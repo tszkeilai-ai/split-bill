@@ -6,17 +6,16 @@
   <title>分單計數機</title>
   <style>
     :root {
-      --bg: #f5f7fb;
+      --bg: #f6f7fb;
       --card: #ffffff;
-      --line: #d9e0ea;
-      --text: #1f2937;
+      --line: #e5e7eb;
+      --text: #111827;
       --muted: #6b7280;
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
       --success: #0f766e;
       --danger: #dc2626;
-      --warning: #b45309;
-      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
     }
 
     * {
@@ -31,24 +30,37 @@
       line-height: 1.5;
     }
 
-    .container {
-      max-width: 1180px;
+    .wrap {
+      max-width: 1120px;
       margin: 0 auto;
-      padding: 24px 16px 48px;
+      padding: 20px 16px 48px;
     }
 
-    .hero {
-      margin-bottom: 20px;
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      margin-bottom: 16px;
+      padding: 14px;
+      background: rgba(246, 247, 251, 0.92);
+      backdrop-filter: blur(10px);
     }
 
-    .hero h1 {
-      margin: 0 0 8px;
-      font-size: 2rem;
+    .topbar-inner {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: var(--shadow);
     }
 
-    .hero p {
-      margin: 0;
-      color: var(--muted);
+    .group-input {
+      flex: 1 1 280px;
+      min-width: 0;
     }
 
     .grid {
@@ -61,56 +73,90 @@
       grid-column: span 12;
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 20px;
+      border-radius: 18px;
+      padding: 18px;
       box-shadow: var(--shadow);
     }
 
-    .card h2,
-    .card h3 {
-      margin: 0 0 16px;
+    .span-6 {
+      grid-column: span 12;
     }
 
-    .two-col {
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .section-subtitle {
+      margin: -4px 0 14px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fbfcfe;
+    }
+
+    .stat small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.4rem;
+      letter-spacing: 0.02em;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
     }
 
     label {
       display: block;
-      font-weight: 600;
       margin-bottom: 6px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--muted);
     }
 
     input {
       width: 100%;
       padding: 11px 12px;
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 12px;
       background: #fff;
+      color: var(--text);
       font-size: 1rem;
     }
 
     input:focus {
-      outline: 2px solid rgba(37, 99, 235, 0.15);
+      outline: none;
       border-color: var(--primary);
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 16px;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
 
     button {
       border: 0;
-      border-radius: 10px;
-      padding: 10px 16px;
-      cursor: pointer;
+      border-radius: 12px;
+      padding: 11px 16px;
       font-size: 0.95rem;
       font-weight: 700;
+      cursor: pointer;
     }
 
     .btn-primary {
@@ -123,24 +169,31 @@
     }
 
     .btn-secondary {
-      background: #eef2ff;
+      background: #eff6ff;
       color: var(--primary);
+    }
+
+    .btn-light {
+      background: #f3f4f6;
+      color: var(--text);
     }
 
     .btn-warning {
       background: #fff7ed;
-      color: var(--warning);
+      color: #b45309;
     }
 
-    .inline-tip {
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 0.92rem;
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
     }
 
     .status {
       min-height: 24px;
-      margin-top: 14px;
+      margin-top: 12px;
+      font-size: 0.92rem;
       font-weight: 600;
     }
 
@@ -152,80 +205,60 @@
       color: var(--danger);
     }
 
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px;
-      background: #fbfdff;
-    }
-
-    .stat small {
-      display: block;
+    .quiet {
       color: var(--muted);
-      margin-bottom: 6px;
+      font-size: 0.92rem;
     }
 
-    .stat strong {
-      font-size: 1.35rem;
+    .empty {
+      padding: 20px;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      background: #fcfcfd;
+      color: var(--muted);
+      text-align: center;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 12px;
     }
 
     th, td {
       padding: 12px 10px;
       border-bottom: 1px solid var(--line);
-      vertical-align: top;
       text-align: left;
+      vertical-align: top;
     }
 
     th {
-      font-size: 0.92rem;
       color: var(--muted);
+      font-size: 0.9rem;
       font-weight: 700;
     }
 
-    .table-actions {
+    td.number {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .toolbar {
       display: flex;
-      gap: 8px;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
       flex-wrap: wrap;
     }
 
-    .empty {
-      padding: 18px;
-      border: 1px dashed var(--line);
-      border-radius: 12px;
-      color: var(--muted);
-      text-align: center;
-      margin-top: 12px;
-      background: #fafcff;
+    .current-group {
+      font-size: 1.1rem;
+      font-weight: 700;
     }
 
-    .footer-actions {
+    .print-area {
       display: flex;
       justify-content: flex-end;
-      margin-top: 20px;
-    }
-
-    .pill {
-      display: inline-block;
-      background: #eff6ff;
-      color: var(--primary);
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 0.84rem;
-      font-weight: 700;
-      margin-bottom: 12px;
+      margin-top: 16px;
     }
 
     @media (min-width: 900px) {
@@ -243,131 +276,118 @@
         background: #fff;
       }
 
+      .topbar {
+        position: static;
+        padding: 0;
+      }
+
+      .topbar-inner,
       .card {
         box-shadow: none;
-        border: 1px solid #ddd;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <section class="hero">
-      <h1>分單計數機</h1>
-      <p>採用 `bills` 與 `members` 雙表架構，讓沒有付款的人也能正確參與分帳。</p>
-    </section>
+  <div class="wrap">
+    <div class="topbar no-print">
+      <form id="groupForm" class="topbar-inner">
+        <div class="group-input">
+          <label for="groupInput">群組名稱</label>
+          <input id="groupInput" type="text" placeholder="輸入群組後按 Enter 或點擊進入" />
+        </div>
+        <button type="submit" class="btn-primary">進入</button>
+        <button type="button" class="btn-secondary" id="copyUrlBtn">複製目前網址</button>
+      </form>
+    </div>
 
     <div class="grid">
-      <section class="card no-print">
-        <div class="pill">群組篩選</div>
-        <h2>載入指定群組</h2>
-        <div class="two-col">
-          <div>
-            <label for="groupFilter">目前群組 group_name</label>
-            <input id="groupFilter" type="text" placeholder="例如：沖繩家庭團" />
+      <section class="card">
+        <div class="toolbar">
+          <div class="current-group" id="currentGroupLabel">未選擇群組</div>
+          <div class="quiet" id="groupHint">輸入群組名稱後即可進入。</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <small>總金額</small>
+            <strong id="totalAmount">0.00</strong>
+          </div>
+          <div class="stat">
+            <small>總權重</small>
+            <strong id="totalWeight">0.00</strong>
+          </div>
+          <div class="stat">
+            <small>每單位</small>
+            <strong id="unitAmount">0.00</strong>
           </div>
         </div>
-        <div class="actions">
-          <button type="button" class="btn-primary" id="applyGroupBtn">載入群組資料</button>
-        </div>
-        <div class="inline-tip">
-          可直接用網址 `?group_name=你的群組` 載入，例如 `bill-splitter.html?group_name=沖繩家庭團`。
+
+        <div id="memberSummary"></div>
+
+        <div class="print-area no-print">
+          <button type="button" class="btn-light" id="printBtn">導出 PDF</button>
         </div>
       </section>
 
       <section class="card span-6 no-print">
-        <div class="pill">消費紀錄 bills</div>
-        <h2 id="billFormTitle">新增消費項目</h2>
+        <h2 class="section-title" id="billFormTitle">新增消費</h2>
+        <p class="section-subtitle">目前群組會自動帶入，不需重複輸入。</p>
         <form id="billForm">
           <input type="hidden" id="billId" />
-          <div class="two-col">
+          <div class="form-grid">
             <div>
-              <label for="itemName">項目名稱 item_name</label>
-              <input id="itemName" type="text" placeholder="例如：晚餐、飲料、停車費" required />
+              <label for="itemName">項目</label>
+              <input id="itemName" type="text" placeholder="晚餐、飲料、交通" required />
             </div>
             <div>
-              <label for="amount">金額 amount</label>
-              <input id="amount" type="number" min="0" step="0.01" placeholder="請輸入金額" required />
+              <label for="amount">金額</label>
+              <input id="amount" type="number" min="0" step="0.01" placeholder="0.00" required />
             </div>
             <div>
-              <label for="payerName">付款人 payer_name</label>
-              <input id="payerName" type="text" placeholder="例如：小明" required />
-            </div>
-            <div>
-              <label for="billGroupName">群組名稱 group_name</label>
-              <input id="billGroupName" type="text" placeholder="例如：沖繩家庭團" required />
+              <label for="payerName">付款人</label>
+              <input id="payerName" type="text" placeholder="小明" required />
             </div>
           </div>
           <div class="actions">
-            <button type="submit" class="btn-primary" id="billSubmitBtn">送出消費紀錄</button>
-            <button type="button" class="btn-secondary" id="billCancelBtn">清空表單</button>
+            <button type="submit" class="btn-primary" id="billSubmitBtn">儲存</button>
+            <button type="button" class="btn-light" id="billCancelBtn">清空</button>
           </div>
           <div id="billStatus" class="status"></div>
         </form>
       </section>
 
       <section class="card span-6 no-print">
-        <div class="pill">參與者 members</div>
-        <h2 id="memberFormTitle">新增參與者名單</h2>
+        <h2 class="section-title" id="memberFormTitle">新增成員</h2>
+        <p class="section-subtitle">沒有付款的人也能加入分帳。</p>
         <form id="memberForm">
           <input type="hidden" id="memberId" />
-          <div class="two-col">
+          <div class="form-grid">
             <div>
-              <label for="memberName">成員名稱 member_name</label>
-              <input id="memberName" type="text" placeholder="例如：小明、小華、小孩" required />
+              <label for="memberName">姓名</label>
+              <input id="memberName" type="text" placeholder="小明、小華、小孩" required />
             </div>
             <div>
-              <label for="weight">權重 weight</label>
+              <label for="weight">權重</label>
               <input id="weight" type="number" min="0.01" step="0.01" value="1" required />
-            </div>
-            <div>
-              <label for="memberGroupName">群組名稱 group_name</label>
-              <input id="memberGroupName" type="text" placeholder="例如：沖繩家庭團" required />
             </div>
           </div>
           <div class="actions">
-            <button type="submit" class="btn-primary" id="memberSubmitBtn">送出參與者</button>
-            <button type="button" class="btn-secondary" id="memberCancelBtn">清空表單</button>
+            <button type="submit" class="btn-primary" id="memberSubmitBtn">儲存</button>
+            <button type="button" class="btn-light" id="memberCancelBtn">清空</button>
           </div>
           <div id="memberStatus" class="status"></div>
         </form>
       </section>
 
       <section class="card">
-        <div class="pill">群組分帳結果</div>
-        <h2>目前群組：<span id="currentGroupLabel">尚未指定</span></h2>
-        <div class="summary-grid">
-          <div class="stat">
-            <small>總金額</small>
-            <strong id="totalAmount">NT$ 0.00</strong>
-          </div>
-          <div class="stat">
-            <small>總權重和</small>
-            <strong id="totalWeight">0.00</strong>
-          </div>
-          <div class="stat">
-            <small>單位權重金額</small>
-            <strong id="unitAmount">NT$ 0.00</strong>
-          </div>
-        </div>
-
-        <h3>每位成員應付金額</h3>
-        <div id="memberSummary"></div>
-      </section>
-
-      <section class="card">
-        <div class="pill">消費清單</div>
-        <h2>群組消費紀錄</h2>
+        <h2 class="section-title">消費</h2>
         <div id="billList"></div>
       </section>
 
       <section class="card">
-        <div class="pill">參與者清單</div>
-        <h2>群組參與者名單</h2>
+        <h2 class="section-title">成員</h2>
         <div id="memberList"></div>
-        <div class="footer-actions no-print">
-          <button type="button" class="btn-primary" id="printBtn">導出 PDF</button>
-        </div>
       </section>
     </div>
   </div>
@@ -381,30 +401,11 @@
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const groupFilterInput = document.getElementById("groupFilter");
-    const applyGroupBtn = document.getElementById("applyGroupBtn");
+    const groupForm = document.getElementById("groupForm");
+    const groupInput = document.getElementById("groupInput");
+    const copyUrlBtn = document.getElementById("copyUrlBtn");
     const currentGroupLabel = document.getElementById("currentGroupLabel");
-
-    const billForm = document.getElementById("billForm");
-    const billIdInput = document.getElementById("billId");
-    const itemNameInput = document.getElementById("itemName");
-    const amountInput = document.getElementById("amount");
-    const payerNameInput = document.getElementById("payerName");
-    const billGroupNameInput = document.getElementById("billGroupName");
-    const billFormTitle = document.getElementById("billFormTitle");
-    const billSubmitBtn = document.getElementById("billSubmitBtn");
-    const billCancelBtn = document.getElementById("billCancelBtn");
-    const billStatus = document.getElementById("billStatus");
-
-    const memberForm = document.getElementById("memberForm");
-    const memberIdInput = document.getElementById("memberId");
-    const memberNameInput = document.getElementById("memberName");
-    const weightInput = document.getElementById("weight");
-    const memberGroupNameInput = document.getElementById("memberGroupName");
-    const memberFormTitle = document.getElementById("memberFormTitle");
-    const memberSubmitBtn = document.getElementById("memberSubmitBtn");
-    const memberCancelBtn = document.getElementById("memberCancelBtn");
-    const memberStatus = document.getElementById("memberStatus");
+    const groupHint = document.getElementById("groupHint");
 
     const totalAmountEl = document.getElementById("totalAmount");
     const totalWeightEl = document.getElementById("totalWeight");
@@ -414,16 +415,41 @@
     const memberListEl = document.getElementById("memberList");
     const printBtn = document.getElementById("printBtn");
 
+    const billForm = document.getElementById("billForm");
+    const billIdInput = document.getElementById("billId");
+    const itemNameInput = document.getElementById("itemName");
+    const amountInput = document.getElementById("amount");
+    const payerNameInput = document.getElementById("payerName");
+    const billFormTitle = document.getElementById("billFormTitle");
+    const billSubmitBtn = document.getElementById("billSubmitBtn");
+    const billCancelBtn = document.getElementById("billCancelBtn");
+    const billStatus = document.getElementById("billStatus");
+
+    const memberForm = document.getElementById("memberForm");
+    const memberIdInput = document.getElementById("memberId");
+    const memberNameInput = document.getElementById("memberName");
+    const weightInput = document.getElementById("weight");
+    const memberFormTitle = document.getElementById("memberFormTitle");
+    const memberSubmitBtn = document.getElementById("memberSubmitBtn");
+    const memberCancelBtn = document.getElementById("memberCancelBtn");
+    const memberStatus = document.getElementById("memberStatus");
+
     let currentGroupName = "";
     let currentBills = [];
     let currentMembers = [];
 
-    function formatCurrency(value) {
-      return new Intl.NumberFormat("zh-TW", {
-        style: "currency",
-        currency: "TWD",
-        minimumFractionDigits: 2,
-      }).format(Number(value || 0));
+    function formatNumber(value) {
+      const number = Number(value || 0);
+      return Number.isFinite(number) ? number.toFixed(2) : "0.00";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
     }
 
     function setStatus(element, message, type = "success") {
@@ -441,44 +467,49 @@
       return (params.get("group_name") || "").trim();
     }
 
-    function syncGroupNameToUrl(groupName) {
-      const url = new URL(window.location.href);
-      if (groupName) {
-        url.searchParams.set("group_name", groupName);
-      } else {
-        url.searchParams.delete("group_name");
+    function buildGroupUrl(groupName) {
+      const clean = groupName.trim();
+      if (!clean) {
+        return "index.html";
       }
-      window.history.replaceState({}, "", url.toString());
+      return `index.html?group_name=${encodeURIComponent(clean)}`;
     }
 
-    function applyGroupNameToInputs(groupName) {
-      groupFilterInput.value = groupName;
-      billGroupNameInput.value = groupName;
-      memberGroupNameInput.value = groupName;
-      currentGroupLabel.textContent = groupName || "尚未指定";
+    function updateGroupHeader(groupName) {
+      currentGroupLabel.textContent = groupName || "未選擇群組";
+      if (!groupName) {
+        groupHint.textContent = "輸入群組名稱後即可進入。";
+        return;
+      }
+      groupHint.textContent = "載入後會自動查詢，不需要再手動點擊。";
     }
 
-    function resetBillForm(preserveGroup = true) {
-      const groupName = preserveGroup ? currentGroupName : "";
+    function resetBillForm() {
       billIdInput.value = "";
       itemNameInput.value = "";
       amountInput.value = "";
       payerNameInput.value = "";
-      billGroupNameInput.value = groupName;
-      billFormTitle.textContent = "新增消費項目";
-      billSubmitBtn.textContent = "送出消費紀錄";
+      billFormTitle.textContent = "新增消費";
+      billSubmitBtn.textContent = "儲存";
       clearStatus(billStatus);
     }
 
-    function resetMemberForm(preserveGroup = true) {
-      const groupName = preserveGroup ? currentGroupName : "";
+    function resetMemberForm() {
       memberIdInput.value = "";
       memberNameInput.value = "";
       weightInput.value = "1";
-      memberGroupNameInput.value = groupName;
-      memberFormTitle.textContent = "新增參與者名單";
-      memberSubmitBtn.textContent = "送出參與者";
+      memberFormTitle.textContent = "新增成員";
+      memberSubmitBtn.textContent = "儲存";
       clearStatus(memberStatus);
+    }
+
+    function renderWelcomeState() {
+      totalAmountEl.textContent = "0.00";
+      totalWeightEl.textContent = "0.00";
+      unitAmountEl.textContent = "0.00";
+      memberSummaryEl.innerHTML = '<div class="empty">輸入群組名稱並進入後，這裡會顯示分帳結果。</div>';
+      billListEl.innerHTML = '<div class="empty">尚未選擇群組。</div>';
+      memberListEl.innerHTML = '<div class="empty">尚未選擇群組。</div>';
     }
 
     function renderSummary(bills, members) {
@@ -486,17 +517,17 @@
       const totalWeight = members.reduce((sum, member) => sum + Number(member.weight || 0), 0);
       const unitAmount = totalWeight > 0 ? totalAmount / totalWeight : 0;
 
-      totalAmountEl.textContent = formatCurrency(totalAmount);
-      totalWeightEl.textContent = totalWeight.toFixed(2);
-      unitAmountEl.textContent = formatCurrency(unitAmount);
+      totalAmountEl.textContent = formatNumber(totalAmount);
+      totalWeightEl.textContent = formatNumber(totalWeight);
+      unitAmountEl.textContent = formatNumber(unitAmount);
 
       if (!currentGroupName) {
-        memberSummaryEl.innerHTML = '<div class="empty">請先指定 `group_name` 再載入資料。</div>';
+        memberSummaryEl.innerHTML = '<div class="empty">請先輸入群組名稱。</div>';
         return;
       }
 
       if (!members.length) {
-        memberSummaryEl.innerHTML = '<div class="empty">此群組還沒有參與者名單，請先新增 members 資料。</div>';
+        memberSummaryEl.innerHTML = '<div class="empty">這個群組目前沒有成員資料，先新增成員後就能計算。</div>';
         return;
       }
 
@@ -508,9 +539,9 @@
           const shouldPay = unitAmount * weight;
           return `
             <tr>
-              <td>${member.member_name || ""}</td>
-              <td>${weight.toFixed(2)}</td>
-              <td>${formatCurrency(shouldPay)}</td>
+              <td>${escapeHtml(member.member_name || "")}</td>
+              <td class="number">${formatNumber(weight)}</td>
+              <td class="number">${formatNumber(shouldPay)}</td>
             </tr>
           `;
         })
@@ -520,40 +551,35 @@
         <table>
           <thead>
             <tr>
-              <th>成員</th>
+              <th>姓名</th>
               <th>權重</th>
-              <th>應付金額</th>
+              <th>應付</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
-        <div class="inline-tip">計算方式：先加總 `bills.amount`，再加總 `members.weight`，最後依每位成員權重分攤。</div>
       `;
     }
 
     function renderBills(bills) {
       if (!currentGroupName) {
-        billListEl.innerHTML = '<div class="empty">請先輸入 `group_name` 並載入群組資料。</div>';
+        billListEl.innerHTML = '<div class="empty">請先輸入群組名稱。</div>';
         return;
       }
 
       if (!bills.length) {
-        billListEl.innerHTML = '<div class="empty">此群組目前沒有消費紀錄。</div>';
+        billListEl.innerHTML = '<div class="empty">這個群組目前沒有消費資料。</div>';
         return;
       }
 
       const rows = bills
         .map((bill) => `
           <tr>
-            <td>${bill.item_name || ""}</td>
-            <td>${formatCurrency(bill.amount)}</td>
-            <td>${bill.payer_name || ""}</td>
-            <td>${bill.group_name || ""}</td>
-            <td>${bill.created_at ? new Date(bill.created_at).toLocaleString("zh-TW") : "-"}</td>
-            <td>
-              <div class="table-actions no-print">
-                <button type="button" class="btn-warning" onclick="startBillEdit(${bill.id})">修改</button>
-              </div>
+            <td>${escapeHtml(bill.item_name || "")}</td>
+            <td>${escapeHtml(bill.payer_name || "")}</td>
+            <td class="number">${formatNumber(bill.amount)}</td>
+            <td class="no-print">
+              <button type="button" class="btn-warning" onclick="startBillEdit(${bill.id})">修改</button>
             </td>
           </tr>
         `)
@@ -564,10 +590,8 @@
           <thead>
             <tr>
               <th>項目</th>
-              <th>金額</th>
               <th>付款人</th>
-              <th>群組</th>
-              <th>建立時間</th>
+              <th>金額</th>
               <th class="no-print">操作</th>
             </tr>
           </thead>
@@ -578,26 +602,22 @@
 
     function renderMembers(members) {
       if (!currentGroupName) {
-        memberListEl.innerHTML = '<div class="empty">請先輸入 `group_name` 並載入群組資料。</div>';
+        memberListEl.innerHTML = '<div class="empty">請先輸入群組名稱。</div>';
         return;
       }
 
       if (!members.length) {
-        memberListEl.innerHTML = '<div class="empty">此群組目前沒有參與者名單。</div>';
+        memberListEl.innerHTML = '<div class="empty">這個群組目前沒有成員資料。</div>';
         return;
       }
 
       const rows = members
         .map((member) => `
           <tr>
-            <td>${member.member_name || ""}</td>
-            <td>${Number(member.weight || 0).toFixed(2)}</td>
-            <td>${member.group_name || ""}</td>
-            <td>${member.created_at ? new Date(member.created_at).toLocaleString("zh-TW") : "-"}</td>
-            <td>
-              <div class="table-actions no-print">
-                <button type="button" class="btn-warning" onclick="startMemberEdit(${member.id})">修改</button>
-              </div>
+            <td>${escapeHtml(member.member_name || "")}</td>
+            <td class="number">${formatNumber(member.weight)}</td>
+            <td class="no-print">
+              <button type="button" class="btn-warning" onclick="startMemberEdit(${member.id})">修改</button>
             </td>
           </tr>
         `)
@@ -607,10 +627,8 @@
         <table>
           <thead>
             <tr>
-              <th>成員</th>
+              <th>姓名</th>
               <th>權重</th>
-              <th>群組</th>
-              <th>建立時間</th>
               <th class="no-print">操作</th>
             </tr>
           </thead>
@@ -621,17 +639,14 @@
 
     async function loadGroupData(options = {}) {
       const { preserveBillStatus = false, preserveMemberStatus = false } = options;
-      currentGroupName = getGroupNameFromUrl() || groupFilterInput.value.trim() || billGroupNameInput.value.trim() || memberGroupNameInput.value.trim();
-      applyGroupNameToInputs(currentGroupName);
 
       if (!currentGroupName) {
-        currentBills = [];
-        currentMembers = [];
-        renderSummary([], []);
-        renderBills([]);
-        renderMembers([]);
+        renderWelcomeState();
         return;
       }
+
+      updateGroupHeader(currentGroupName);
+      groupInput.value = currentGroupName;
 
       const [billsResult, membersResult] = await Promise.all([
         supabaseClient
@@ -648,70 +663,83 @@
 
       if (billsResult.error) {
         currentBills = [];
-        setStatus(billStatus, "讀取消費紀錄失敗：" + billsResult.error.message, "error");
-      } else if (!preserveBillStatus) {
-        clearStatus(billStatus);
+        setStatus(billStatus, "讀取消費資料失敗：" + billsResult.error.message, "error");
+      } else {
+        currentBills = billsResult.data || [];
+        if (!preserveBillStatus) {
+          clearStatus(billStatus);
+        }
       }
 
       if (membersResult.error) {
         currentMembers = [];
-        setStatus(memberStatus, "讀取參與者名單失敗：" + membersResult.error.message, "error");
-      } else if (!preserveMemberStatus) {
-        clearStatus(memberStatus);
+        setStatus(memberStatus, "讀取成員資料失敗：" + membersResult.error.message, "error");
+      } else {
+        currentMembers = membersResult.data || [];
+        if (!preserveMemberStatus) {
+          clearStatus(memberStatus);
+        }
       }
 
-      currentBills = billsResult.data || [];
-      currentMembers = membersResult.data || [];
       renderSummary(currentBills, currentMembers);
       renderBills(currentBills);
       renderMembers(currentMembers);
+
+      if (!currentBills.length && !currentMembers.length) {
+        groupHint.textContent = "查詢完成，這個群組目前還沒有任何資料。";
+      }
     }
 
     async function saveBill(event) {
       event.preventDefault();
 
+      if (!currentGroupName) {
+        setStatus(billStatus, "請先在上方輸入群組名稱並進入。", "error");
+        return;
+      }
+
       const payload = {
         item_name: itemNameInput.value.trim(),
         amount: Number(amountInput.value),
         payer_name: payerNameInput.value.trim(),
-        group_name: billGroupNameInput.value.trim(),
+        group_name: currentGroupName,
       };
 
-      if (!payload.item_name || !payload.payer_name || !payload.group_name || Number.isNaN(payload.amount)) {
-        setStatus(billStatus, "請完整填寫消費紀錄欄位。", "error");
+      if (!payload.item_name || !payload.payer_name || Number.isNaN(payload.amount)) {
+        setStatus(billStatus, "請完整填寫消費資料。", "error");
         return;
       }
-
-      syncGroupNameToUrl(payload.group_name);
-      currentGroupName = payload.group_name;
-      applyGroupNameToInputs(currentGroupName);
 
       const result = billIdInput.value
         ? await supabaseClient.from(BILLS_TABLE).update(payload).eq("id", billIdInput.value)
         : await supabaseClient.from(BILLS_TABLE).insert([payload]);
 
       if (result.error) {
-        setStatus(billStatus, "寫入消費紀錄失敗：" + result.error.message, "error");
+        setStatus(billStatus, "儲存失敗：" + result.error.message, "error");
         return;
       }
 
-      setStatus(billStatus, billIdInput.value ? "消費紀錄已更新。" : "消費紀錄已新增。", "success");
+      setStatus(billStatus, billIdInput.value ? "已更新。" : "已新增。", "success");
       resetBillForm();
-      applyGroupNameToInputs(currentGroupName);
       await loadGroupData({ preserveBillStatus: true });
     }
 
     async function saveMember(event) {
       event.preventDefault();
 
+      if (!currentGroupName) {
+        setStatus(memberStatus, "請先在上方輸入群組名稱並進入。", "error");
+        return;
+      }
+
       const payload = {
         member_name: memberNameInput.value.trim(),
         weight: Number(weightInput.value),
-        group_name: memberGroupNameInput.value.trim(),
+        group_name: currentGroupName,
       };
 
-      if (!payload.member_name || !payload.group_name || Number.isNaN(payload.weight)) {
-        setStatus(memberStatus, "請完整填寫參與者欄位。", "error");
+      if (!payload.member_name || Number.isNaN(payload.weight)) {
+        setStatus(memberStatus, "請完整填寫成員資料。", "error");
         return;
       }
 
@@ -720,29 +748,47 @@
         return;
       }
 
-      syncGroupNameToUrl(payload.group_name);
-      currentGroupName = payload.group_name;
-      applyGroupNameToInputs(currentGroupName);
-
       const result = memberIdInput.value
         ? await supabaseClient.from(MEMBERS_TABLE).update(payload).eq("id", memberIdInput.value)
         : await supabaseClient.from(MEMBERS_TABLE).insert([payload]);
 
       if (result.error) {
-        setStatus(memberStatus, "寫入參與者資料失敗：" + result.error.message, "error");
+        setStatus(memberStatus, "儲存失敗：" + result.error.message, "error");
         return;
       }
 
-      setStatus(memberStatus, memberIdInput.value ? "參與者資料已更新。" : "參與者已新增。", "success");
+      setStatus(memberStatus, memberIdInput.value ? "已更新。" : "已新增。", "success");
       resetMemberForm();
-      applyGroupNameToInputs(currentGroupName);
       await loadGroupData({ preserveMemberStatus: true });
+    }
+
+    async function copyCurrentUrl() {
+      const url = window.location.href;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const temp = document.createElement("textarea");
+          temp.value = url;
+          temp.style.position = "fixed";
+          temp.style.opacity = "0";
+          document.body.appendChild(temp);
+          temp.focus();
+          temp.select();
+          document.execCommand("copy");
+          document.body.removeChild(temp);
+        }
+        groupHint.textContent = "目前網址已複製。";
+      } catch (error) {
+        groupHint.textContent = "複製失敗，請手動複製網址。";
+      }
     }
 
     window.startBillEdit = function startBillEdit(id) {
       const bill = currentBills.find((item) => String(item.id) === String(id));
       if (!bill) {
-        setStatus(billStatus, "找不到要編輯的消費紀錄。", "error");
+        setStatus(billStatus, "找不到這筆資料。", "error");
         return;
       }
 
@@ -750,70 +796,60 @@
       itemNameInput.value = bill.item_name || "";
       amountInput.value = bill.amount ?? "";
       payerNameInput.value = bill.payer_name || "";
-      billGroupNameInput.value = bill.group_name || currentGroupName;
-      billFormTitle.textContent = "修改消費項目";
-      billSubmitBtn.textContent = "儲存消費修改";
-      setStatus(billStatus, "你正在編輯一筆消費紀錄。", "success");
+      billFormTitle.textContent = "修改消費";
+      billSubmitBtn.textContent = "更新";
+      setStatus(billStatus, "正在編輯。", "success");
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     window.startMemberEdit = function startMemberEdit(id) {
       const member = currentMembers.find((item) => String(item.id) === String(id));
       if (!member) {
-        setStatus(memberStatus, "找不到要編輯的參與者資料。", "error");
+        setStatus(memberStatus, "找不到這筆資料。", "error");
         return;
       }
 
       memberIdInput.value = member.id;
       memberNameInput.value = member.member_name || "";
       weightInput.value = member.weight ?? 1;
-      memberGroupNameInput.value = member.group_name || currentGroupName;
-      memberFormTitle.textContent = "修改參與者資料";
-      memberSubmitBtn.textContent = "儲存參與者修改";
-      setStatus(memberStatus, "你正在編輯一位參與者。", "success");
+      memberFormTitle.textContent = "修改成員";
+      memberSubmitBtn.textContent = "更新";
+      setStatus(memberStatus, "正在編輯。", "success");
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    function initGroupName() {
-      currentGroupName = getGroupNameFromUrl();
-      applyGroupNameToInputs(currentGroupName);
-      resetBillForm();
-      resetMemberForm();
-    }
+    groupForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const groupName = groupInput.value.trim();
+      if (!groupName) {
+        groupHint.textContent = "請先輸入群組名稱。";
+        return;
+      }
+      window.location.href = buildGroupUrl(groupName);
+    });
 
+    copyUrlBtn.addEventListener("click", copyCurrentUrl);
     billForm.addEventListener("submit", saveBill);
     memberForm.addEventListener("submit", saveMember);
-
-    billCancelBtn.addEventListener("click", () => {
-      resetBillForm();
-      applyGroupNameToInputs(currentGroupName);
-    });
-
-    memberCancelBtn.addEventListener("click", () => {
-      resetMemberForm();
-      applyGroupNameToInputs(currentGroupName);
-    });
-
-    applyGroupBtn.addEventListener("click", async () => {
-      const groupName = groupFilterInput.value.trim();
-      syncGroupNameToUrl(groupName);
-      currentGroupName = groupName;
-      applyGroupNameToInputs(groupName);
-      await loadGroupData();
-    });
-
-    groupFilterInput.addEventListener("change", async () => {
-      const groupName = groupFilterInput.value.trim();
-      syncGroupNameToUrl(groupName);
-      currentGroupName = groupName;
-      applyGroupNameToInputs(groupName);
-      await loadGroupData();
-    });
-
+    billCancelBtn.addEventListener("click", resetBillForm);
+    memberCancelBtn.addEventListener("click", resetMemberForm);
     printBtn.addEventListener("click", () => window.print());
 
-    initGroupName();
-    loadGroupData();
+    function init() {
+      currentGroupName = getGroupNameFromUrl();
+      groupInput.value = currentGroupName;
+      updateGroupHeader(currentGroupName);
+      resetBillForm();
+      resetMemberForm();
+
+      if (currentGroupName) {
+        loadGroupData();
+      } else {
+        renderWelcomeState();
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
