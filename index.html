@@ -76,6 +76,11 @@
       border-radius: 18px;
       padding: 18px;
       box-shadow: var(--shadow);
+      transition: background-color 0.2s ease;
+    }
+
+    .card.edit-mode {
+      background: #ffe6e6;
     }
 
     .span-6 {
@@ -354,7 +359,7 @@
         </div>
       </section>
 
-      <section class="card span-6 no-print">
+      <section class="card span-6 no-print" id="billCard">
         <h2 class="section-title" id="billFormTitle">新增預支</h2>
         <p class="section-subtitle">每一筆都代表某人先墊付的一筆費用。</p>
         <form id="billForm">
@@ -446,6 +451,7 @@
     const printBtn = document.getElementById("printBtn");
 
     const billForm = document.getElementById("billForm");
+    const billCard = document.getElementById("billCard");
     const billIdInput = document.getElementById("billId");
     const itemNameInput = document.getElementById("itemName");
     const amountInput = document.getElementById("amount");
@@ -539,6 +545,10 @@
       groupHint.textContent = "載入後會自動查詢，不需要再手動點擊。";
     }
 
+    function setBillEditMode(enabled) {
+      billCard.classList.toggle("edit-mode", Boolean(enabled));
+    }
+
     function resetBillForm() {
       billIdInput.value = "";
       itemNameInput.value = "";
@@ -547,6 +557,7 @@
       billWeightInput.value = "1";
       billFormTitle.textContent = "新增預支";
       billSubmitBtn.textContent = "儲存";
+      setBillEditMode(false);
       clearStatus(billStatus);
     }
 
@@ -940,6 +951,7 @@
       billWeightInput.value = bill.weight ?? 1;
       billFormTitle.textContent = "修改預支";
       billSubmitBtn.textContent = "更新";
+      setBillEditMode(true);
       setStatus(billStatus, "正在編輯。", "success");
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
@@ -956,6 +968,7 @@
       weightInput.value = member.weight ?? 1;
       memberFormTitle.textContent = "修改成員";
       memberSubmitBtn.textContent = "更新";
+      setBillEditMode(false);
       setStatus(memberStatus, "正在編輯。", "success");
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
