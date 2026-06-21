@@ -377,10 +377,6 @@
               <label for="payer">預支人</label>
               <input id="payer" type="text" placeholder="小明" required />
             </div>
-            <div>
-              <label for="billWeight">人數</label>
-              <input id="billWeight" type="number" min="0.01" step="0.01" value="1" required />
-            </div>
           </div>
           <div class="actions">
             <button type="submit" class="btn-primary" id="billSubmitBtn">儲存</button>
@@ -390,7 +386,7 @@
         </form>
       </section>
 
-      <section class="card span-6 no-print">
+      <section class="card span-6 no-print" id="memberCard">
         <h2 class="section-title" id="memberFormTitle">新增成員</h2>
         <p class="section-subtitle">沒有預支的人也能加入分帳。</p>
         <form id="memberForm">
@@ -456,13 +452,13 @@
     const itemNameInput = document.getElementById("itemName");
     const amountInput = document.getElementById("amount");
     const payerInput = document.getElementById("payer");
-    const billWeightInput = document.getElementById("billWeight");
     const billFormTitle = document.getElementById("billFormTitle");
     const billSubmitBtn = document.getElementById("billSubmitBtn");
     const billCancelBtn = document.getElementById("billCancelBtn");
     const billStatus = document.getElementById("billStatus");
 
     const memberForm = document.getElementById("memberForm");
+    const memberCard = document.getElementById("memberCard");
     const memberIdInput = document.getElementById("memberId");
     const memberNameInput = document.getElementById("memberName");
     const weightInput = document.getElementById("weight");
@@ -549,12 +545,15 @@
       billCard.classList.toggle("edit-mode", Boolean(enabled));
     }
 
+    function setMemberEditMode(enabled) {
+      memberCard.classList.toggle("edit-mode", Boolean(enabled));
+    }
+
     function resetBillForm() {
       billIdInput.value = "";
       itemNameInput.value = "";
       amountInput.value = "";
       payerInput.value = "";
-      billWeightInput.value = "1";
       billFormTitle.textContent = "新增預支";
       billSubmitBtn.textContent = "儲存";
       setBillEditMode(false);
@@ -567,6 +566,7 @@
       weightInput.value = "1";
       memberFormTitle.textContent = "新增成員";
       memberSubmitBtn.textContent = "儲存";
+      setMemberEditMode(false);
       clearStatus(memberStatus);
     }
 
@@ -681,7 +681,6 @@
             <td>${escapeHtml(bill.item_name || "")}</td>
             <td>${escapeHtml(bill.payer || "")}</td>
             <td class="number">${formatNumber(bill.amount)}</td>
-            <td class="number">${formatNumber(bill.weight)}</td>
             <td class="no-print">
               <button type="button" class="btn-warning" onclick="startBillEdit(${bill.id})">修改</button>
             </td>
@@ -696,7 +695,6 @@
               <th>項目</th>
               <th>預支人</th>
               <th>金額</th>
-              <th>人數</th>
               <th class="no-print">操作</th>
             </tr>
           </thead>
@@ -847,16 +845,10 @@
         amount: Number(amountInput.value),
         payer: payerInput.value.trim(),
         group_name: currentGroupName,
-        weight: Number(billWeightInput.value),
       };
 
-      if (!payload.item_name || !payload.payer || Number.isNaN(payload.amount) || Number.isNaN(payload.weight)) {
+      if (!payload.item_name || !payload.payer || Number.isNaN(payload.amount)) {
         setStatus(billStatus, "請完整填寫預支資料。", "error");
-        return;
-      }
-
-      if (payload.weight <= 0) {
-        setStatus(billStatus, "人數必須大於 0。", "error");
         return;
       }
 
@@ -948,10 +940,10 @@
       itemNameInput.value = bill.item_name || "";
       amountInput.value = bill.amount ?? "";
       payerInput.value = bill.payer || "";
-      billWeightInput.value = bill.weight ?? 1;
       billFormTitle.textContent = "修改預支";
       billSubmitBtn.textContent = "更新";
       setBillEditMode(true);
+      setMemberEditMode(false);
       setStatus(billStatus, "正在編輯。", "success");
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
@@ -969,6 +961,7 @@
       memberFormTitle.textContent = "修改成員";
       memberSubmitBtn.textContent = "更新";
       setBillEditMode(false);
+      setMemberEditMode(true);
       setStatus(memberStatus, "正在編輯。", "success");
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
