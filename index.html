@@ -134,7 +134,8 @@
       color: var(--muted);
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       padding: 11px 12px;
       border: 1px solid var(--line);
@@ -144,7 +145,8 @@
       font-size: 1rem;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
@@ -241,6 +243,21 @@
       font-variant-numeric: tabular-nums;
     }
 
+    .settlement-positive {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .settlement-negative {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .settlement-zero {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
     .toolbar {
       display: flex;
       justify-content: space-between;
@@ -296,8 +313,15 @@
           <label for="groupInput">群組名稱</label>
           <input id="groupInput" type="text" placeholder="輸入群組後按 Enter 或點擊進入" />
         </div>
+        <div class="group-input">
+          <label for="groupSelect">快速切換</label>
+          <select id="groupSelect">
+            <option value="">選擇已存在的群組</option>
+          </select>
+        </div>
         <button type="submit" class="btn-primary">進入</button>
         <button type="button" class="btn-secondary" id="copyUrlBtn">複製目前網址</button>
+        <button type="button" class="btn-light" id="resetBtn">清除 / 重置</button>
       </form>
     </div>
 
@@ -314,7 +338,7 @@
             <strong id="totalAmount">0.00</strong>
           </div>
           <div class="stat">
-            <small>總權重</small>
+            <small>總人數</small>
             <strong id="totalWeight">0.00</strong>
           </div>
           <div class="stat">
@@ -331,8 +355,8 @@
       </section>
 
       <section class="card span-6 no-print">
-        <h2 class="section-title" id="billFormTitle">新增消費</h2>
-        <p class="section-subtitle">目前群組會自動帶入，不需重複輸入。</p>
+        <h2 class="section-title" id="billFormTitle">新增預支</h2>
+        <p class="section-subtitle">每一筆都代表某人先墊付的一筆費用。</p>
         <form id="billForm">
           <input type="hidden" id="billId" />
           <div class="form-grid">
@@ -345,11 +369,11 @@
               <input id="amount" type="number" min="0" step="0.01" placeholder="0.00" required />
             </div>
             <div>
-              <label for="payer">付款人</label>
+              <label for="payer">預支人</label>
               <input id="payer" type="text" placeholder="小明" required />
             </div>
             <div>
-              <label for="billWeight">權重</label>
+              <label for="billWeight">人數</label>
               <input id="billWeight" type="number" min="0.01" step="0.01" value="1" required />
             </div>
           </div>
@@ -363,7 +387,7 @@
 
       <section class="card span-6 no-print">
         <h2 class="section-title" id="memberFormTitle">新增成員</h2>
-        <p class="section-subtitle">沒有付款的人也能加入分帳。</p>
+        <p class="section-subtitle">沒有預支的人也能加入分帳。</p>
         <form id="memberForm">
           <input type="hidden" id="memberId" />
           <div class="form-grid">
@@ -372,7 +396,7 @@
               <input id="memberName" type="text" placeholder="小明、小華、小孩" required />
             </div>
             <div>
-              <label for="weight">權重</label>
+              <label for="weight">人數</label>
               <input id="weight" type="number" min="0.01" step="0.01" value="1" required />
             </div>
           </div>
@@ -385,7 +409,7 @@
       </section>
 
       <section class="card">
-        <h2 class="section-title">消費</h2>
+        <h2 class="section-title">預支紀錄</h2>
         <div id="billList"></div>
       </section>
 
@@ -407,7 +431,9 @@
 
     const groupForm = document.getElementById("groupForm");
     const groupInput = document.getElementById("groupInput");
+    const groupSelect = document.getElementById("groupSelect");
     const copyUrlBtn = document.getElementById("copyUrlBtn");
+    const resetBtn = document.getElementById("resetBtn");
     const currentGroupLabel = document.getElementById("currentGroupLabel");
     const groupHint = document.getElementById("groupHint");
 
@@ -519,7 +545,7 @@
       amountInput.value = "";
       payerInput.value = "";
       billWeightInput.value = "1";
-      billFormTitle.textContent = "新增消費";
+      billFormTitle.textContent = "新增預支";
       billSubmitBtn.textContent = "儲存";
       clearStatus(billStatus);
     }
@@ -537,7 +563,7 @@
       totalAmountEl.textContent = "0.00";
       totalWeightEl.textContent = "0.00";
       unitAmountEl.textContent = "0.00";
-      memberSummaryEl.innerHTML = '<div class="empty">輸入群組名稱並進入後，這裡會顯示分帳結果。</div>';
+      memberSummaryEl.innerHTML = '<div class="empty">輸入群組名稱並進入後，這裡會顯示每個人的已付、應付與結算。</div>';
       billListEl.innerHTML = '<div class="empty">尚未選擇群組。</div>';
       memberListEl.innerHTML = '<div class="empty">尚未選擇群組。</div>';
     }
@@ -546,6 +572,15 @@
       const totalAmount = bills.reduce((sum, bill) => sum + Number(bill.amount || 0), 0);
       const totalWeight = members.reduce((sum, member) => sum + Number(member.weight || 0), 0);
       const unitAmount = totalWeight > 0 ? totalAmount / totalWeight : 0;
+      const paidMap = new Map();
+
+      for (const bill of bills) {
+        const payerName = String(bill.payer || "").trim();
+        if (!payerName) {
+          continue;
+        }
+        paidMap.set(payerName, (paidMap.get(payerName) || 0) + Number(bill.amount || 0));
+      }
 
       totalAmountEl.textContent = formatNumber(totalAmount);
       totalWeightEl.textContent = formatNumber(totalWeight);
@@ -561,17 +596,42 @@
         return;
       }
 
-      const rows = members
-        .slice()
-        .sort((a, b) => (a.member_name || "").localeCompare(b.member_name || "", "zh-Hant"))
-        .map((member) => {
-          const weight = Number(member.weight || 0);
-          const shouldPay = unitAmount * weight;
+      const nameSet = new Set([
+        ...members.map((member) => String(member.member_name || "").trim()).filter(Boolean),
+        ...bills.map((bill) => String(bill.payer || "").trim()).filter(Boolean),
+      ]);
+
+      const memberMap = new Map(
+        members.map((member) => [String(member.member_name || "").trim(), member])
+      );
+
+      const rows = [...nameSet]
+        .sort((a, b) => a.localeCompare(b, "zh-Hant"))
+        .map((name) => {
+          const member = memberMap.get(name);
+          const people = Number(member?.weight || 0);
+          const paid = Number(paidMap.get(name) || 0);
+          const shouldPay = unitAmount * people;
+          const settlement = paid - shouldPay;
+
+          let settlementText = `剛好 ${formatNumber(0)}`;
+          let settlementClass = "settlement-zero";
+
+          if (settlement > 0.000001) {
+            settlementText = `可收回 ${formatNumber(settlement)}`;
+            settlementClass = "settlement-positive";
+          } else if (settlement < -0.000001) {
+            settlementText = `需支付 ${formatNumber(Math.abs(settlement))}`;
+            settlementClass = "settlement-negative";
+          }
+
           return `
             <tr>
-              <td>${escapeHtml(member.member_name || "")}</td>
-              <td class="number">${formatNumber(weight)}</td>
+              <td>${escapeHtml(name)}</td>
+              <td class="number">${formatNumber(people)}</td>
+              <td class="number">${formatNumber(paid)}</td>
               <td class="number">${formatNumber(shouldPay)}</td>
+              <td class="${settlementClass}">${settlementText}</td>
             </tr>
           `;
         })
@@ -582,8 +642,10 @@
           <thead>
             <tr>
               <th>姓名</th>
-              <th>權重</th>
+              <th>人數</th>
+              <th>已付</th>
               <th>應付</th>
+              <th>結算</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -598,7 +660,7 @@
       }
 
       if (!bills.length) {
-        billListEl.innerHTML = '<div class="empty">這個群組目前沒有消費資料。</div>';
+        billListEl.innerHTML = '<div class="empty">這個群組目前沒有預支資料。</div>';
         return;
       }
 
@@ -608,6 +670,7 @@
             <td>${escapeHtml(bill.item_name || "")}</td>
             <td>${escapeHtml(bill.payer || "")}</td>
             <td class="number">${formatNumber(bill.amount)}</td>
+            <td class="number">${formatNumber(bill.weight)}</td>
             <td class="no-print">
               <button type="button" class="btn-warning" onclick="startBillEdit(${bill.id})">修改</button>
             </td>
@@ -620,8 +683,9 @@
           <thead>
             <tr>
               <th>項目</th>
-              <th>付款人</th>
+              <th>預支人</th>
               <th>金額</th>
+              <th>人數</th>
               <th class="no-print">操作</th>
             </tr>
           </thead>
@@ -658,7 +722,7 @@
           <thead>
             <tr>
               <th>姓名</th>
-              <th>權重</th>
+              <th>人數</th>
               <th class="no-print">操作</th>
             </tr>
           </thead>
@@ -693,7 +757,7 @@
 
       if (billsResult.error) {
         currentBills = [];
-        setStatus(billStatus, getErrorMessage(billsResult.error, "讀取消費資料失敗"), "error");
+        setStatus(billStatus, getErrorMessage(billsResult.error, "讀取預支資料失敗"), "error");
       } else {
         currentBills = billsResult.data || [];
         if (!preserveBillStatus) {
@@ -722,6 +786,43 @@
       }
     }
 
+    async function loadGroupOptions() {
+      const [billsResult, membersResult] = await Promise.all([
+        supabaseClient.from(BILLS_TABLE).select("group_name"),
+        supabaseClient.from(MEMBERS_TABLE).select("group_name"),
+      ]);
+
+      const groups = new Set();
+
+      if (Array.isArray(billsResult.data)) {
+        billsResult.data.forEach((row) => {
+          const name = String(row.group_name || "").trim();
+          if (name) {
+            groups.add(name);
+          }
+        });
+      }
+
+      if (Array.isArray(membersResult.data)) {
+        membersResult.data.forEach((row) => {
+          const name = String(row.group_name || "").trim();
+          if (name) {
+            groups.add(name);
+          }
+        });
+      }
+
+      const options = ['<option value="">選擇已存在的群組</option>'];
+      [...groups]
+        .sort((a, b) => a.localeCompare(b, "zh-Hant"))
+        .forEach((groupName) => {
+          const selected = groupName === currentGroupName ? " selected" : "";
+          options.push(`<option value="${escapeHtml(groupName)}"${selected}>${escapeHtml(groupName)}</option>`);
+        });
+
+      groupSelect.innerHTML = options.join("");
+    }
+
     async function saveBill(event) {
       event.preventDefault();
 
@@ -739,12 +840,12 @@
       };
 
       if (!payload.item_name || !payload.payer || Number.isNaN(payload.amount) || Number.isNaN(payload.weight)) {
-        setStatus(billStatus, "請完整填寫消費資料。", "error");
+        setStatus(billStatus, "請完整填寫預支資料。", "error");
         return;
       }
 
       if (payload.weight <= 0) {
-        setStatus(billStatus, "權重必須大於 0。", "error");
+        setStatus(billStatus, "人數必須大於 0。", "error");
         return;
       }
 
@@ -759,6 +860,7 @@
 
       setStatus(billStatus, billIdInput.value ? "已更新。" : "已新增。", "success");
       resetBillForm();
+      await loadGroupOptions();
       await loadGroupData({ preserveBillStatus: true });
     }
 
@@ -782,7 +884,7 @@
       }
 
       if (payload.weight <= 0) {
-        setStatus(memberStatus, "權重必須大於 0。", "error");
+        setStatus(memberStatus, "人數必須大於 0。", "error");
         return;
       }
 
@@ -797,6 +899,7 @@
 
       setStatus(memberStatus, memberIdInput.value ? "已更新。" : "已新增。", "success");
       resetMemberForm();
+      await loadGroupOptions();
       await loadGroupData({ preserveMemberStatus: true });
     }
 
@@ -835,7 +938,7 @@
       amountInput.value = bill.amount ?? "";
       payerInput.value = bill.payer || "";
       billWeightInput.value = bill.weight ?? 1;
-      billFormTitle.textContent = "修改消費";
+      billFormTitle.textContent = "修改預支";
       billSubmitBtn.textContent = "更新";
       setStatus(billStatus, "正在編輯。", "success");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -867,21 +970,35 @@
       window.location.href = buildGroupUrl(groupName);
     });
 
+    groupSelect.addEventListener("change", () => {
+      const groupName = groupSelect.value.trim();
+      if (!groupName) {
+        return;
+      }
+      groupInput.value = groupName;
+      window.location.href = buildGroupUrl(groupName);
+    });
+
     copyUrlBtn.addEventListener("click", copyCurrentUrl);
+    resetBtn.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
     billForm.addEventListener("submit", saveBill);
     memberForm.addEventListener("submit", saveMember);
     billCancelBtn.addEventListener("click", resetBillForm);
     memberCancelBtn.addEventListener("click", resetMemberForm);
     printBtn.addEventListener("click", () => window.print());
 
-    function init() {
+    async function init() {
       currentGroupName = getGroupNameFromUrl();
       groupInput.value = currentGroupName;
       updateGroupHeader(currentGroupName);
       resetBillForm();
       resetMemberForm();
+      await loadGroupOptions();
 
       if (currentGroupName) {
+        groupSelect.value = currentGroupName;
         loadGroupData();
       } else {
         renderWelcomeState();
