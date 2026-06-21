@@ -326,6 +326,7 @@
         </div>
         <button type="submit" class="btn-primary">進入</button>
         <button type="button" class="btn-secondary" id="copyUrlBtn">複製目前網址</button>
+        <button type="button" class="btn-warning" id="deleteGroupBtn">刪除目前群組</button>
         <button type="button" class="btn-light" id="resetBtn">清除 / 重置</button>
       </form>
     </div>
@@ -375,7 +376,9 @@
             </div>
             <div>
               <label for="payer">預支人</label>
-              <input id="payer" type="text" placeholder="小明" required />
+              <select id="payer" required>
+                <option value="">請先新增成員</option>
+              </select>
             </div>
           </div>
           <div class="actions">
@@ -434,6 +437,7 @@
     const groupInput = document.getElementById("groupInput");
     const groupSelect = document.getElementById("groupSelect");
     const copyUrlBtn = document.getElementById("copyUrlBtn");
+    const deleteGroupBtn = document.getElementById("deleteGroupBtn");
     const resetBtn = document.getElementById("resetBtn");
     const currentGroupLabel = document.getElementById("currentGroupLabel");
     const groupHint = document.getElementById("groupHint");
@@ -570,10 +574,38 @@
       clearStatus(memberStatus);
     }
 
+    function renderPayerOptions(selectedValue = "") {
+      const members = currentMembers
+        .map((member) => String(member.member_name || "").trim())
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, "zh-Hant"));
+
+      const uniqueMembers = [...new Set(members)];
+      const hasMembers = uniqueMembers.length > 0;
+
+      const options = [
+        `<option value="">${hasMembers ? "請選擇預支人" : "請先新增成員"}</option>`,
+      ];
+
+      uniqueMembers.forEach((memberName) => {
+        const selected = memberName === selectedValue ? " selected" : "";
+        options.push(`<option value="${escapeHtml(memberName)}"${selected}>${escapeHtml(memberName)}</option>`);
+      });
+
+      payerInput.innerHTML = options.join("");
+      payerInput.disabled = !hasMembers;
+      if (selectedValue && uniqueMembers.includes(selectedValue)) {
+        payerInput.value = selectedValue;
+      } else if (!hasMembers) {
+        payerInput.value = "";
+      }
+    }
+
     function renderWelcomeState() {
       totalAmountEl.textContent = "0.00";
       totalWeightEl.textContent = "0.00";
       unitAmountEl.textContent = "0.00";
+      renderPayerOptions();
       memberSummaryEl.innerHTML = '<div class="empty">輸入群組名稱並進入後，這裡會顯示每個人的已付、應付與結算。</div>';
       billListEl.innerHTML = '<div class="empty">尚未選擇群組。</div>';
       memberListEl.innerHTML = '<div class="empty">尚未選擇群組。</div>';
@@ -787,6 +819,7 @@
       renderSummary(currentBills, currentMembers);
       renderBills(currentBills);
       renderMembers(currentMembers);
+      renderPayerOptions(payerInput.value);
 
       if (!currentBills.length && !currentMembers.length) {
         groupHint.textContent = "查詢完成，這個群組目前還沒有任何資料。";
@@ -832,11 +865,50 @@
       groupSelect.innerHTML = options.join("");
     }
 
+    async function deleteCurrentGroup() {
+      if (!currentGroupName) {
+        groupHint.textContent = "目前沒有可刪除的群組。";
+        return;
+      }
+
+      const confirmed = window.confirm(`確定要刪除群組「${currentGroupName}」的所有預支與成員資料嗎？`);
+      if (!confirmed) {
+        return;
+      }
+
+      const [deleteBillsResult, deleteMembersResult] = await Promise.all([
+        supabaseClient.from(BILLS_TABLE).delete().eq("group_name", currentGroupName),
+        supabaseClient.from(MEMBERS_TABLE).delete().eq("group_name", currentGroupName),
+      ]);
+
+      if (deleteBillsResult.error) {
+        setStatus(billStatus, getErrorMessage(deleteBillsResult.error, "刪除群組失敗"), "error");
+        return;
+      }
+
+      if (deleteMembersResult.error) {
+        setStatus(memberStatus, getErrorMessage(deleteMembersResult.error, "刪除群組失敗"), "error");
+        return;
+      }
+
+      currentGroupName = "";
+      await loadGroupOptions();
+      resetBillForm();
+      resetMemberForm();
+      groupHint.textContent = "目前群組已刪除。";
+      window.location.href = "index.html";
+    }
+
     async function saveBill(event) {
       event.preventDefault();
 
       if (!currentGroupName) {
         setStatus(billStatus, "請先在上方輸入群組名稱並進入。", "error");
+        return;
+      }
+
+      if (!currentMembers.length) {
+        setStatus(billStatus, "請先新增成員，再選擇預支人。", "error");
         return;
       }
 
@@ -863,7 +935,6 @@
 
       setStatus(billStatus, billIdInput.value ? "已更新。" : "已新增。", "success");
       resetBillForm();
-      await loadGroupOptions();
       await loadGroupData({ preserveBillStatus: true });
     }
 
@@ -939,7 +1010,7 @@
       billIdInput.value = bill.id;
       itemNameInput.value = bill.item_name || "";
       amountInput.value = bill.amount ?? "";
-      payerInput.value = bill.payer || "";
+      renderPayerOptions(String(bill.payer || "").trim());
       billFormTitle.textContent = "修改預支";
       billSubmitBtn.textContent = "更新";
       setBillEditMode(true);
@@ -986,6 +1057,7 @@
     });
 
     copyUrlBtn.addEventListener("click", copyCurrentUrl);
+    deleteGroupBtn.addEventListener("click", deleteCurrentGroup);
     resetBtn.addEventListener("click", () => {
       window.location.href = "index.html";
     });
