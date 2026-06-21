@@ -37,13 +37,7 @@
     }
 
     .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 10;
       margin-bottom: 16px;
-      padding: 14px;
-      background: rgba(246, 247, 251, 0.92);
-      backdrop-filter: blur(10px);
     }
 
     .topbar-inner {
@@ -299,7 +293,6 @@
       }
 
       .topbar {
-        position: static;
         padding: 0;
       }
 
@@ -332,34 +325,6 @@
     </div>
 
     <div class="grid">
-      <section class="card">
-        <div class="toolbar">
-          <div class="current-group" id="currentGroupLabel">未選擇群組</div>
-          <div class="quiet" id="groupHint">輸入群組名稱後即可進入。</div>
-        </div>
-
-        <div class="stats">
-          <div class="stat">
-            <small>總金額</small>
-            <strong id="totalAmount">0.00</strong>
-          </div>
-          <div class="stat">
-            <small>總人數</small>
-            <strong id="totalWeight">0.00</strong>
-          </div>
-          <div class="stat">
-            <small>每單位</small>
-            <strong id="unitAmount">0.00</strong>
-          </div>
-        </div>
-
-        <div id="memberSummary"></div>
-
-        <div class="print-area no-print">
-          <button type="button" class="btn-light" id="printBtn">導出 PDF</button>
-        </div>
-      </section>
-
       <section class="card span-6 no-print" id="memberCard">
         <h2 class="section-title" id="memberFormTitle">新增成員</h2>
         <p class="section-subtitle">沒有預支的人也能加入分帳。</p>
@@ -410,6 +375,34 @@
           </div>
           <div id="billStatus" class="status"></div>
         </form>
+      </section>
+
+      <section class="card">
+        <div class="toolbar">
+          <div class="current-group" id="currentGroupLabel">未選擇群組</div>
+          <div class="quiet" id="groupHint">輸入群組名稱後即可進入。</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <small>總金額</small>
+            <strong id="totalAmount">0.00</strong>
+          </div>
+          <div class="stat">
+            <small>總人數</small>
+            <strong id="totalWeight">0.00</strong>
+          </div>
+          <div class="stat">
+            <small>每單位</small>
+            <strong id="unitAmount">0.00</strong>
+          </div>
+        </div>
+
+        <div id="memberSummary"></div>
+
+        <div class="print-area no-print">
+          <button type="button" class="btn-light" id="printBtn">導出 PDF</button>
+        </div>
       </section>
 
       <section class="card">
