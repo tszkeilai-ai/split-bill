@@ -345,8 +345,12 @@
               <input id="amount" type="number" min="0" step="0.01" placeholder="0.00" required />
             </div>
             <div>
-              <label for="payerName">付款人</label>
-              <input id="payerName" type="text" placeholder="小明" required />
+              <label for="payer">付款人</label>
+              <input id="payer" type="text" placeholder="小明" required />
+            </div>
+            <div>
+              <label for="billWeight">權重</label>
+              <input id="billWeight" type="number" min="0.01" step="0.01" value="1" required />
             </div>
           </div>
           <div class="actions">
@@ -419,7 +423,8 @@
     const billIdInput = document.getElementById("billId");
     const itemNameInput = document.getElementById("itemName");
     const amountInput = document.getElementById("amount");
-    const payerNameInput = document.getElementById("payerName");
+    const payerInput = document.getElementById("payer");
+    const billWeightInput = document.getElementById("billWeight");
     const billFormTitle = document.getElementById("billFormTitle");
     const billSubmitBtn = document.getElementById("billSubmitBtn");
     const billCancelBtn = document.getElementById("billCancelBtn");
@@ -475,6 +480,30 @@
       return `index.html?group_name=${encodeURIComponent(clean)}`;
     }
 
+    function isPermissionError(error) {
+      const message = String(error?.message || "").toLowerCase();
+      const code = String(error?.code || "");
+      return (
+        code === "42501" ||
+        message.includes("permission denied") ||
+        message.includes("row-level security") ||
+        message.includes("violates row-level security") ||
+        message.includes("new row violates")
+      );
+    }
+
+    function getErrorMessage(error, fallbackText) {
+      if (!error) {
+        return fallbackText;
+      }
+
+      if (isPermissionError(error)) {
+        return `${fallbackText}：目前權限不足，請檢查 Supabase 的 RLS Policies 是否已允許目前的 select、insert 或 update。`;
+      }
+
+      return `${fallbackText}：${error.message || "發生未知錯誤"}`;
+    }
+
     function updateGroupHeader(groupName) {
       currentGroupLabel.textContent = groupName || "未選擇群組";
       if (!groupName) {
@@ -488,7 +517,8 @@
       billIdInput.value = "";
       itemNameInput.value = "";
       amountInput.value = "";
-      payerNameInput.value = "";
+      payerInput.value = "";
+      billWeightInput.value = "1";
       billFormTitle.textContent = "新增消費";
       billSubmitBtn.textContent = "儲存";
       clearStatus(billStatus);
@@ -576,7 +606,7 @@
         .map((bill) => `
           <tr>
             <td>${escapeHtml(bill.item_name || "")}</td>
-            <td>${escapeHtml(bill.payer_name || "")}</td>
+            <td>${escapeHtml(bill.payer || "")}</td>
             <td class="number">${formatNumber(bill.amount)}</td>
             <td class="no-print">
               <button type="button" class="btn-warning" onclick="startBillEdit(${bill.id})">修改</button>
@@ -663,7 +693,7 @@
 
       if (billsResult.error) {
         currentBills = [];
-        setStatus(billStatus, "讀取消費資料失敗：" + billsResult.error.message, "error");
+        setStatus(billStatus, getErrorMessage(billsResult.error, "讀取消費資料失敗"), "error");
       } else {
         currentBills = billsResult.data || [];
         if (!preserveBillStatus) {
@@ -673,7 +703,7 @@
 
       if (membersResult.error) {
         currentMembers = [];
-        setStatus(memberStatus, "讀取成員資料失敗：" + membersResult.error.message, "error");
+        setStatus(memberStatus, getErrorMessage(membersResult.error, "讀取成員資料失敗"), "error");
       } else {
         currentMembers = membersResult.data || [];
         if (!preserveMemberStatus) {
@@ -687,6 +717,8 @@
 
       if (!currentBills.length && !currentMembers.length) {
         groupHint.textContent = "查詢完成，這個群組目前還沒有任何資料。";
+      } else if (!billsResult.error && !membersResult.error) {
+        groupHint.textContent = "資料已自動載入。";
       }
     }
 
@@ -701,12 +733,18 @@
       const payload = {
         item_name: itemNameInput.value.trim(),
         amount: Number(amountInput.value),
-        payer_name: payerNameInput.value.trim(),
+        payer: payerInput.value.trim(),
         group_name: currentGroupName,
+        weight: Number(billWeightInput.value),
       };
 
-      if (!payload.item_name || !payload.payer_name || Number.isNaN(payload.amount)) {
+      if (!payload.item_name || !payload.payer || Number.isNaN(payload.amount) || Number.isNaN(payload.weight)) {
         setStatus(billStatus, "請完整填寫消費資料。", "error");
+        return;
+      }
+
+      if (payload.weight <= 0) {
+        setStatus(billStatus, "權重必須大於 0。", "error");
         return;
       }
 
@@ -715,7 +753,7 @@
         : await supabaseClient.from(BILLS_TABLE).insert([payload]);
 
       if (result.error) {
-        setStatus(billStatus, "儲存失敗：" + result.error.message, "error");
+        setStatus(billStatus, getErrorMessage(result.error, "儲存失敗"), "error");
         return;
       }
 
@@ -753,7 +791,7 @@
         : await supabaseClient.from(MEMBERS_TABLE).insert([payload]);
 
       if (result.error) {
-        setStatus(memberStatus, "儲存失敗：" + result.error.message, "error");
+        setStatus(memberStatus, getErrorMessage(result.error, "儲存失敗"), "error");
         return;
       }
 
@@ -795,7 +833,8 @@
       billIdInput.value = bill.id;
       itemNameInput.value = bill.item_name || "";
       amountInput.value = bill.amount ?? "";
-      payerNameInput.value = bill.payer_name || "";
+      payerInput.value = bill.payer || "";
+      billWeightInput.value = bill.weight ?? 1;
       billFormTitle.textContent = "修改消費";
       billSubmitBtn.textContent = "更新";
       setStatus(billStatus, "正在編輯。", "success");
