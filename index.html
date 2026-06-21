@@ -360,6 +360,29 @@
         </div>
       </section>
 
+      <section class="card span-6 no-print" id="memberCard">
+        <h2 class="section-title" id="memberFormTitle">新增成員</h2>
+        <p class="section-subtitle">沒有預支的人也能加入分帳。</p>
+        <form id="memberForm">
+          <input type="hidden" id="memberId" />
+          <div class="form-grid">
+            <div>
+              <label for="memberName">姓名</label>
+              <input id="memberName" type="text" placeholder="小明、小華、小孩" required />
+            </div>
+            <div>
+              <label for="weight">人數</label>
+              <input id="weight" type="number" min="0.01" step="0.01" value="1" required />
+            </div>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn-primary" id="memberSubmitBtn">儲存</button>
+            <button type="button" class="btn-light" id="memberCancelBtn">清空</button>
+          </div>
+          <div id="memberStatus" class="status"></div>
+        </form>
+      </section>
+
       <section class="card span-6 no-print" id="billCard">
         <h2 class="section-title" id="billFormTitle">新增預支</h2>
         <p class="section-subtitle">每一筆都代表某人先墊付的一筆費用。</p>
@@ -386,29 +409,6 @@
             <button type="button" class="btn-light" id="billCancelBtn">清空</button>
           </div>
           <div id="billStatus" class="status"></div>
-        </form>
-      </section>
-
-      <section class="card span-6 no-print" id="memberCard">
-        <h2 class="section-title" id="memberFormTitle">新增成員</h2>
-        <p class="section-subtitle">沒有預支的人也能加入分帳。</p>
-        <form id="memberForm">
-          <input type="hidden" id="memberId" />
-          <div class="form-grid">
-            <div>
-              <label for="memberName">姓名</label>
-              <input id="memberName" type="text" placeholder="小明、小華、小孩" required />
-            </div>
-            <div>
-              <label for="weight">人數</label>
-              <input id="weight" type="number" min="0.01" step="0.01" value="1" required />
-            </div>
-          </div>
-          <div class="actions">
-            <button type="submit" class="btn-primary" id="memberSubmitBtn">儲存</button>
-            <button type="button" class="btn-light" id="memberCancelBtn">清空</button>
-          </div>
-          <div id="memberStatus" class="status"></div>
         </form>
       </section>
 
