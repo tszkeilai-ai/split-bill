@@ -450,6 +450,20 @@
         <div class="badge">目前群組：<span id="currentGroupLabel">未選擇群組</span></div>
         <div class="hint" id="groupHint">輸入群組名稱後即可進入。</div>
       </div>
+      <div class="subsection">
+        <div class="form-grid">
+          <div class="field">
+            <label for="subGroupSelect">子群組選擇</label>
+            <select id="subGroupSelect">
+              <option value="子群組 1">子群組 1</option>
+            </select>
+          </div>
+        </div>
+        <div class="button-row">
+          <button type="button" class="btn-secondary" id="manageSubGroupBtn">+ 新增/修改子群組</button>
+        </div>
+        <div class="hint" id="subGroupHint">目前使用子群組 1。</div>
+      </div>
     </section>
 
     <section class="card" id="memberCard">
@@ -597,8 +611,11 @@
     const copyUrlBtn = document.getElementById("copyUrlBtn");
     const resetBtn = document.getElementById("resetBtn");
     const deleteGroupBtn = document.getElementById("deleteGroupBtn");
+    const subGroupSelect = document.getElementById("subGroupSelect");
+    const manageSubGroupBtn = document.getElementById("manageSubGroupBtn");
     const currentGroupLabel = document.getElementById("currentGroupLabel");
     const groupHint = document.getElementById("groupHint");
+    const subGroupHint = document.getElementById("subGroupHint");
     const globalSettlementHint = document.getElementById("globalSettlementHint");
 
     const memberCard = document.getElementById("memberCard");
@@ -642,6 +659,10 @@
     const closeGlobalSettlementBtnBottom = document.getElementById("closeGlobalSettlementBtnBottom");
 
     let currentGroupName = "";
+    let currentSubGroupName = DEFAULT_SUB_GROUP_NAME;
+    let currentSubGroupOptions = [DEFAULT_SUB_GROUP_NAME];
+    let allGroupBills = [];
+    let allGroupMembers = [];
     let currentBills = [];
     let currentMembers = [];
 
@@ -668,32 +689,37 @@
     }
 
     function readCompatibleSubGroupName(record) {
-      return normalizeSubGroupName(record?.sub_group_name ?? record?.sub_group);
+      return normalizeSubGroupName(record?.sub_group ?? record?.sub_group_name);
     }
 
     function normalizeBillRecord(record) {
+      const subGroup = readCompatibleSubGroupName(record);
       return {
         ...record,
-        sub_group_name: readCompatibleSubGroupName(record)
+        sub_group: subGroup,
+        sub_group_name: subGroup
       };
     }
 
     function normalizeMemberRecord(record) {
+      const subGroup = readCompatibleSubGroupName(record);
       return {
         ...record,
-        sub_group_name: readCompatibleSubGroupName(record)
+        sub_group: subGroup,
+        sub_group_name: subGroup
       };
     }
 
     function groupBySubGroup(records) {
       const grouped = new Map();
       (records || []).forEach((record) => {
-        const subGroupName = normalizeSubGroupName(record?.sub_group_name);
+        const subGroupName = normalizeSubGroupName(record?.sub_group);
         if (!grouped.has(subGroupName)) {
           grouped.set(subGroupName, []);
         }
         grouped.get(subGroupName).push({
           ...record,
+          sub_group: subGroupName,
           sub_group_name: subGroupName
         });
       });
@@ -702,13 +728,13 @@
 
     function calculateSubGroupReports(bills, members) {
       const subgroupNames = [...new Set([
-        ...(bills || []).map((bill) => normalizeSubGroupName(bill.sub_group_name)),
-        ...(members || []).map((member) => normalizeSubGroupName(member.sub_group_name))
+        ...(bills || []).map((bill) => normalizeSubGroupName(bill.sub_group)),
+        ...(members || []).map((member) => normalizeSubGroupName(member.sub_group))
       ])].sort((a, b) => a.localeCompare(b, "zh-Hant"));
 
       return subgroupNames.map((subGroupName) => {
-        const subgroupBills = (bills || []).filter((bill) => normalizeSubGroupName(bill.sub_group_name) === subGroupName);
-        const subgroupMembers = (members || []).filter((member) => normalizeSubGroupName(member.sub_group_name) === subGroupName);
+        const subgroupBills = (bills || []).filter((bill) => normalizeSubGroupName(bill.sub_group) === subGroupName);
+        const subgroupMembers = (members || []).filter((member) => normalizeSubGroupName(member.sub_group) === subGroupName);
         return {
           subGroupName,
           stats: calculateGroupStats(subgroupBills, subgroupMembers),
@@ -770,6 +796,52 @@
       groupHint.textContent = groupName ? "群組資料載入後會自動同步更新。" : "輸入群組名稱後即可進入。";
     }
 
+    function syncCurrentSubGroupInputs() {
+      const safeSubGroupName = normalizeSubGroupName(currentSubGroupName);
+      currentSubGroupName = safeSubGroupName;
+      memberSubGroupNameInput.value = safeSubGroupName;
+      billSubGroupNameInput.value = safeSubGroupName;
+      memberSubGroupNameInput.readOnly = true;
+      billSubGroupNameInput.readOnly = true;
+      subGroupHint.textContent = currentGroupName
+        ? `目前使用子群組：${safeSubGroupName}`
+        : `目前使用${DEFAULT_SUB_GROUP_NAME}。`;
+    }
+
+    function renderSubGroupSelectOptions(options = [], selectedValue = DEFAULT_SUB_GROUP_NAME) {
+      const uniqueOptions = [...new Set((options || []).map(normalizeSubGroupName).filter(Boolean))];
+      if (!uniqueOptions.length) {
+        uniqueOptions.push(DEFAULT_SUB_GROUP_NAME);
+      }
+      currentSubGroupOptions = uniqueOptions.sort((a, b) => a.localeCompare(b, "zh-Hant"));
+      const safeSelected = currentSubGroupOptions.includes(normalizeSubGroupName(selectedValue))
+        ? normalizeSubGroupName(selectedValue)
+        : currentSubGroupOptions[0];
+
+      subGroupSelect.innerHTML = currentSubGroupOptions
+        .map((name) => {
+          const selected = name === safeSelected ? " selected" : "";
+          return `<option value="${escapeHtml(name)}"${selected}>${escapeHtml(name)}</option>`;
+        })
+        .join("");
+
+      currentSubGroupName = safeSelected;
+      subGroupSelect.value = safeSelected;
+      syncCurrentSubGroupInputs();
+    }
+
+    function applyCurrentSubGroupView() {
+      const safeSubGroupName = normalizeSubGroupName(currentSubGroupName);
+      currentSubGroupName = safeSubGroupName;
+      currentBills = allGroupBills.filter((bill) => normalizeSubGroupName(bill.sub_group) === safeSubGroupName);
+      currentMembers = allGroupMembers.filter((member) => normalizeSubGroupName(member.sub_group) === safeSubGroupName);
+      syncCurrentSubGroupInputs();
+      renderPayerOptions(payerInput.value, safeSubGroupName);
+      renderMembers(currentMembers);
+      renderBills(currentBills);
+      renderGroupSummary(currentBills, currentMembers);
+    }
+
     function updateEditBackground() {
       const isEditing = memberCard.classList.contains("edit-mode") || billCard.classList.contains("edit-mode");
       document.body.classList.toggle("edit-active", isEditing);
@@ -790,7 +862,7 @@
       memberOriginalNameInput.value = "";
       memberOriginalSubGroupInput.value = "";
       memberNameInput.value = "";
-      memberSubGroupNameInput.value = DEFAULT_SUB_GROUP_NAME;
+      memberSubGroupNameInput.value = normalizeSubGroupName(currentSubGroupName);
       weightInput.value = "1";
       memberFormTitle.textContent = "新增成員";
       memberSubmitBtn.textContent = "儲存";
@@ -801,7 +873,7 @@
     function resetBillForm() {
       billIdInput.value = "";
       itemNameInput.value = "";
-      billSubGroupNameInput.value = DEFAULT_SUB_GROUP_NAME;
+      billSubGroupNameInput.value = normalizeSubGroupName(currentSubGroupName);
       amountInput.value = "";
       payerInput.value = "";
       billFormTitle.textContent = "新增預支";
@@ -823,7 +895,7 @@
     function renderPayerOptions(selectedValue = "", subGroupName = normalizeSubGroupName(billSubGroupNameInput?.value)) {
       const memberNames = [...new Set(
         currentMembers
-          .filter((member) => normalizeSubGroupName(member.sub_group_name) === normalizeSubGroupName(subGroupName))
+          .filter((member) => normalizeSubGroupName(member.sub_group) === normalizeSubGroupName(subGroupName))
           .map((member) => normalizeName(member.member_name))
           .filter(Boolean)
       )].sort((a, b) => a.localeCompare(b, "zh-Hant"));
@@ -885,6 +957,11 @@
 
     function renderWelcomeState() {
       updateGroupHeader("");
+      currentSubGroupName = DEFAULT_SUB_GROUP_NAME;
+      currentSubGroupOptions = [DEFAULT_SUB_GROUP_NAME];
+      allGroupBills = [];
+      allGroupMembers = [];
+      renderSubGroupSelectOptions(currentSubGroupOptions, currentSubGroupName);
       totalAmountEl.textContent = "0.00";
       totalWeightEl.textContent = "0.00";
       unitAmountEl.textContent = "0.00";
@@ -1118,13 +1195,105 @@
       renderGroupSelectOptions([...groups].sort((a, b) => a.localeCompare(b, "zh-Hant")));
     }
 
+    async function migrateNullSubGroups() {
+      const [billsMigration, membersMigration] = await Promise.all([
+        supabaseClient.from(BILLS_TABLE).update({ sub_group: DEFAULT_SUB_GROUP_NAME }).is("sub_group", null),
+        supabaseClient.from(MEMBERS_TABLE).update({ sub_group: DEFAULT_SUB_GROUP_NAME }).is("sub_group", null)
+      ]);
+
+      if (billsMigration.error && !isPermissionError(billsMigration.error)) {
+        console.error("Bills sub_group migration failed:", billsMigration.error);
+      }
+
+      if (membersMigration.error && !isPermissionError(membersMigration.error)) {
+        console.error("Members sub_group migration failed:", membersMigration.error);
+      }
+    }
+
+    async function loadSubGroupOptions(preferredSubGroupName = currentSubGroupName) {
+      if (!currentGroupName) {
+        renderSubGroupSelectOptions([DEFAULT_SUB_GROUP_NAME], DEFAULT_SUB_GROUP_NAME);
+        return;
+      }
+
+      const [billsResult, membersResult] = await Promise.all([
+        supabaseClient.from(BILLS_TABLE).select("sub_group").eq("group_name", currentGroupName),
+        supabaseClient.from(MEMBERS_TABLE).select("sub_group").eq("group_name", currentGroupName)
+      ]);
+
+      const subGroups = new Set();
+
+      if (Array.isArray(billsResult.data)) {
+        billsResult.data.forEach((row) => subGroups.add(readCompatibleSubGroupName(row)));
+      }
+
+      if (Array.isArray(membersResult.data)) {
+        membersResult.data.forEach((row) => subGroups.add(readCompatibleSubGroupName(row)));
+      }
+
+      if (!subGroups.size) {
+        subGroups.add(DEFAULT_SUB_GROUP_NAME);
+      }
+
+      renderSubGroupSelectOptions([...subGroups], preferredSubGroupName);
+    }
+
+    async function manageSubGroup() {
+      if (!currentGroupName) {
+        subGroupHint.textContent = "請先選擇大群組，再管理子群組。";
+        return;
+      }
+
+      const renameCurrent = window.confirm(`按「確定」可修改目前子群組「${currentSubGroupName}」；按「取消」則建立新的子群組名稱。`);
+      const inputName = window.prompt(renameCurrent ? "請輸入新的子群組名稱" : "請輸入要新增的子群組名稱", currentSubGroupName);
+      const targetName = normalizeSubGroupName(inputName);
+
+      if (!inputName) {
+        return;
+      }
+
+      if (!renameCurrent) {
+        renderSubGroupSelectOptions([...currentSubGroupOptions, targetName], targetName);
+        applyCurrentSubGroupView();
+        subGroupHint.textContent = `已切換為新的子群組「${targetName}」，新增第一筆資料後就會正式寫入資料庫。`;
+        return;
+      }
+
+      const sourceName = normalizeSubGroupName(currentSubGroupName);
+      if (sourceName === targetName) {
+        subGroupHint.textContent = `目前仍使用子群組「${sourceName}」。`;
+        return;
+      }
+
+      const [billsRenameResult, membersRenameResult] = await Promise.all([
+        supabaseClient.from(BILLS_TABLE).update({ sub_group: targetName }).eq("group_name", currentGroupName).eq("sub_group", sourceName),
+        supabaseClient.from(MEMBERS_TABLE).update({ sub_group: targetName }).eq("group_name", currentGroupName).eq("sub_group", sourceName)
+      ]);
+
+      if (billsRenameResult.error) {
+        subGroupHint.textContent = getErrorMessage(billsRenameResult.error, "修改子群組名稱失敗");
+        return;
+      }
+
+      if (membersRenameResult.error) {
+        subGroupHint.textContent = getErrorMessage(membersRenameResult.error, "修改子群組名稱失敗");
+        return;
+      }
+
+      await loadGroupData({ preserveBillStatus: true, preserveMemberStatus: true, preferredSubGroupName: targetName });
+      subGroupHint.textContent = `已將子群組「${sourceName}」批量更新為「${targetName}」。`;
+    }
+
     async function switchGroup(groupName) {
       const selectedGroup = normalizeName(groupName);
       currentGroupName = selectedGroup;
+      currentSubGroupName = DEFAULT_SUB_GROUP_NAME;
       groupInput.value = selectedGroup;
       groupSelect.value = selectedGroup;
       resetMemberForm();
       resetBillForm();
+      allGroupBills = [];
+      allGroupMembers = [];
       currentBills = [];
       currentMembers = [];
       updateGroupHeader(selectedGroup);
@@ -1156,9 +1325,11 @@
     }
 
     async function loadGroupData(options = {}) {
-      const { preserveBillStatus = false, preserveMemberStatus = false } = options;
+      const { preserveBillStatus = false, preserveMemberStatus = false, preferredSubGroupName = currentSubGroupName } = options;
 
       if (!currentGroupName) {
+        allGroupBills = [];
+        allGroupMembers = [];
         currentBills = [];
         currentMembers = [];
         renderWelcomeState();
@@ -1181,36 +1352,32 @@
       }
 
       if (billsResult.error) {
-        currentBills = [];
+        allGroupBills = [];
         setStatus(billStatus, getErrorMessage(billsResult.error, "讀取預支資料失敗"), "error");
       } else {
-        currentBills = (billsResult.data || []).map(normalizeBillRecord);
+        allGroupBills = (billsResult.data || []).map(normalizeBillRecord);
         if (!preserveBillStatus) {
           clearStatus(billStatus);
         }
       }
 
       if (membersResult.error) {
-        currentMembers = [];
+        allGroupMembers = [];
         setStatus(memberStatus, getErrorMessage(membersResult.error, "讀取成員資料失敗"), "error");
       } else {
-        currentMembers = (membersResult.data || []).map(normalizeMemberRecord);
+        allGroupMembers = (membersResult.data || []).map(normalizeMemberRecord);
         if (!preserveMemberStatus) {
           clearStatus(memberStatus);
         }
       }
 
-      memberSubGroupNameInput.value = normalizeSubGroupName(memberSubGroupNameInput.value);
-      billSubGroupNameInput.value = normalizeSubGroupName(billSubGroupNameInput.value);
-      renderPayerOptions(payerInput.value, billSubGroupNameInput.value);
-      renderMembers(currentMembers);
-      renderBills(currentBills);
-      renderGroupSummary(currentBills, currentMembers);
+      await loadSubGroupOptions(preferredSubGroupName);
+      applyCurrentSubGroupView();
 
-      if (!currentBills.length && !currentMembers.length && !billsResult.error && !membersResult.error) {
+      if (!allGroupBills.length && !allGroupMembers.length && !billsResult.error && !membersResult.error) {
         groupHint.textContent = "這個群組目前還沒有任何資料。";
       } else if (!billsResult.error && !membersResult.error) {
-        groupHint.textContent = `目前顯示群組「${selectedGroup}」的歷史資料。`;
+        groupHint.textContent = `目前顯示群組「${selectedGroup}」中子群組「${currentSubGroupName}」的資料。`;
       }
     }
 
@@ -1246,6 +1413,10 @@
       }
 
       currentGroupName = "";
+      currentSubGroupName = DEFAULT_SUB_GROUP_NAME;
+      currentSubGroupOptions = [DEFAULT_SUB_GROUP_NAME];
+      allGroupBills = [];
+      allGroupMembers = [];
       currentBills = [];
       currentMembers = [];
       resetBillForm();
@@ -1267,7 +1438,7 @@
         member_name: normalizeName(memberNameInput.value),
         weight: Number(weightInput.value),
         group_name: currentGroupName,
-        sub_group_name: normalizeSubGroupName(memberSubGroupNameInput.value)
+        sub_group: normalizeSubGroupName(currentSubGroupName)
       };
 
       if (!payload.member_name || Number.isNaN(payload.weight)) {
@@ -1282,7 +1453,7 @@
 
       const duplicated = currentMembers.some((member) => {
         const sameName = normalizeName(member.member_name) === payload.member_name;
-        const sameSubGroup = normalizeSubGroupName(member.sub_group_name) === payload.sub_group_name;
+        const sameSubGroup = normalizeSubGroupName(member.sub_group) === payload.sub_group;
         const differentRow = String(member.id) !== String(memberIdInput.value || "");
         return sameName && sameSubGroup && differentRow;
       });
@@ -1304,13 +1475,13 @@
         return;
       }
 
-      if (memberIdInput.value && originalName && (originalName !== payload.member_name || originalSubGroup !== payload.sub_group_name)) {
+      if (memberIdInput.value && originalName && (originalName !== payload.member_name || originalSubGroup !== payload.sub_group)) {
         const billRenameResult = await supabaseClient
           .from(BILLS_TABLE)
-          .update({ payer: payload.member_name, sub_group_name: payload.sub_group_name })
+          .update({ payer: payload.member_name, sub_group: payload.sub_group })
           .eq("group_name", currentGroupName)
           .eq("payer", originalName)
-          .eq("sub_group_name", originalSubGroup);
+          .eq("sub_group", originalSubGroup);
 
         if (billRenameResult.error) {
           setStatus(memberStatus, getErrorMessage(billRenameResult.error, "成員已更新，但同步付款人名稱失敗"), "error");
@@ -1322,7 +1493,7 @@
       setStatus(memberStatus, memberIdInput.value ? "成員已更新。" : "成員已新增。", "success");
       resetMemberForm();
       await loadExistingGroupNames();
-      await loadGroupData({ preserveMemberStatus: true });
+      await loadGroupData({ preserveMemberStatus: true, preferredSubGroupName: currentSubGroupName });
     }
 
     async function saveBill(event) {
@@ -1343,12 +1514,12 @@
         amount: Number(amountInput.value),
         payer: normalizeName(payerInput.value),
         group_name: currentGroupName,
-        sub_group_name: normalizeSubGroupName(billSubGroupNameInput.value)
+        sub_group: normalizeSubGroupName(currentSubGroupName)
       };
 
       const validPayers = new Set(
         currentMembers
-          .filter((member) => normalizeSubGroupName(member.sub_group_name) === payload.sub_group_name)
+          .filter((member) => normalizeSubGroupName(member.sub_group) === payload.sub_group)
           .map((member) => normalizeName(member.member_name))
           .filter(Boolean)
       );
@@ -1380,7 +1551,7 @@
       setStatus(billStatus, billIdInput.value ? "預支資料已更新。" : "預支資料已新增。", "success");
       resetBillForm();
       await loadExistingGroupNames();
-      await loadGroupData({ preserveBillStatus: true });
+      await loadGroupData({ preserveBillStatus: true, preferredSubGroupName: currentSubGroupName });
     }
 
     async function copyCurrentUrl() {
@@ -1720,9 +1891,9 @@
 
       memberIdInput.value = member.id;
       memberOriginalNameInput.value = normalizeName(member.member_name);
-      memberOriginalSubGroupInput.value = normalizeSubGroupName(member.sub_group_name);
+      memberOriginalSubGroupInput.value = normalizeSubGroupName(member.sub_group);
       memberNameInput.value = normalizeName(member.member_name);
-      memberSubGroupNameInput.value = normalizeSubGroupName(member.sub_group_name);
+      memberSubGroupNameInput.value = normalizeSubGroupName(member.sub_group);
       weightInput.value = member.weight ?? 1;
       memberFormTitle.textContent = "修改成員";
       memberSubmitBtn.textContent = "更新";
@@ -1741,9 +1912,9 @@
 
       billIdInput.value = bill.id;
       itemNameInput.value = normalizeName(bill.item_name);
-      billSubGroupNameInput.value = normalizeSubGroupName(bill.sub_group_name);
+      billSubGroupNameInput.value = normalizeSubGroupName(bill.sub_group);
       amountInput.value = bill.amount ?? "";
-      renderPayerOptions(normalizeName(bill.payer), normalizeSubGroupName(bill.sub_group_name));
+      renderPayerOptions(normalizeName(bill.payer), normalizeSubGroupName(bill.sub_group));
       billFormTitle.textContent = "修改預支";
       billSubmitBtn.textContent = "更新";
       setBillEditMode(true);
@@ -1769,24 +1940,26 @@
       }
       await switchGroup(selectedGroup);
     });
+    subGroupSelect.addEventListener("change", () => {
+      currentSubGroupName = normalizeSubGroupName(subGroupSelect.value);
+      resetMemberForm();
+      resetBillForm();
+      applyCurrentSubGroupView();
+      groupHint.textContent = `目前顯示群組「${currentGroupName}」中子群組「${currentSubGroupName}」的資料。`;
+    });
 
     copyUrlBtn.addEventListener("click", copyCurrentUrl);
     resetBtn.addEventListener("click", () => {
       window.location.href = buildGroupUrl("");
     });
     deleteGroupBtn.addEventListener("click", deleteCurrentGroup);
+    manageSubGroupBtn.addEventListener("click", manageSubGroup);
 
     memberForm.addEventListener("submit", saveMember);
     memberCancelBtn.addEventListener("click", resetMemberForm);
 
     billForm.addEventListener("submit", saveBill);
     billCancelBtn.addEventListener("click", resetBillForm);
-    billSubGroupNameInput.addEventListener("input", () => {
-      renderPayerOptions("", billSubGroupNameInput.value);
-    });
-    billSubGroupNameInput.addEventListener("change", () => {
-      renderPayerOptions("", billSubGroupNameInput.value);
-    });
 
     openGlobalSettlementBtn.addEventListener("click", openGlobalSettlement);
     closeGlobalSettlementBtn.addEventListener("click", closeGlobalSettlementModal);
@@ -1815,9 +1988,12 @@
     });
 
     async function init() {
+      await migrateNullSubGroups();
       currentGroupName = getGroupNameFromUrl();
+      currentSubGroupName = DEFAULT_SUB_GROUP_NAME;
       groupInput.value = currentGroupName;
       updateGroupHeader(currentGroupName);
+      renderSubGroupSelectOptions([DEFAULT_SUB_GROUP_NAME], DEFAULT_SUB_GROUP_NAME);
       resetMemberForm();
       resetBillForm();
       await loadExistingGroupNames();
