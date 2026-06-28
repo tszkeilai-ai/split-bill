@@ -1322,6 +1322,57 @@
       saveSubGroupBtn.disabled = false;
     }
 
+    function openAddSubGroupModal() {
+      openSubGroupModal("create");
+    }
+
+    async function updateSubGroup() {
+      if (!currentGroupName) {
+        subGroupHint.textContent = "請先選擇大群組，再管理子群組。";
+        closeSubGroupModal();
+        return;
+      }
+
+      const inputName = normalizeName(subGroupModalInput.value);
+      if (!inputName) {
+        setStatus(subGroupModalStatus, "請先輸入子群組名稱。", "error");
+        subGroupModalInput.focus();
+        return;
+      }
+
+      const targetName = normalizeSubGroupName(inputName);
+      const sourceName = normalizeSubGroupName(subGroupModalOriginalName || currentSubGroupName);
+
+      if (sourceName === targetName) {
+        subGroupHint.textContent = `目前仍使用子群組「${sourceName}」。`;
+        closeSubGroupModal();
+        return;
+      }
+
+      saveSubGroupBtn.disabled = true;
+
+      const [billsRenameResult, membersRenameResult] = await Promise.all([
+        supabaseClient.from(BILLS_TABLE).update({ sub_group: targetName }).eq("group_name", currentGroupName).eq("sub_group", sourceName),
+        supabaseClient.from(MEMBERS_TABLE).update({ sub_group: targetName }).eq("group_name", currentGroupName).eq("sub_group", sourceName)
+      ]);
+
+      if (billsRenameResult.error) {
+        setStatus(subGroupModalStatus, getErrorMessage(billsRenameResult.error, "修改子群組名稱失敗"), "error");
+        saveSubGroupBtn.disabled = false;
+        return;
+      }
+
+      if (membersRenameResult.error) {
+        setStatus(subGroupModalStatus, getErrorMessage(membersRenameResult.error, "修改子群組名稱失敗"), "error");
+        saveSubGroupBtn.disabled = false;
+        return;
+      }
+
+      await loadGroupData({ preserveBillStatus: true, preserveMemberStatus: true, preferredSubGroupName: targetName });
+      subGroupHint.textContent = `已將子群組「${sourceName}」批量更新為「${targetName}」。`;
+      closeSubGroupModal();
+    }
+
     async function submitSubGroupModal() {
       if (!currentGroupName) {
         subGroupHint.textContent = "請先選擇大群組，再管理子群組。";
@@ -1351,35 +1402,7 @@
         return;
       }
 
-      const sourceName = normalizeSubGroupName(subGroupModalOriginalName || currentSubGroupName);
-      if (sourceName === targetName) {
-        subGroupHint.textContent = `目前仍使用子群組「${sourceName}」。`;
-        closeSubGroupModal();
-        return;
-      }
-
-      saveSubGroupBtn.disabled = true;
-
-      const [billsRenameResult, membersRenameResult] = await Promise.all([
-        supabaseClient.from(BILLS_TABLE).update({ sub_group: targetName }).eq("group_name", currentGroupName).eq("sub_group", sourceName),
-        supabaseClient.from(MEMBERS_TABLE).update({ sub_group: targetName }).eq("group_name", currentGroupName).eq("sub_group", sourceName)
-      ]);
-
-      if (billsRenameResult.error) {
-        setStatus(subGroupModalStatus, getErrorMessage(billsRenameResult.error, "修改子群組名稱失敗"), "error");
-        saveSubGroupBtn.disabled = false;
-        return;
-      }
-
-      if (membersRenameResult.error) {
-        setStatus(subGroupModalStatus, getErrorMessage(membersRenameResult.error, "修改子群組名稱失敗"), "error");
-        saveSubGroupBtn.disabled = false;
-        return;
-      }
-
-      await loadGroupData({ preserveBillStatus: true, preserveMemberStatus: true, preferredSubGroupName: targetName });
-      subGroupHint.textContent = `已將子群組「${sourceName}」批量更新為「${targetName}」。`;
-      closeSubGroupModal();
+      await updateSubGroup();
     }
 
     async function switchGroup(groupName) {
@@ -2102,6 +2125,9 @@
         closeSubGroupModal();
       }
     });
+
+    window.openAddSubGroupModal = openAddSubGroupModal;
+    window.updateSubGroup = updateSubGroup;
 
     async function init() {
       await migrateNullSubGroups();
