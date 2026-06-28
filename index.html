@@ -3,19 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>分單計數機</title>
+  <title>分帳群組管理</title>
   <style>
     :root {
-      --bg: #f6f7fb;
+      --bg: #f5f7fb;
       --card: #ffffff;
-      --line: #e5e7eb;
-      --text: #111827;
+      --line: #d9e2f1;
+      --text: #1f2937;
       --muted: #6b7280;
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
-      --success: #0f766e;
       --danger: #dc2626;
-      --shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+      --danger-soft: #fff1f2;
+      --soft: #eef4ff;
+      --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+      --success: #0f766e;
+      --warning: #b45309;
+      --edit-bg: #ffe6e6;
     }
 
     * {
@@ -25,123 +29,122 @@
     body {
       margin: 0;
       font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
-      background: var(--bg);
       color: var(--text);
+      background: var(--bg);
       line-height: 1.5;
-    }
-
-    .wrap {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 20px 16px 48px;
-    }
-
-    .topbar {
-      margin-bottom: 16px;
-    }
-
-    .topbar-inner {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: var(--shadow);
-    }
-
-    .group-input {
-      flex: 1 1 280px;
-      min-width: 0;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 16px;
-    }
-
-    .card {
-      grid-column: span 12;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: var(--shadow);
       transition: background-color 0.2s ease;
     }
 
-    .card.edit-mode {
-      background: #ffe6e6;
+    body.edit-active {
+      background: var(--edit-bg);
     }
 
-    .span-6 {
-      grid-column: span 12;
+    button,
+    input,
+    select {
+      font: inherit;
     }
 
-    .section-title {
-      margin: 0 0 12px;
-      font-size: 1rem;
-      font-weight: 700;
+    .page {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
     }
 
-    .section-subtitle {
-      margin: -4px 0 14px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .stat {
+    .card {
+      background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px;
-      background: #fbfcfe;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 18px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    .stat small {
-      display: block;
-      color: var(--muted);
+    .card.edit-mode {
+      background: var(--edit-bg);
+      border-color: #f1b5b5;
+    }
+
+    .delete-panel {
+      margin-top: 34px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 1.55rem;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 1.15rem;
       margin-bottom: 8px;
     }
 
-    .stat strong {
-      display: block;
-      font-size: 1.4rem;
-      letter-spacing: 0.02em;
+    h3 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    .muted,
+    .hint,
+    .quiet {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .group-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1e40af;
+      font-weight: 700;
+      border: 1px solid #bfdbfe;
     }
 
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      min-width: 0;
     }
 
     label {
       display: block;
       margin-bottom: 6px;
       font-size: 0.92rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--muted);
     }
 
     input,
     select {
       width: 100%;
-      padding: 11px 12px;
+      padding: 12px 13px;
       border: 1px solid var(--line);
       border-radius: 12px;
       background: #fff;
       color: var(--text);
-      font-size: 1rem;
     }
 
     input:focus,
@@ -151,13 +154,29 @@
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
 
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
     button {
       border: 0;
       border-radius: 12px;
       padding: 11px 16px;
-      font-size: 0.95rem;
       font-weight: 700;
       cursor: pointer;
+      transition: transform 0.04s ease, opacity 0.2s ease, background-color 0.2s ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .btn-primary {
@@ -169,33 +188,31 @@
       background: var(--primary-dark);
     }
 
-    .btn-secondary {
-      background: #eff6ff;
-      color: var(--primary);
-    }
-
     .btn-light {
       background: #f3f4f6;
       color: var(--text);
     }
 
-    .btn-warning {
-      background: #fff7ed;
-      color: #b45309;
+    .btn-secondary {
+      background: var(--soft);
+      color: var(--primary);
     }
 
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 14px;
+    .btn-warning {
+      background: #fff7ed;
+      color: var(--warning);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
     }
 
     .status {
       min-height: 24px;
-      margin-top: 12px;
-      font-size: 0.92rem;
-      font-weight: 600;
+      margin-top: 10px;
+      font-size: 0.93rem;
+      font-weight: 700;
     }
 
     .status.success {
@@ -206,28 +223,70 @@
       color: var(--danger);
     }
 
-    .quiet {
+    .section-head,
+    .inline-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .subsection {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fafcff;
+    }
+
+    .stat small {
+      display: block;
       color: var(--muted);
-      font-size: 0.92rem;
+      margin-bottom: 7px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.3rem;
+      font-variant-numeric: tabular-nums;
     }
 
     .empty {
-      padding: 20px;
+      padding: 18px;
       border: 1px dashed var(--line);
       border-radius: 14px;
-      background: #fcfcfd;
       color: var(--muted);
+      background: #fcfdff;
       text-align: center;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 640px;
     }
 
-    th, td {
+    th,
+    td {
       padding: 12px 10px;
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid #e5e7eb;
       text-align: left;
       vertical-align: top;
     }
@@ -236,6 +295,7 @@
       color: var(--muted);
       font-size: 0.9rem;
       font-weight: 700;
+      white-space: nowrap;
     }
 
     td.number {
@@ -257,163 +317,266 @@
       font-weight: 700;
     }
 
-    .toolbar {
+    .action-panel {
+      text-align: left;
+    }
+
+    .delete-panel p {
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.52);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 1000;
+    }
+
+    .modal.is-open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      width: min(860px, 100%);
+      max-height: min(88vh, 900px);
+      overflow: auto;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 70px rgba(15, 23, 42, 0.25);
+      padding: 20px;
+    }
+
+    .modal-head {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
       align-items: center;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 10px;
     }
 
-    .current-group {
+    .modal-head h2 {
+      margin-bottom: 0;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: var(--text);
       font-size: 1.1rem;
-      font-weight: 700;
     }
 
-    .print-area {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 16px;
+    .transfer-list {
+      margin: 0;
+      padding-left: 20px;
     }
 
-    @media (min-width: 900px) {
-      .span-6 {
-        grid-column: span 6;
-      }
+    .transfer-list li + li {
+      margin-top: 8px;
     }
 
-    @media print {
-      .no-print {
-        display: none !important;
+    .note-box {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #f8fafc;
+      color: var(--muted);
+      border: 1px solid #e2e8f0;
+    }
+
+    .warning-box {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #9a3412;
+    }
+
+    .subgroup-block + .subgroup-block {
+      margin-top: 18px;
+    }
+
+    .subgroup-title {
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding-left: 12px;
+        padding-right: 12px;
       }
 
-      body {
-        background: #fff;
-      }
-
-      .topbar {
-        padding: 0;
-      }
-
-      .topbar-inner,
       .card {
-        box-shadow: none;
+        padding: 16px;
+      }
+
+      table {
+        min-width: 560px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar no-print">
-      <form id="groupForm" class="topbar-inner">
-        <div class="group-input">
-          <label for="groupInput">群組名稱</label>
-          <input id="groupInput" type="text" placeholder="輸入群組後按 Enter 或點擊進入" />
+  <div class="page">
+    <section class="card">
+      <h1>分帳群組管理</h1>
+      <p class="muted">頁面順序已整理為群組、成員、預支、紀錄、全局結算與刪除群組。</p>
+      <form id="groupForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="groupInput">群組名稱</label>
+            <input id="groupInput" type="text" placeholder="輸入群組名稱後按 Enter 或點擊進入" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="groupSelect">快速切換群組</label>
+            <select id="groupSelect">
+              <option value="">請選擇已存在的群組</option>
+            </select>
+          </div>
         </div>
-        <div class="group-input">
-          <label for="groupSelect">快速切換</label>
-          <select id="groupSelect">
-            <option value="">選擇已存在的群組</option>
-          </select>
+        <div class="button-row">
+          <button type="submit" class="btn-primary">進入</button>
+          <button type="button" class="btn-secondary" id="copyUrlBtn">複製目前網址</button>
+          <button type="button" class="btn-light" id="resetBtn">清除 / 重置</button>
         </div>
-        <button type="submit" class="btn-primary">進入</button>
-        <button type="button" class="btn-secondary" id="copyUrlBtn">複製目前網址</button>
-        <button type="button" class="btn-warning" id="deleteGroupBtn">刪除目前群組</button>
-        <button type="button" class="btn-light" id="resetBtn">清除 / 重置</button>
       </form>
-    </div>
+      <div class="group-meta">
+        <div class="badge">目前群組：<span id="currentGroupLabel">未選擇群組</span></div>
+        <div class="hint" id="groupHint">輸入群組名稱後即可進入。</div>
+      </div>
+    </section>
 
-    <div class="grid">
-      <section class="card span-6 no-print" id="memberCard">
-        <h2 class="section-title" id="memberFormTitle">新增成員</h2>
-        <p class="section-subtitle">沒有預支的人也能加入分帳。</p>
-        <form id="memberForm">
-          <input type="hidden" id="memberId" />
-          <div class="form-grid">
-            <div>
-              <label for="memberName">姓名</label>
-              <input id="memberName" type="text" placeholder="小明、小華、小孩" required />
-            </div>
-            <div>
-              <label for="weight">人數</label>
-              <input id="weight" type="number" min="0.01" step="0.01" value="1" required />
-            </div>
+    <section class="card" id="memberCard">
+      <h2 id="memberFormTitle">新增成員</h2>
+      <p class="muted">這裡新增的成員，會成為「新增預支」中的付款人下拉選單來源。</p>
+      <form id="memberForm">
+        <input type="hidden" id="memberId" />
+        <input type="hidden" id="memberOriginalName" />
+        <input type="hidden" id="memberOriginalSubGroup" />
+        <div class="form-grid">
+          <div class="field">
+            <label for="memberName">成員名稱</label>
+            <input id="memberName" type="text" placeholder="例如：小明、小華、小孩" required />
           </div>
-          <div class="actions">
-            <button type="submit" class="btn-primary" id="memberSubmitBtn">儲存</button>
-            <button type="button" class="btn-light" id="memberCancelBtn">清空</button>
+          <div class="field">
+            <label for="memberSubGroupName">子群組名稱</label>
+            <input id="memberSubGroupName" type="text" placeholder="未填寫時預設為子群組 1" />
           </div>
-          <div id="memberStatus" class="status"></div>
-        </form>
-      </section>
-
-      <section class="card span-6 no-print" id="billCard">
-        <h2 class="section-title" id="billFormTitle">新增預支</h2>
-        <p class="section-subtitle">每一筆都代表某人先墊付的一筆費用。</p>
-        <form id="billForm">
-          <input type="hidden" id="billId" />
-          <div class="form-grid">
-            <div>
-              <label for="itemName">項目</label>
-              <input id="itemName" type="text" placeholder="晚餐、飲料、交通" required />
-            </div>
-            <div>
-              <label for="amount">金額</label>
-              <input id="amount" type="number" min="0" step="0.01" placeholder="0.00" required />
-            </div>
-            <div>
-              <label for="payer">預支人</label>
-              <select id="payer" required>
-                <option value="">請先新增成員</option>
-              </select>
-            </div>
+          <div class="field">
+            <label for="weight">權重 / 人數</label>
+            <input id="weight" type="number" min="0.01" step="0.01" value="1" required />
           </div>
-          <div class="actions">
-            <button type="submit" class="btn-primary" id="billSubmitBtn">儲存</button>
-            <button type="button" class="btn-light" id="billCancelBtn">清空</button>
-          </div>
-          <div id="billStatus" class="status"></div>
-        </form>
-      </section>
-
-      <section class="card">
-        <div class="toolbar">
-          <div class="current-group" id="currentGroupLabel">未選擇群組</div>
-          <div class="quiet" id="groupHint">輸入群組名稱後即可進入。</div>
         </div>
+        <div class="button-row">
+          <button type="submit" class="btn-primary" id="memberSubmitBtn">儲存</button>
+          <button type="button" class="btn-light" id="memberCancelBtn">清空</button>
+        </div>
+        <div id="memberStatus" class="status"></div>
+      </form>
 
+      <div class="subsection">
+        <div class="inline-head">
+          <h3>目前成員</h3>
+          <div class="quiet" id="memberCount">0 人</div>
+        </div>
+        <div id="memberInlineList"></div>
+      </div>
+    </section>
+
+    <section class="card" id="billCard">
+      <h2 id="billFormTitle">新增預支</h2>
+      <p class="muted">付款人必須從成員下拉選單選擇，並嚴格使用 `payer`、`item_name`、`amount`、`group_name` 欄位。</p>
+      <form id="billForm">
+        <input type="hidden" id="billId" />
+        <div class="form-grid">
+          <div class="field">
+            <label for="itemName">項目名稱</label>
+            <input id="itemName" type="text" placeholder="例如：晚餐、飲料、交通" required />
+          </div>
+          <div class="field">
+            <label for="billSubGroupName">子群組名稱</label>
+            <input id="billSubGroupName" type="text" placeholder="未填寫時預設為子群組 1" />
+          </div>
+          <div class="field">
+            <label for="amount">金額</label>
+            <input id="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required />
+          </div>
+          <div class="field">
+            <label for="payer">付款人</label>
+            <select id="payer" required>
+              <option value="">請先新增成員</option>
+            </select>
+          </div>
+        </div>
+        <div class="button-row">
+          <button type="submit" class="btn-primary" id="billSubmitBtn">儲存</button>
+          <button type="button" class="btn-light" id="billCancelBtn">清空</button>
+        </div>
+        <div id="billStatus" class="status"></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h2>預支紀錄列表</h2>
+        <div class="quiet" id="billCount">0 筆</div>
+      </div>
+      <div id="billList"></div>
+
+      <div class="subsection">
+        <h3>本群組收支概覽</h3>
         <div class="stats">
           <div class="stat">
             <small>總金額</small>
             <strong id="totalAmount">0.00</strong>
           </div>
           <div class="stat">
-            <small>總人數</small>
+            <small>總權重</small>
             <strong id="totalWeight">0.00</strong>
           </div>
           <div class="stat">
-            <small>每單位</small>
+            <small>每單位應付</small>
             <strong id="unitAmount">0.00</strong>
           </div>
         </div>
+        <div id="groupSummary"></div>
+      </div>
+    </section>
 
-        <div id="memberSummary"></div>
+    <section class="card action-panel">
+      <h2>全局債務結算</h2>
+      <p class="muted">會自動讀取所有有資料的群組，先合併每位成員在各群組的最終淨額，再以債務最小化演算法配對最大債權與最大債務。</p>
+      <div class="button-row">
+        <button type="button" class="btn-primary" id="openGlobalSettlementBtn">開啟全局債務結算</button>
+      </div>
+      <div class="hint" id="globalSettlementHint">尚未執行全局結算。</div>
+    </section>
 
-        <div class="print-area no-print">
-          <button type="button" class="btn-light" id="printBtn">導出 PDF</button>
-        </div>
-      </section>
+    <section class="card delete-panel">
+      <h2>刪除目前群組</h2>
+      <p>此操作會刪除目前群組的所有成員與預支資料，系統會強制出現二次確認視窗以避免誤刪。</p>
+      <div class="button-row">
+        <button type="button" class="btn-danger" id="deleteGroupBtn">刪除目前群組</button>
+      </div>
+    </section>
+  </div>
 
-      <section class="card">
-        <h2 class="section-title">預支紀錄</h2>
-        <div id="billList"></div>
-      </section>
-
-      <section class="card">
-        <h2 class="section-title">成員</h2>
-        <div id="memberList"></div>
-      </section>
+  <div class="modal" id="globalSettlementModal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="globalSettlementTitle">
+      <div class="modal-head">
+        <h2 id="globalSettlementTitle">全局債務結算</h2>
+        <button type="button" class="icon-btn" id="closeGlobalSettlementBtn" aria-label="關閉">✕</button>
+      </div>
+      <div id="globalSettlementContent"></div>
+      <div class="button-row">
+        <button type="button" class="btn-light" id="closeGlobalSettlementBtnBottom">關閉</button>
+      </div>
     </div>
   </div>
 
@@ -423,6 +586,8 @@
     const SUPABASE_ANON_KEY = "sb_publishable_SvaZt60lD68VdZaZbYbMFA_NpSO4Bgh";
     const BILLS_TABLE = "bills";
     const MEMBERS_TABLE = "members";
+    const EPSILON = 0.005;
+    const DEFAULT_SUB_GROUP_NAME = "子群組 1";
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -430,23 +595,32 @@
     const groupInput = document.getElementById("groupInput");
     const groupSelect = document.getElementById("groupSelect");
     const copyUrlBtn = document.getElementById("copyUrlBtn");
-    const deleteGroupBtn = document.getElementById("deleteGroupBtn");
     const resetBtn = document.getElementById("resetBtn");
+    const deleteGroupBtn = document.getElementById("deleteGroupBtn");
     const currentGroupLabel = document.getElementById("currentGroupLabel");
     const groupHint = document.getElementById("groupHint");
+    const globalSettlementHint = document.getElementById("globalSettlementHint");
 
-    const totalAmountEl = document.getElementById("totalAmount");
-    const totalWeightEl = document.getElementById("totalWeight");
-    const unitAmountEl = document.getElementById("unitAmount");
-    const memberSummaryEl = document.getElementById("memberSummary");
-    const billListEl = document.getElementById("billList");
-    const memberListEl = document.getElementById("memberList");
-    const printBtn = document.getElementById("printBtn");
+    const memberCard = document.getElementById("memberCard");
+    const memberForm = document.getElementById("memberForm");
+    const memberIdInput = document.getElementById("memberId");
+    const memberOriginalNameInput = document.getElementById("memberOriginalName");
+    const memberOriginalSubGroupInput = document.getElementById("memberOriginalSubGroup");
+    const memberNameInput = document.getElementById("memberName");
+    const memberSubGroupNameInput = document.getElementById("memberSubGroupName");
+    const weightInput = document.getElementById("weight");
+    const memberFormTitle = document.getElementById("memberFormTitle");
+    const memberSubmitBtn = document.getElementById("memberSubmitBtn");
+    const memberCancelBtn = document.getElementById("memberCancelBtn");
+    const memberStatus = document.getElementById("memberStatus");
+    const memberInlineList = document.getElementById("memberInlineList");
+    const memberCount = document.getElementById("memberCount");
 
-    const billForm = document.getElementById("billForm");
     const billCard = document.getElementById("billCard");
+    const billForm = document.getElementById("billForm");
     const billIdInput = document.getElementById("billId");
     const itemNameInput = document.getElementById("itemName");
+    const billSubGroupNameInput = document.getElementById("billSubGroupName");
     const amountInput = document.getElementById("amount");
     const payerInput = document.getElementById("payer");
     const billFormTitle = document.getElementById("billFormTitle");
@@ -454,15 +628,18 @@
     const billCancelBtn = document.getElementById("billCancelBtn");
     const billStatus = document.getElementById("billStatus");
 
-    const memberForm = document.getElementById("memberForm");
-    const memberCard = document.getElementById("memberCard");
-    const memberIdInput = document.getElementById("memberId");
-    const memberNameInput = document.getElementById("memberName");
-    const weightInput = document.getElementById("weight");
-    const memberFormTitle = document.getElementById("memberFormTitle");
-    const memberSubmitBtn = document.getElementById("memberSubmitBtn");
-    const memberCancelBtn = document.getElementById("memberCancelBtn");
-    const memberStatus = document.getElementById("memberStatus");
+    const billListEl = document.getElementById("billList");
+    const billCount = document.getElementById("billCount");
+    const totalAmountEl = document.getElementById("totalAmount");
+    const totalWeightEl = document.getElementById("totalWeight");
+    const unitAmountEl = document.getElementById("unitAmount");
+    const groupSummaryEl = document.getElementById("groupSummary");
+
+    const openGlobalSettlementBtn = document.getElementById("openGlobalSettlementBtn");
+    const globalSettlementModal = document.getElementById("globalSettlementModal");
+    const globalSettlementContent = document.getElementById("globalSettlementContent");
+    const closeGlobalSettlementBtn = document.getElementById("closeGlobalSettlementBtn");
+    const closeGlobalSettlementBtnBottom = document.getElementById("closeGlobalSettlementBtnBottom");
 
     let currentGroupName = "";
     let currentBills = [];
@@ -482,6 +659,65 @@
         .replaceAll("'", "&#39;");
     }
 
+    function normalizeName(value) {
+      return String(value || "").trim();
+    }
+
+    function normalizeSubGroupName(value) {
+      return normalizeName(value) || DEFAULT_SUB_GROUP_NAME;
+    }
+
+    function readCompatibleSubGroupName(record) {
+      return normalizeSubGroupName(record?.sub_group_name ?? record?.sub_group);
+    }
+
+    function normalizeBillRecord(record) {
+      return {
+        ...record,
+        sub_group_name: readCompatibleSubGroupName(record)
+      };
+    }
+
+    function normalizeMemberRecord(record) {
+      return {
+        ...record,
+        sub_group_name: readCompatibleSubGroupName(record)
+      };
+    }
+
+    function groupBySubGroup(records) {
+      const grouped = new Map();
+      (records || []).forEach((record) => {
+        const subGroupName = normalizeSubGroupName(record?.sub_group_name);
+        if (!grouped.has(subGroupName)) {
+          grouped.set(subGroupName, []);
+        }
+        grouped.get(subGroupName).push({
+          ...record,
+          sub_group_name: subGroupName
+        });
+      });
+      return new Map([...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0], "zh-Hant")));
+    }
+
+    function calculateSubGroupReports(bills, members) {
+      const subgroupNames = [...new Set([
+        ...(bills || []).map((bill) => normalizeSubGroupName(bill.sub_group_name)),
+        ...(members || []).map((member) => normalizeSubGroupName(member.sub_group_name))
+      ])].sort((a, b) => a.localeCompare(b, "zh-Hant"));
+
+      return subgroupNames.map((subGroupName) => {
+        const subgroupBills = (bills || []).filter((bill) => normalizeSubGroupName(bill.sub_group_name) === subGroupName);
+        const subgroupMembers = (members || []).filter((member) => normalizeSubGroupName(member.sub_group_name) === subGroupName);
+        return {
+          subGroupName,
+          stats: calculateGroupStats(subgroupBills, subgroupMembers),
+          bills: subgroupBills,
+          members: subgroupMembers
+        };
+      });
+    }
+
     function setStatus(element, message, type = "success") {
       element.textContent = message;
       element.className = "status " + type;
@@ -493,16 +729,18 @@
     }
 
     function getGroupNameFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      return (params.get("group_name") || "").trim();
+      return normalizeName(new URL(window.location.href).searchParams.get("group_name"));
     }
 
     function buildGroupUrl(groupName) {
-      const clean = groupName.trim();
-      if (!clean) {
-        return "index.html";
+      const url = new URL(window.location.href);
+      const clean = normalizeName(groupName);
+      if (clean) {
+        url.searchParams.set("group_name", clean);
+      } else {
+        url.searchParams.delete("group_name");
       }
-      return `index.html?group_name=${encodeURIComponent(clean)}`;
+      return url.toString();
     }
 
     function isPermissionError(error) {
@@ -521,45 +759,38 @@
       if (!error) {
         return fallbackText;
       }
-
       if (isPermissionError(error)) {
-        return `${fallbackText}：目前權限不足，請檢查 Supabase 的 RLS Policies 是否已允許目前的 select、insert 或 update。`;
+        return `${fallbackText}：目前權限不足，請檢查 Supabase 的 RLS Policies 是否允許 select、insert、update 與 delete。`;
       }
-
       return `${fallbackText}：${error.message || "發生未知錯誤"}`;
     }
 
     function updateGroupHeader(groupName) {
       currentGroupLabel.textContent = groupName || "未選擇群組";
-      if (!groupName) {
-        groupHint.textContent = "輸入群組名稱後即可進入。";
-        return;
-      }
-      groupHint.textContent = "載入後會自動查詢，不需要再手動點擊。";
+      groupHint.textContent = groupName ? "群組資料載入後會自動同步更新。" : "輸入群組名稱後即可進入。";
     }
 
-    function setBillEditMode(enabled) {
-      billCard.classList.toggle("edit-mode", Boolean(enabled));
+    function updateEditBackground() {
+      const isEditing = memberCard.classList.contains("edit-mode") || billCard.classList.contains("edit-mode");
+      document.body.classList.toggle("edit-active", isEditing);
     }
 
     function setMemberEditMode(enabled) {
       memberCard.classList.toggle("edit-mode", Boolean(enabled));
+      updateEditBackground();
     }
 
-    function resetBillForm() {
-      billIdInput.value = "";
-      itemNameInput.value = "";
-      amountInput.value = "";
-      payerInput.value = "";
-      billFormTitle.textContent = "新增預支";
-      billSubmitBtn.textContent = "儲存";
-      setBillEditMode(false);
-      clearStatus(billStatus);
+    function setBillEditMode(enabled) {
+      billCard.classList.toggle("edit-mode", Boolean(enabled));
+      updateEditBackground();
     }
 
     function resetMemberForm() {
       memberIdInput.value = "";
+      memberOriginalNameInput.value = "";
+      memberOriginalSubGroupInput.value = "";
       memberNameInput.value = "";
+      memberSubGroupNameInput.value = DEFAULT_SUB_GROUP_NAME;
       weightInput.value = "1";
       memberFormTitle.textContent = "新增成員";
       memberSubmitBtn.textContent = "儲存";
@@ -567,131 +798,185 @@
       clearStatus(memberStatus);
     }
 
-    function renderPayerOptions(selectedValue = "") {
-      const members = currentMembers
-        .map((member) => String(member.member_name || "").trim())
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b, "zh-Hant"));
+    function resetBillForm() {
+      billIdInput.value = "";
+      itemNameInput.value = "";
+      billSubGroupNameInput.value = DEFAULT_SUB_GROUP_NAME;
+      amountInput.value = "";
+      payerInput.value = "";
+      billFormTitle.textContent = "新增預支";
+      billSubmitBtn.textContent = "儲存";
+      setBillEditMode(false);
+      clearStatus(billStatus);
+      renderPayerOptions();
+    }
 
-      const uniqueMembers = [...new Set(members)];
-      const hasMembers = uniqueMembers.length > 0;
+    function renderGroupSelectOptions(groupNames) {
+      const options = ['<option value="">請選擇已存在的群組</option>'];
+      (groupNames || []).forEach((groupName) => {
+        const selected = groupName === currentGroupName ? " selected" : "";
+        options.push(`<option value="${escapeHtml(groupName)}"${selected}>${escapeHtml(groupName)}</option>`);
+      });
+      groupSelect.innerHTML = options.join("");
+    }
 
+    function renderPayerOptions(selectedValue = "", subGroupName = normalizeSubGroupName(billSubGroupNameInput?.value)) {
+      const memberNames = [...new Set(
+        currentMembers
+          .filter((member) => normalizeSubGroupName(member.sub_group_name) === normalizeSubGroupName(subGroupName))
+          .map((member) => normalizeName(member.member_name))
+          .filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b, "zh-Hant"));
+
+      const hasMembers = memberNames.length > 0;
       const options = [
-        `<option value="">${hasMembers ? "請選擇預支人" : "請先新增成員"}</option>`,
+        `<option value="">${hasMembers ? "請選擇付款人" : "請先新增成員"}</option>`
       ];
 
-      uniqueMembers.forEach((memberName) => {
-        const selected = memberName === selectedValue ? " selected" : "";
-        options.push(`<option value="${escapeHtml(memberName)}"${selected}>${escapeHtml(memberName)}</option>`);
+      memberNames.forEach((name) => {
+        const selected = name === selectedValue ? " selected" : "";
+        options.push(`<option value="${escapeHtml(name)}"${selected}>${escapeHtml(name)}</option>`);
       });
 
       payerInput.innerHTML = options.join("");
       payerInput.disabled = !hasMembers;
-      if (selectedValue && uniqueMembers.includes(selectedValue)) {
-        payerInput.value = selectedValue;
-      } else if (!hasMembers) {
-        payerInput.value = "";
+      payerInput.value = memberNames.includes(selectedValue) ? selectedValue : "";
+    }
+
+    function calculateGroupStats(bills, members) {
+      const paidMap = new Map();
+      const weightMap = new Map();
+
+      for (const bill of bills) {
+        const payer = normalizeName(bill.payer);
+        const amount = Number(bill.amount || 0);
+        if (!payer) {
+          continue;
+        }
+        paidMap.set(payer, (paidMap.get(payer) || 0) + amount);
       }
+
+      for (const member of members) {
+        const memberName = normalizeName(member.member_name);
+        const weight = Number(member.weight || 0);
+        if (!memberName) {
+          continue;
+        }
+        weightMap.set(memberName, (weightMap.get(memberName) || 0) + weight);
+      }
+
+      const totalAmount = bills.reduce((sum, bill) => sum + Number(bill.amount || 0), 0);
+      const totalWeight = [...weightMap.values()].reduce((sum, weight) => sum + Number(weight || 0), 0);
+      const unitAmount = totalWeight > 0 ? totalAmount / totalWeight : 0;
+
+      const names = [...new Set([...weightMap.keys(), ...paidMap.keys()])]
+        .sort((a, b) => a.localeCompare(b, "zh-Hant"));
+
+      const rows = names.map((name) => {
+        const weight = Number(weightMap.get(name) || 0);
+        const paid = Number(paidMap.get(name) || 0);
+        const shouldPay = unitAmount * weight;
+        const net = paid - shouldPay;
+        return { name, weight, paid, shouldPay, net };
+      });
+
+      return { totalAmount, totalWeight, unitAmount, rows };
     }
 
     function renderWelcomeState() {
+      updateGroupHeader("");
       totalAmountEl.textContent = "0.00";
       totalWeightEl.textContent = "0.00";
       unitAmountEl.textContent = "0.00";
+      memberCount.textContent = "0 人";
+      billCount.textContent = "0 筆";
+      memberInlineList.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
+      billListEl.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
+      groupSummaryEl.innerHTML = '<div class="empty">進入群組後，這裡會顯示本群組的應收應付結果。</div>';
       renderPayerOptions();
-      memberSummaryEl.innerHTML = '<div class="empty">輸入群組名稱並進入後，這裡會顯示每個人的已付、應付與結算。</div>';
-      billListEl.innerHTML = '<div class="empty">尚未選擇群組。</div>';
-      memberListEl.innerHTML = '<div class="empty">尚未選擇群組。</div>';
     }
 
-    function renderSummary(bills, members) {
-      const totalAmount = bills.reduce((sum, bill) => sum + Number(bill.amount || 0), 0);
-      const totalWeight = members.reduce((sum, member) => sum + Number(member.weight || 0), 0);
-      const unitAmount = totalWeight > 0 ? totalAmount / totalWeight : 0;
-      const paidMap = new Map();
-
-      for (const bill of bills) {
-        const payerName = String(bill.payer || "").trim();
-        if (!payerName) {
-          continue;
-        }
-        paidMap.set(payerName, (paidMap.get(payerName) || 0) + Number(bill.amount || 0));
-      }
-
-      totalAmountEl.textContent = formatNumber(totalAmount);
-      totalWeightEl.textContent = formatNumber(totalWeight);
-      unitAmountEl.textContent = formatNumber(unitAmount);
-
-      if (!currentGroupName) {
-        memberSummaryEl.innerHTML = '<div class="empty">請先輸入群組名稱。</div>';
-        return;
-      }
-
-      if (!members.length) {
-        memberSummaryEl.innerHTML = '<div class="empty">這個群組目前沒有成員資料，先新增成員後就能計算。</div>';
-        return;
-      }
-
-      const nameSet = new Set([
-        ...members.map((member) => String(member.member_name || "").trim()).filter(Boolean),
-        ...bills.map((bill) => String(bill.payer || "").trim()).filter(Boolean),
-      ]);
-
-      const memberMap = new Map(
-        members.map((member) => [String(member.member_name || "").trim(), member])
-      );
-
-      const rows = [...nameSet]
-        .sort((a, b) => a.localeCompare(b, "zh-Hant"))
-        .map((name) => {
-          const member = memberMap.get(name);
-          const people = Number(member?.weight || 0);
-          const paid = Number(paidMap.get(name) || 0);
-          const shouldPay = unitAmount * people;
-          const settlement = paid - shouldPay;
-
-          let settlementText = `剛好 ${formatNumber(0)}`;
+    function buildSettlementRows(rows) {
+      return rows
+        .map((row) => {
+          let settlementText = `剛好 ${formatNumber(0)} 元`;
           let settlementClass = "settlement-zero";
 
-          if (settlement > 0.000001) {
-            settlementText = `可收回 ${formatNumber(settlement)}`;
+          if (row.net > EPSILON) {
+            settlementText = `可收回 ${formatNumber(row.net)} 元`;
             settlementClass = "settlement-positive";
-          } else if (settlement < -0.000001) {
-            settlementText = `需支付 ${formatNumber(Math.abs(settlement))}`;
+          } else if (row.net < -EPSILON) {
+            settlementText = `需支付 ${formatNumber(Math.abs(row.net))} 元`;
             settlementClass = "settlement-negative";
           }
 
           return `
             <tr>
-              <td>${escapeHtml(name)}</td>
-              <td class="number">${formatNumber(people)}</td>
-              <td class="number">${formatNumber(paid)}</td>
-              <td class="number">${formatNumber(shouldPay)}</td>
+              <td>${escapeHtml(row.name)}</td>
+              <td class="number">${formatNumber(row.weight)}</td>
+              <td class="number">${formatNumber(row.paid)}</td>
+              <td class="number">${formatNumber(row.shouldPay)}</td>
               <td class="${settlementClass}">${settlementText}</td>
             </tr>
           `;
         })
         .join("");
+    }
 
-      memberSummaryEl.innerHTML = `
-        <table>
-          <thead>
+    function renderMembers(members) {
+      memberCount.textContent = `${members.length} 人`;
+
+      if (!currentGroupName) {
+        memberInlineList.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
+        return;
+      }
+
+      if (!members.length) {
+        memberInlineList.innerHTML = '<div class="empty">這個群組目前沒有成員資料。</div>';
+        return;
+      }
+
+      const subgroupSections = [...groupBySubGroup(members).entries()].map(([subGroupName, subgroupMembers]) => {
+        const rows = [...subgroupMembers]
+          .sort((a, b) => normalizeName(a.member_name).localeCompare(normalizeName(b.member_name), "zh-Hant"))
+          .map((member) => `
             <tr>
-              <th>姓名</th>
-              <th>人數</th>
-              <th>已付</th>
-              <th>應付</th>
-              <th>結算</th>
+              <td>${escapeHtml(member.member_name)}</td>
+              <td class="number">${formatNumber(member.weight)}</td>
+              <td>
+                <button type="button" class="btn-warning" onclick="startMemberEdit(${Number(member.id)})">修改</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
+          `)
+          .join("");
+
+        return `
+          <div class="subgroup-block">
+            <h4 class="subgroup-title">${escapeHtml(subGroupName)}</h4>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>成員名稱</th>
+                    <th>權重 / 人數</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      memberInlineList.innerHTML = subgroupSections;
     }
 
     function renderBills(bills) {
+      billCount.textContent = `${bills.length} 筆`;
+
       if (!currentGroupName) {
-        billListEl.innerHTML = '<div class="empty">請先輸入群組名稱。</div>';
+        billListEl.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
         return;
       }
 
@@ -700,100 +985,206 @@
         return;
       }
 
-      const rows = bills
-        .map((bill) => `
-          <tr>
-            <td>${escapeHtml(bill.item_name || "")}</td>
-            <td>${escapeHtml(bill.payer || "")}</td>
-            <td class="number">${formatNumber(bill.amount)}</td>
-            <td class="no-print">
-              <button type="button" class="btn-warning" onclick="startBillEdit(${bill.id})">修改</button>
-            </td>
-          </tr>
-        `)
-        .join("");
-
-      billListEl.innerHTML = `
-        <table>
-          <thead>
+      const subgroupSections = [...groupBySubGroup(bills).entries()].map(([subGroupName, subgroupBills]) => {
+        const rows = subgroupBills
+          .map((bill) => `
             <tr>
-              <th>項目</th>
-              <th>預支人</th>
-              <th>金額</th>
-              <th class="no-print">操作</th>
+              <td>${escapeHtml(bill.item_name)}</td>
+              <td>${escapeHtml(bill.payer)}</td>
+              <td class="number">${formatNumber(bill.amount)}</td>
+              <td>
+                <button type="button" class="btn-warning" onclick="startBillEdit(${Number(bill.id)})">修改</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
+          `)
+          .join("");
+
+        return `
+          <div class="subgroup-block">
+            <h4 class="subgroup-title">${escapeHtml(subGroupName)}</h4>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>項目名稱</th>
+                    <th>付款人</th>
+                    <th>金額</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      billListEl.innerHTML = subgroupSections;
     }
 
-    function renderMembers(members) {
+    function renderGroupSummary(bills, members) {
+      const stats = calculateGroupStats(bills, members);
+      totalAmountEl.textContent = formatNumber(stats.totalAmount);
+      totalWeightEl.textContent = formatNumber(stats.totalWeight);
+      unitAmountEl.textContent = formatNumber(stats.unitAmount);
+
       if (!currentGroupName) {
-        memberListEl.innerHTML = '<div class="empty">請先輸入群組名稱。</div>';
+        groupSummaryEl.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
         return;
       }
 
       if (!members.length) {
-        memberListEl.innerHTML = '<div class="empty">這個群組目前沒有成員資料。</div>';
+        groupSummaryEl.innerHTML = '<div class="empty">這個群組尚無成員資料，因此無法計算每人應付金額。</div>';
         return;
       }
 
-      const rows = members
-        .map((member) => `
-          <tr>
-            <td>${escapeHtml(member.member_name || "")}</td>
-            <td class="number">${formatNumber(member.weight)}</td>
-            <td class="no-print">
-              <button type="button" class="btn-warning" onclick="startMemberEdit(${member.id})">修改</button>
-            </td>
-          </tr>
-        `)
-        .join("");
+      if (!stats.rows.length) {
+        groupSummaryEl.innerHTML = '<div class="empty">目前沒有可計算的資料。</div>';
+        return;
+      }
 
-      memberListEl.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>姓名</th>
-              <th>人數</th>
-              <th class="no-print">操作</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+      const subgroupReports = calculateSubGroupReports(bills, members);
+      const subgroupHtml = subgroupReports.map((report) => `
+        <div class="subgroup-block">
+          <h4 class="subgroup-title">${escapeHtml(report.subGroupName)}</h4>
+          ${report.stats.rows.length ? `
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>成員</th>
+                    <th>權重 / 人數</th>
+                    <th>已付</th>
+                    <th>應付</th>
+                    <th>結算</th>
+                  </tr>
+                </thead>
+                <tbody>${buildSettlementRows(report.stats.rows)}</tbody>
+              </table>
+            </div>
+          ` : '<div class="empty">此子群組目前沒有足夠資料可供計算。</div>'}
+        </div>
+      `).join("");
+
+      groupSummaryEl.innerHTML = `
+        <div class="note-box">本群組會先依子群組個別計算，再整合為下方的大群組總報告。</div>
+        ${subgroupHtml}
+        <div class="subsection">
+          <h3>大群組總報告</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>成員</th>
+                  <th>權重 / 人數</th>
+                  <th>已付</th>
+                  <th>應付</th>
+                  <th>結算</th>
+                </tr>
+              </thead>
+              <tbody>${buildSettlementRows(stats.rows)}</tbody>
+            </table>
+          </div>
+        </div>
       `;
+    }
+
+    async function loadExistingGroupNames() {
+      const [billsResult, membersResult] = await Promise.all([
+        supabaseClient.from(BILLS_TABLE).select("group_name"),
+        supabaseClient.from(MEMBERS_TABLE).select("group_name")
+      ]);
+
+      const groups = new Set();
+
+      if (Array.isArray(billsResult.data)) {
+        billsResult.data.forEach((row) => {
+          const groupName = normalizeName(row.group_name);
+          if (groupName) {
+            groups.add(groupName);
+          }
+        });
+      }
+
+      if (Array.isArray(membersResult.data)) {
+        membersResult.data.forEach((row) => {
+          const groupName = normalizeName(row.group_name);
+          if (groupName) {
+            groups.add(groupName);
+          }
+        });
+      }
+
+      renderGroupSelectOptions([...groups].sort((a, b) => a.localeCompare(b, "zh-Hant")));
+    }
+
+    async function switchGroup(groupName) {
+      const selectedGroup = normalizeName(groupName);
+      currentGroupName = selectedGroup;
+      groupInput.value = selectedGroup;
+      groupSelect.value = selectedGroup;
+      resetMemberForm();
+      resetBillForm();
+      currentBills = [];
+      currentMembers = [];
+      updateGroupHeader(selectedGroup);
+      window.history.replaceState({}, "", buildGroupUrl(selectedGroup));
+
+      if (!selectedGroup) {
+        renderWelcomeState();
+        return;
+      }
+
+      groupHint.textContent = `正在載入「${selectedGroup}」的群組資料...`;
+      await loadGroupData();
+    }
+
+    async function fetchBillsByGroup() {
+      return supabaseClient
+        .from("bills")
+        .select("*")
+        .eq("group_name", currentGroupName)
+        .order("created_at", { ascending: false });
+    }
+
+    async function fetchMembersByGroup() {
+      return supabaseClient
+        .from("members")
+        .select("*")
+        .eq("group_name", currentGroupName)
+        .order("created_at", { ascending: false });
     }
 
     async function loadGroupData(options = {}) {
       const { preserveBillStatus = false, preserveMemberStatus = false } = options;
 
       if (!currentGroupName) {
+        currentBills = [];
+        currentMembers = [];
         renderWelcomeState();
         return;
       }
 
-      updateGroupHeader(currentGroupName);
-      groupInput.value = currentGroupName;
+      const selectedGroup = normalizeName(currentGroupName);
+
+      updateGroupHeader(selectedGroup);
+      groupInput.value = selectedGroup;
+      groupSelect.value = selectedGroup;
 
       const [billsResult, membersResult] = await Promise.all([
-        supabaseClient
-          .from(BILLS_TABLE)
-          .select("*")
-          .eq("group_name", currentGroupName)
-          .order("created_at", { ascending: false }),
-        supabaseClient
-          .from(MEMBERS_TABLE)
-          .select("*")
-          .eq("group_name", currentGroupName)
-          .order("created_at", { ascending: false }),
+        fetchBillsByGroup(),
+        fetchMembersByGroup()
       ]);
+
+      if (normalizeName(currentGroupName) !== selectedGroup) {
+        return;
+      }
 
       if (billsResult.error) {
         currentBills = [];
         setStatus(billStatus, getErrorMessage(billsResult.error, "讀取預支資料失敗"), "error");
       } else {
-        currentBills = billsResult.data || [];
+        currentBills = (billsResult.data || []).map(normalizeBillRecord);
         if (!preserveBillStatus) {
           clearStatus(billStatus);
         }
@@ -803,59 +1194,24 @@
         currentMembers = [];
         setStatus(memberStatus, getErrorMessage(membersResult.error, "讀取成員資料失敗"), "error");
       } else {
-        currentMembers = membersResult.data || [];
+        currentMembers = (membersResult.data || []).map(normalizeMemberRecord);
         if (!preserveMemberStatus) {
           clearStatus(memberStatus);
         }
       }
 
-      renderSummary(currentBills, currentMembers);
-      renderBills(currentBills);
+      memberSubGroupNameInput.value = normalizeSubGroupName(memberSubGroupNameInput.value);
+      billSubGroupNameInput.value = normalizeSubGroupName(billSubGroupNameInput.value);
+      renderPayerOptions(payerInput.value, billSubGroupNameInput.value);
       renderMembers(currentMembers);
-      renderPayerOptions(payerInput.value);
+      renderBills(currentBills);
+      renderGroupSummary(currentBills, currentMembers);
 
-      if (!currentBills.length && !currentMembers.length) {
-        groupHint.textContent = "查詢完成，這個群組目前還沒有任何資料。";
+      if (!currentBills.length && !currentMembers.length && !billsResult.error && !membersResult.error) {
+        groupHint.textContent = "這個群組目前還沒有任何資料。";
       } else if (!billsResult.error && !membersResult.error) {
-        groupHint.textContent = "資料已自動載入。";
+        groupHint.textContent = `目前顯示群組「${selectedGroup}」的歷史資料。`;
       }
-    }
-
-    async function loadGroupOptions() {
-      const [billsResult, membersResult] = await Promise.all([
-        supabaseClient.from(BILLS_TABLE).select("group_name"),
-        supabaseClient.from(MEMBERS_TABLE).select("group_name"),
-      ]);
-
-      const groups = new Set();
-
-      if (Array.isArray(billsResult.data)) {
-        billsResult.data.forEach((row) => {
-          const name = String(row.group_name || "").trim();
-          if (name) {
-            groups.add(name);
-          }
-        });
-      }
-
-      if (Array.isArray(membersResult.data)) {
-        membersResult.data.forEach((row) => {
-          const name = String(row.group_name || "").trim();
-          if (name) {
-            groups.add(name);
-          }
-        });
-      }
-
-      const options = ['<option value="">選擇已存在的群組</option>'];
-      [...groups]
-        .sort((a, b) => a.localeCompare(b, "zh-Hant"))
-        .forEach((groupName) => {
-          const selected = groupName === currentGroupName ? " selected" : "";
-          options.push(`<option value="${escapeHtml(groupName)}"${selected}>${escapeHtml(groupName)}</option>`);
-        });
-
-      groupSelect.innerHTML = options.join("");
     }
 
     async function deleteCurrentGroup() {
@@ -864,14 +1220,19 @@
         return;
       }
 
-      const confirmed = window.confirm(`確定要刪除群組「${currentGroupName}」的所有預支與成員資料嗎？`);
-      if (!confirmed) {
+      const firstConfirm = window.confirm(`確定要刪除群組「${currentGroupName}」的所有資料嗎？`);
+      if (!firstConfirm) {
+        return;
+      }
+
+      const secondConfirm = window.confirm(`請再次確認：刪除群組「${currentGroupName}」後將無法復原。是否繼續？`);
+      if (!secondConfirm) {
         return;
       }
 
       const [deleteBillsResult, deleteMembersResult] = await Promise.all([
         supabaseClient.from(BILLS_TABLE).delete().eq("group_name", currentGroupName),
-        supabaseClient.from(MEMBERS_TABLE).delete().eq("group_name", currentGroupName),
+        supabaseClient.from(MEMBERS_TABLE).delete().eq("group_name", currentGroupName)
       ]);
 
       if (deleteBillsResult.error) {
@@ -885,64 +1246,28 @@
       }
 
       currentGroupName = "";
-      await loadGroupOptions();
+      currentBills = [];
+      currentMembers = [];
       resetBillForm();
       resetMemberForm();
-      groupHint.textContent = "目前群組已刪除。";
-      window.location.href = "index.html";
-    }
-
-    async function saveBill(event) {
-      event.preventDefault();
-
-      if (!currentGroupName) {
-        setStatus(billStatus, "請先在上方輸入群組名稱並進入。", "error");
-        return;
-      }
-
-      if (!currentMembers.length) {
-        setStatus(billStatus, "請先新增成員，再選擇預支人。", "error");
-        return;
-      }
-
-      const payload = {
-        item_name: itemNameInput.value.trim(),
-        amount: Number(amountInput.value),
-        payer: payerInput.value.trim(),
-        group_name: currentGroupName,
-      };
-
-      if (!payload.item_name || !payload.payer || Number.isNaN(payload.amount)) {
-        setStatus(billStatus, "請完整填寫預支資料。", "error");
-        return;
-      }
-
-      const result = billIdInput.value
-        ? await supabaseClient.from(BILLS_TABLE).update(payload).eq("id", billIdInput.value)
-        : await supabaseClient.from(BILLS_TABLE).insert([payload]);
-
-      if (result.error) {
-        setStatus(billStatus, getErrorMessage(result.error, "儲存失敗"), "error");
-        return;
-      }
-
-      setStatus(billStatus, billIdInput.value ? "已更新。" : "已新增。", "success");
-      resetBillForm();
-      await loadGroupData({ preserveBillStatus: true });
+      await loadExistingGroupNames();
+      globalSettlementHint.textContent = "目前群組已刪除。";
+      window.location.href = buildGroupUrl("");
     }
 
     async function saveMember(event) {
       event.preventDefault();
 
       if (!currentGroupName) {
-        setStatus(memberStatus, "請先在上方輸入群組名稱並進入。", "error");
+        setStatus(memberStatus, "請先在上方輸入群組名稱並點擊進入。", "error");
         return;
       }
 
       const payload = {
-        member_name: memberNameInput.value.trim(),
+        member_name: normalizeName(memberNameInput.value),
         weight: Number(weightInput.value),
         group_name: currentGroupName,
+        sub_group_name: normalizeSubGroupName(memberSubGroupNameInput.value)
       };
 
       if (!payload.member_name || Number.isNaN(payload.weight)) {
@@ -951,23 +1276,111 @@
       }
 
       if (payload.weight <= 0) {
-        setStatus(memberStatus, "人數必須大於 0。", "error");
+        setStatus(memberStatus, "權重 / 人數必須大於 0。", "error");
         return;
       }
+
+      const duplicated = currentMembers.some((member) => {
+        const sameName = normalizeName(member.member_name) === payload.member_name;
+        const sameSubGroup = normalizeSubGroupName(member.sub_group_name) === payload.sub_group_name;
+        const differentRow = String(member.id) !== String(memberIdInput.value || "");
+        return sameName && sameSubGroup && differentRow;
+      });
+
+      if (duplicated) {
+        setStatus(memberStatus, "這個群組已存在同名成員，請改用其他名稱。", "error");
+        return;
+      }
+
+      const originalName = normalizeName(memberOriginalNameInput.value);
+      const originalSubGroup = normalizeSubGroupName(memberOriginalSubGroupInput.value);
 
       const result = memberIdInput.value
         ? await supabaseClient.from(MEMBERS_TABLE).update(payload).eq("id", memberIdInput.value)
         : await supabaseClient.from(MEMBERS_TABLE).insert([payload]);
 
       if (result.error) {
-        setStatus(memberStatus, getErrorMessage(result.error, "儲存失敗"), "error");
+        setStatus(memberStatus, getErrorMessage(result.error, "儲存成員失敗"), "error");
         return;
       }
 
-      setStatus(memberStatus, memberIdInput.value ? "已更新。" : "已新增。", "success");
+      if (memberIdInput.value && originalName && (originalName !== payload.member_name || originalSubGroup !== payload.sub_group_name)) {
+        const billRenameResult = await supabaseClient
+          .from(BILLS_TABLE)
+          .update({ payer: payload.member_name, sub_group_name: payload.sub_group_name })
+          .eq("group_name", currentGroupName)
+          .eq("payer", originalName)
+          .eq("sub_group_name", originalSubGroup);
+
+        if (billRenameResult.error) {
+          setStatus(memberStatus, getErrorMessage(billRenameResult.error, "成員已更新，但同步付款人名稱失敗"), "error");
+          await loadGroupData({ preserveMemberStatus: true });
+          return;
+        }
+      }
+
+      setStatus(memberStatus, memberIdInput.value ? "成員已更新。" : "成員已新增。", "success");
       resetMemberForm();
-      await loadGroupOptions();
+      await loadExistingGroupNames();
       await loadGroupData({ preserveMemberStatus: true });
+    }
+
+    async function saveBill(event) {
+      event.preventDefault();
+
+      if (!currentGroupName) {
+        setStatus(billStatus, "請先在上方輸入群組名稱並點擊進入。", "error");
+        return;
+      }
+
+      if (!currentMembers.length) {
+        setStatus(billStatus, "請先新增成員，再建立預支資料。", "error");
+        return;
+      }
+
+      const payload = {
+        item_name: normalizeName(itemNameInput.value),
+        amount: Number(amountInput.value),
+        payer: normalizeName(payerInput.value),
+        group_name: currentGroupName,
+        sub_group_name: normalizeSubGroupName(billSubGroupNameInput.value)
+      };
+
+      const validPayers = new Set(
+        currentMembers
+          .filter((member) => normalizeSubGroupName(member.sub_group_name) === payload.sub_group_name)
+          .map((member) => normalizeName(member.member_name))
+          .filter(Boolean)
+      );
+
+      if (!payload.item_name || !payload.payer || Number.isNaN(payload.amount)) {
+        setStatus(billStatus, "請完整填寫預支資料。", "error");
+        return;
+      }
+
+      if (payload.amount <= 0) {
+        setStatus(billStatus, "金額必須大於 0。", "error");
+        return;
+      }
+
+      if (!validPayers.has(payload.payer)) {
+        setStatus(billStatus, "付款人必須從同一個子群組的成員清單中選擇。", "error");
+        return;
+      }
+
+      const result = billIdInput.value
+        ? await supabaseClient.from(BILLS_TABLE).update(payload).eq("id", billIdInput.value)
+        : await supabaseClient.from(BILLS_TABLE).insert([payload]);
+
+      if (result.error) {
+        setStatus(billStatus, getErrorMessage(result.error, "儲存預支失敗"), "error");
+        return;
+      }
+
+      setStatus(billStatus, billIdInput.value ? "預支資料已更新。" : "預支資料已新增。", "success");
+      resetBillForm();
+      await loadExistingGroupNames();
+      await loadGroupData({ preserveBillStatus: true });
     }
 
     async function copyCurrentUrl() {
@@ -993,84 +1406,425 @@
       }
     }
 
-    window.startBillEdit = function startBillEdit(id) {
-      const bill = currentBills.find((item) => String(item.id) === String(id));
-      if (!bill) {
-        setStatus(billStatus, "找不到這筆資料。", "error");
+    function openGlobalSettlementModal(html) {
+      globalSettlementContent.innerHTML = html;
+      globalSettlementModal.classList.add("is-open");
+      globalSettlementModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeGlobalSettlementModal() {
+      globalSettlementModal.classList.remove("is-open");
+      globalSettlementModal.setAttribute("aria-hidden", "true");
+    }
+
+    function minimizeDebts(balanceMap) {
+      const debtors = [];
+      const creditors = [];
+
+      for (const [name, net] of balanceMap.entries()) {
+        if (net > EPSILON) {
+          creditors.push({ name, amount: net });
+        } else if (net < -EPSILON) {
+          debtors.push({ name, amount: Math.abs(net) });
+        }
+      }
+
+      const transfers = [];
+
+      while (debtors.length && creditors.length) {
+        debtors.sort((a, b) => b.amount - a.amount);
+        creditors.sort((a, b) => b.amount - a.amount);
+
+        const debtor = debtors[0];
+        const creditor = creditors[0];
+        const transfer = Math.min(debtor.amount, creditor.amount);
+
+        transfers.push({
+          from: debtor.name,
+          to: creditor.name,
+          amount: transfer
+        });
+
+        debtor.amount -= transfer;
+        creditor.amount -= transfer;
+
+        if (debtor.amount <= EPSILON) {
+          debtors.shift();
+        }
+        if (creditor.amount <= EPSILON) {
+          creditors.shift();
+        }
+      }
+
+      return transfers;
+    }
+
+    async function getDistinctGroupNames() {
+      const [billsResult, membersResult] = await Promise.all([
+        supabaseClient.from(BILLS_TABLE).select("group_name"),
+        supabaseClient.from(MEMBERS_TABLE).select("group_name")
+      ]);
+
+      if (billsResult.error) {
+        throw new Error(getErrorMessage(billsResult.error, "讀取群組名稱失敗"));
+      }
+
+      if (membersResult.error) {
+        throw new Error(getErrorMessage(membersResult.error, "讀取群組名稱失敗"));
+      }
+
+      const groupNames = [...new Set([
+        ...(billsResult.data || []).map((row) => normalizeName(row.group_name)).filter(Boolean),
+        ...(membersResult.data || []).map((row) => normalizeName(row.group_name)).filter(Boolean)
+      ])].sort((a, b) => a.localeCompare(b, "zh-Hant"));
+
+      return groupNames;
+    }
+
+    function renderGlobalSettlementChooser(groupNames) {
+      const content = groupNames.length
+        ? `
+          <p class="muted">請勾選這次要納入結算的大群組。每個大群組內部會再依子群組個別計算，最後才加總成全局結果。</p>
+          <div class="note-box">群組之間會先各自隔離計算，不會把所有預支明細直接混在一起。</div>
+          <form id="globalSettlementSelectionForm">
+            <div class="subsection">
+              ${groupNames.map((groupName) => `
+                <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;color:var(--text);font-weight:600;">
+                  <input type="checkbox" name="selected_groups" value="${escapeHtml(groupName)}" checked style="width:18px;height:18px;flex:0 0 auto;margin-top:2px;" />
+                  <span>${escapeHtml(groupName)}</span>
+                </label>
+              `).join("")}
+            </div>
+            <div class="button-row">
+              <button type="button" class="btn-primary" id="runGlobalSettlementBtn">開始結算</button>
+            </div>
+          </form>
+        `
+        : '<div class="empty">目前沒有任何可選擇的群組資料。</div>';
+
+      openGlobalSettlementModal(content);
+    }
+
+    async function runSelectedGlobalSettlement(selectedGroups) {
+      const chosenGroups = [...new Set((selectedGroups || []).map(normalizeName).filter(Boolean))];
+
+      if (!chosenGroups.length) {
+        globalSettlementContent.innerHTML = `
+          <div class="empty">請至少勾選一個群組後再進行結算。</div>
+          <div class="button-row">
+            <button type="button" class="btn-light" id="backToGlobalChooserBtn">返回群組勾選</button>
+          </div>
+        `;
         return;
       }
 
-      billIdInput.value = bill.id;
-      itemNameInput.value = bill.item_name || "";
-      amountInput.value = bill.amount ?? "";
-      renderPayerOptions(String(bill.payer || "").trim());
-      billFormTitle.textContent = "修改預支";
-      billSubmitBtn.textContent = "更新";
-      setBillEditMode(true);
-      setMemberEditMode(false);
-      setStatus(billStatus, "正在編輯。", "success");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    };
+      globalSettlementContent.innerHTML = '<div class="empty">正在依照勾選群組進行隔離計算與全局結算...</div>';
+
+      const [billsResult, membersResult] = await Promise.all([
+        supabaseClient.from(BILLS_TABLE).select("*").in("group_name", chosenGroups),
+        supabaseClient.from(MEMBERS_TABLE).select("*").in("group_name", chosenGroups)
+      ]);
+
+      if (billsResult.error) {
+        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(billsResult.error, "讀取勾選群組的預支資料失敗"))}</div>`;
+        return;
+      }
+
+      if (membersResult.error) {
+        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(membersResult.error, "讀取勾選群組的成員資料失敗"))}</div>`;
+        return;
+      }
+
+      const allBills = (billsResult.data || []).map(normalizeBillRecord);
+      const allMembers = (membersResult.data || []).map(normalizeMemberRecord);
+      const totalBalanceMap = new Map();
+      const usableGroups = [];
+      const skippedGroups = [];
+      const groupBreakdowns = [];
+
+      chosenGroups.forEach((groupName) => {
+        const groupBills = allBills.filter((row) => normalizeName(row.group_name) === groupName);
+        const groupMembers = allMembers.filter((row) => normalizeName(row.group_name) === groupName);
+        const stats = calculateGroupStats(groupBills, groupMembers);
+        const subgroupReports = calculateSubGroupReports(groupBills, groupMembers);
+
+        if (!groupBills.length && !groupMembers.length) {
+          skippedGroups.push(groupName);
+          return;
+        }
+
+        if (stats.totalWeight <= 0) {
+          skippedGroups.push(groupName);
+          return;
+        }
+
+        usableGroups.push(groupName);
+        groupBreakdowns.push({
+          groupName,
+          subgroupReports,
+          stats
+        });
+
+        stats.rows.forEach((row) => {
+          totalBalanceMap.set(row.name, (totalBalanceMap.get(row.name) || 0) + row.net);
+        });
+      });
+
+      const netRows = [...totalBalanceMap.entries()]
+        .map(([name, net]) => ({ name, net }))
+        .sort((a, b) => b.net - a.net);
+
+      const transfers = minimizeDebts(totalBalanceMap);
+      const netTableRows = netRows.length
+        ? netRows.map((row) => {
+            let label = `剛好 ${formatNumber(0)} 元`;
+            let className = "settlement-zero";
+            if (row.net > EPSILON) {
+              label = `可收 ${formatNumber(row.net)} 元`;
+              className = "settlement-positive";
+            } else if (row.net < -EPSILON) {
+              label = `應付 ${formatNumber(Math.abs(row.net))} 元`;
+              className = "settlement-negative";
+            }
+            return `
+              <tr>
+                <td>${escapeHtml(row.name)}</td>
+                <td class="${className}">${label}</td>
+              </tr>
+            `;
+          }).join("")
+        : '<tr><td colspan="2">目前沒有可彙總的成員淨額。</td></tr>';
+
+      const transferHtml = transfers.length
+        ? `
+          <ol class="transfer-list">
+            ${transfers.map((item) => `
+              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)} 元</li>
+            `).join("")}
+          </ol>
+        `
+        : '<div class="empty">所選群組加總後已經平衡，沒有需要額外付款的對象。</div>';
+
+      const skippedHtml = skippedGroups.length
+        ? `<div class="note-box warning-box">以下勾選群組因為沒有有效資料或缺少有效權重，已被略過：${escapeHtml(skippedGroups.join("、"))}</div>`
+        : "";
+
+      const breakdownHtml = groupBreakdowns.map((groupReport) => `
+        <div class="subsection">
+          <h3>${escapeHtml(groupReport.groupName)}</h3>
+          <div class="note-box">此大群組會先依子群組獨立計算，再彙整為本群組總報告。</div>
+          ${groupReport.subgroupReports.map((subgroupReport) => `
+            <div class="subgroup-block">
+              <h4 class="subgroup-title">${escapeHtml(subgroupReport.subGroupName)}</h4>
+              ${subgroupReport.stats.rows.length ? `
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>成員</th>
+                        <th>權重 / 人數</th>
+                        <th>已付</th>
+                        <th>應付</th>
+                        <th>結算</th>
+                      </tr>
+                    </thead>
+                    <tbody>${buildSettlementRows(subgroupReport.stats.rows)}</tbody>
+                  </table>
+                </div>
+              ` : '<div class="empty">此子群組目前沒有足夠資料可供計算。</div>'}
+            </div>
+          `).join("")}
+          <div class="subsection">
+            <h4 class="subgroup-title">本群組總報告</h4>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>成員</th>
+                    <th>權重 / 人數</th>
+                    <th>已付</th>
+                    <th>應付</th>
+                    <th>結算</th>
+                  </tr>
+                </thead>
+                <tbody>${buildSettlementRows(groupReport.stats.rows)}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      globalSettlementContent.innerHTML = `
+        <p class="muted">本次只納入你勾選的大群組，且每個大群組都會先依子群組個別計算，再進行跨群組加總與債務最小化。</p>
+        <div class="note-box">本次納入群組：${escapeHtml(chosenGroups.join("、"))}</div>
+        ${usableGroups.length ? `<div class="note-box">成功參與計算的群組：${escapeHtml(usableGroups.join("、"))}</div>` : ""}
+        ${skippedHtml}
+        <div class="button-row">
+          <button type="button" class="btn-light" id="backToGlobalChooserBtn">返回群組勾選</button>
+        </div>
+        <div class="subsection">
+          <h3>付款指引</h3>
+          ${transferHtml}
+        </div>
+        <div class="subsection">
+          <h3>各群組分解報告</h3>
+          ${breakdownHtml || '<div class="empty">目前沒有可顯示的群組分解報告。</div>'}
+        </div>
+        <div class="subsection">
+          <h3>全局淨額總表</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>成員</th>
+                  <th>跨所選群組最終淨額</th>
+                </tr>
+              </thead>
+              <tbody>${netTableRows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      globalSettlementHint.textContent = `已依照勾選群組完成結算：${chosenGroups.join("、")}`;
+    }
+
+    async function openGlobalSettlement() {
+      openGlobalSettlementBtn.disabled = true;
+      openGlobalSettlementBtn.textContent = "載入群組中...";
+      globalSettlementHint.textContent = "正在讀取可供勾選的群組名稱。";
+
+      openGlobalSettlementBtn.disabled = false;
+      openGlobalSettlementBtn.textContent = "開啟全局債務結算";
+
+      try {
+        const groupNames = await getDistinctGroupNames();
+        if (!groupNames.length) {
+          openGlobalSettlementModal('<div class="empty">目前資料庫中沒有任何可計算的群組資料。</div>');
+          globalSettlementHint.textContent = "資料庫中沒有任何群組資料。";
+          return;
+        }
+        renderGlobalSettlementChooser(groupNames);
+        globalSettlementHint.textContent = "請先勾選要納入本次結算的子群組。";
+      } catch (error) {
+        globalSettlementHint.textContent = error.message || "讀取群組名稱失敗。";
+      }
+    }
 
     window.startMemberEdit = function startMemberEdit(id) {
       const member = currentMembers.find((item) => String(item.id) === String(id));
       if (!member) {
-        setStatus(memberStatus, "找不到這筆資料。", "error");
+        setStatus(memberStatus, "找不到這位成員資料。", "error");
         return;
       }
 
       memberIdInput.value = member.id;
-      memberNameInput.value = member.member_name || "";
+      memberOriginalNameInput.value = normalizeName(member.member_name);
+      memberOriginalSubGroupInput.value = normalizeSubGroupName(member.sub_group_name);
+      memberNameInput.value = normalizeName(member.member_name);
+      memberSubGroupNameInput.value = normalizeSubGroupName(member.sub_group_name);
       weightInput.value = member.weight ?? 1;
       memberFormTitle.textContent = "修改成員";
       memberSubmitBtn.textContent = "更新";
-      setBillEditMode(false);
       setMemberEditMode(true);
-      setStatus(memberStatus, "正在編輯。", "success");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setBillEditMode(false);
+      setStatus(memberStatus, "正在編輯成員，背景已切換為淡粉紅色。", "success");
+      memberCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    window.startBillEdit = function startBillEdit(id) {
+      const bill = currentBills.find((item) => String(item.id) === String(id));
+      if (!bill) {
+        setStatus(billStatus, "找不到這筆預支資料。", "error");
+        return;
+      }
+
+      billIdInput.value = bill.id;
+      itemNameInput.value = normalizeName(bill.item_name);
+      billSubGroupNameInput.value = normalizeSubGroupName(bill.sub_group_name);
+      amountInput.value = bill.amount ?? "";
+      renderPayerOptions(normalizeName(bill.payer), normalizeSubGroupName(bill.sub_group_name));
+      billFormTitle.textContent = "修改預支";
+      billSubmitBtn.textContent = "更新";
+      setBillEditMode(true);
+      setMemberEditMode(false);
+      setStatus(billStatus, "正在編輯預支，背景已切換為淡粉紅色。", "success");
+      billCard.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
     groupForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      const groupName = groupInput.value.trim();
+      const groupName = normalizeName(groupInput.value);
       if (!groupName) {
         groupHint.textContent = "請先輸入群組名稱。";
         return;
       }
-      window.location.href = buildGroupUrl(groupName);
+      switchGroup(groupName);
     });
 
-    groupSelect.addEventListener("change", () => {
-      const groupName = groupSelect.value.trim();
-      if (!groupName) {
+    groupSelect.addEventListener("change", async () => {
+      const selectedGroup = normalizeName(groupSelect.value);
+      if (!selectedGroup) {
         return;
       }
-      groupInput.value = groupName;
-      window.location.href = buildGroupUrl(groupName);
+      await switchGroup(selectedGroup);
     });
 
     copyUrlBtn.addEventListener("click", copyCurrentUrl);
-    deleteGroupBtn.addEventListener("click", deleteCurrentGroup);
     resetBtn.addEventListener("click", () => {
-      window.location.href = "index.html";
+      window.location.href = buildGroupUrl("");
     });
-    billForm.addEventListener("submit", saveBill);
+    deleteGroupBtn.addEventListener("click", deleteCurrentGroup);
+
     memberForm.addEventListener("submit", saveMember);
-    billCancelBtn.addEventListener("click", resetBillForm);
     memberCancelBtn.addEventListener("click", resetMemberForm);
-    printBtn.addEventListener("click", () => window.print());
+
+    billForm.addEventListener("submit", saveBill);
+    billCancelBtn.addEventListener("click", resetBillForm);
+    billSubGroupNameInput.addEventListener("input", () => {
+      renderPayerOptions("", billSubGroupNameInput.value);
+    });
+    billSubGroupNameInput.addEventListener("change", () => {
+      renderPayerOptions("", billSubGroupNameInput.value);
+    });
+
+    openGlobalSettlementBtn.addEventListener("click", openGlobalSettlement);
+    closeGlobalSettlementBtn.addEventListener("click", closeGlobalSettlementModal);
+    closeGlobalSettlementBtnBottom.addEventListener("click", closeGlobalSettlementModal);
+
+    globalSettlementModal.addEventListener("click", (event) => {
+      if (event.target === globalSettlementModal) {
+        closeGlobalSettlementModal();
+      }
+
+      if (event.target && event.target.id === "runGlobalSettlementBtn") {
+        const checkedGroups = [...globalSettlementModal.querySelectorAll('input[name="selected_groups"]:checked')]
+          .map((input) => input.value);
+        runSelectedGlobalSettlement(checkedGroups);
+      }
+
+      if (event.target && event.target.id === "backToGlobalChooserBtn") {
+        openGlobalSettlement();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && globalSettlementModal.classList.contains("is-open")) {
+        closeGlobalSettlementModal();
+      }
+    });
 
     async function init() {
       currentGroupName = getGroupNameFromUrl();
       groupInput.value = currentGroupName;
       updateGroupHeader(currentGroupName);
-      resetBillForm();
       resetMemberForm();
-      await loadGroupOptions();
+      resetBillForm();
+      await loadExistingGroupNames();
+      groupSelect.value = currentGroupName;
 
       if (currentGroupName) {
-        groupSelect.value = currentGroupName;
-        loadGroupData();
+        await loadGroupData();
       } else {
         renderWelcomeState();
       }
