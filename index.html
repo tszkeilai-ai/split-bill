@@ -1293,13 +1293,73 @@
         </div>
       `).join("");
 
+      const groupBalanceMap = new Map(
+        (stats.rows || [])
+          .filter((row) => normalizeName(row.name))
+          .map((row) => [normalizeName(row.name), Number(row.net || 0)])
+      );
+      const groupTransfers = minimizeDebts(groupBalanceMap);
+      const netRows = [...groupBalanceMap.entries()]
+        .map(([name, net]) => ({ name, net }))
+        .sort((a, b) => b.net - a.net);
+      const netTableRows = netRows.length
+        ? netRows.map((row) => {
+            let label = `剛好 ${formatNumber(0)} 元`;
+            let className = "settlement-zero";
+            if (row.net > EPSILON) {
+              label = `可收 ${formatNumber(row.net)} 元`;
+              className = "settlement-positive";
+            } else if (row.net < -EPSILON) {
+              label = `應付 ${formatNumber(Math.abs(row.net))} 元`;
+              className = "settlement-negative";
+            }
+            return `
+              <tr>
+                <td>${escapeHtml(row.name)}</td>
+                <td class="${className}">${label}</td>
+              </tr>
+            `;
+          }).join("")
+        : '<tr><td colspan="2">目前沒有可彙總的成員淨額。</td></tr>';
+      const transferHtml = groupTransfers.length
+        ? `
+          <ol class="transfer-list">
+            ${groupTransfers.map((item) => `
+              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)} 元</li>
+            `).join("")}
+          </ol>
+        `
+        : '<div class="empty">目前子群組加總後已經平衡，沒有需要額外付款的對象。</div>';
+
       groupSummaryEl.innerHTML = `
-        <div class="note-box">本群組會先依子群組個別計算，再整合為下方的大群組總報告。</div>
+        <div class="note-box">本區會先顯示各子群組分攤明細，最下方提供「最終結算總表」讓你在輸入資料時就能即時看到整體應收應付關係。</div>
         ${stats.duplicateCount > 0 ? `<div class="note-box warning-box">本區統計已先去除 ${escapeHtml(String(stats.duplicateCount))} 筆重複 bill，只會以每個 bill_id 的唯一消費計入總金額與每單位應付。</div>` : ""}
         ${subgroupHtml}
         <div class="subsection">
           <h3>大群組總報告</h3>
           ${buildSettlementTable(stats.rows, { showWeight: false })}
+        </div>
+        <div class="subsection">
+          <h3>最終結算總表</h3>
+          <div class="note-box">這裡會把所有子群組的淨額加總為整體結果，並提供最少筆數的付款指引。</div>
+          <div class="subsection">
+            <h4 class="subgroup-title">付款指引</h4>
+            ${transferHtml}
+          </div>
+          <div class="subsection">
+            <h4 class="subgroup-title">淨額總表</h4>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>成員</th>
+                    <th>最終淨額</th>
+                  </tr>
+                </thead>
+                <tbody>${netTableRows}</tbody>
+              </table>
+            </div>
+          </div>
         </div>
       `;
     }
@@ -2082,6 +2142,75 @@
       win.print();
     }
 
+    function exportGlobalSettlementCsv() {
+      if (!latestGlobalSettlementSnapshot) {
+        openGlobalSettlementModal('<div class="empty">請先完成一次全局結算後，再導出 CSV。</div>');
+        return;
+      }
+
+      const snapshot = latestGlobalSettlementSnapshot;
+      const groupNames = (snapshot.chosenGroups || []).map(normalizeName).filter(Boolean);
+      const groupBreakdowns = snapshot.groupBreakdowns || [];
+
+      const perGroupNetByName = new Map();
+      groupBreakdowns.forEach((groupReport) => {
+        const groupName = normalizeName(groupReport.groupName);
+        if (!groupName) {
+          return;
+        }
+        const map = new Map();
+        (groupReport?.stats?.rows || []).forEach((row) => {
+          const name = normalizeName(row.name);
+          if (!name) {
+            return;
+          }
+          map.set(name, Number(row.net || 0));
+        });
+        perGroupNetByName.set(groupName, map);
+      });
+
+      const allNames = new Set();
+      (snapshot.netRows || []).forEach((row) => {
+        const name = normalizeName(row.name);
+        if (name) {
+          allNames.add(name);
+        }
+      });
+      perGroupNetByName.forEach((map) => {
+        map.forEach((_net, name) => allNames.add(name));
+      });
+
+      const names = [...allNames].sort((a, b) => a.localeCompare(b, "zh-Hant"));
+      const netMap = new Map((snapshot.netRows || []).map((row) => [normalizeName(row.name), Number(row.net || 0)]));
+
+      const header = ["成員", ...groupNames.map((g) => `${g} 淨額`), "最終淨額"];
+      const rows = names.map((name) => {
+        const groupCells = groupNames.map((groupName) => {
+          const groupMap = perGroupNetByName.get(groupName);
+          return formatNumber(groupMap?.get(name) || 0);
+        });
+        return [name, ...groupCells, formatNumber(netMap.get(name) || 0)];
+      });
+
+      const escapeCsv = (value) => {
+        const text = String(value ?? "");
+        return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+      };
+      const csvText = [header, ...rows].map((line) => line.map(escapeCsv).join(",")).join("\n");
+
+      const blob = new Blob(["\ufeff" + csvText], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const now = new Date();
+      const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+      link.href = url;
+      link.download = `global_settlement_${stamp}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
     async function runSelectedGlobalSettlement(selectedGroups) {
       const chosenGroups = [...new Set((selectedGroups || []).map(normalizeName).filter(Boolean))];
 
@@ -2213,6 +2342,7 @@
         <div class="button-row">
           <button type="button" class="btn-light" id="backToGlobalChooserBtn">返回群組勾選</button>
           <button type="button" class="btn-primary" id="exportGlobalSettlementPdfBtn">導出 PDF</button>
+          <button type="button" class="btn-secondary" id="exportGlobalSettlementCsvBtn">導出 Excel (CSV)</button>
         </div>
         <div class="subsection">
           <h3>付款指引</h3>
@@ -2373,6 +2503,10 @@
 
       if (event.target && event.target.id === "exportGlobalSettlementPdfBtn") {
         exportGlobalSettlementPdf();
+      }
+
+      if (event.target && event.target.id === "exportGlobalSettlementCsvBtn") {
+        exportGlobalSettlementCsv();
       }
     });
 
