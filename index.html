@@ -521,7 +521,7 @@
       <section class="card workspace-top" id="workspaceHeaderCard">
         <div class="workspace-title">
           <h1>群組工作區</h1>
-          <p class="muted">這個頁面只處理目前群組的資料輸入、群內彙總、全局結算與維護。</p>
+          <p class="muted">這個頁面只處理目前群組的資料輸入、群內彙總、群組結算與維護。</p>
         </div>
         <div class="group-meta">
           <div class="badge">目前群組：<span id="currentGroupLabel">未選擇群組</span></div>
@@ -642,12 +642,12 @@
     </section>
 
     <section class="card action-panel workspace-view">
-      <h2>全局債務結算</h2>
-      <p class="muted">按下後會直接掃描整個資料庫中所有有資料的群組，不再出現二次篩選彈窗，並自動產出最小化付款配對。</p>
+      <h2>債務結算</h2>
+      <p class="muted">按下後會直接鎖定目前 `group_name`，自動整合這個群組底下所有子群組資料並產出最小化付款配對，不再進行二次篩選。</p>
       <div class="button-row">
-        <button type="button" class="btn-primary" id="openGlobalSettlementBtn">執行全局債務結算</button>
+        <button type="button" class="btn-primary" id="openGlobalSettlementBtn">執行本群組債務結算</button>
       </div>
-      <div class="hint" id="globalSettlementHint">尚未執行全局結算。</div>
+      <div class="hint" id="globalSettlementHint">尚未執行本群組結算。</div>
     </section>
 
     <section class="card delete-panel workspace-view">
@@ -665,7 +665,7 @@
   <div class="modal" id="globalSettlementModal" aria-hidden="true">
     <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="globalSettlementTitle">
       <div class="modal-head">
-        <h2 id="globalSettlementTitle">全局債務結算</h2>
+        <h2 id="globalSettlementTitle">群組債務結算</h2>
         <button type="button" class="icon-btn" id="closeGlobalSettlementBtn" aria-label="關閉">✕</button>
       </div>
       <div id="globalSettlementContent"></div>
@@ -1110,7 +1110,7 @@
       renderPayerOptions(payerInput.value, safeSubGroupName);
       renderMembers(currentMembers);
       renderBills(currentBills);
-      // 輸入頁底部改為「全局預覽模式」：用整個大群組資料做彙總（不只是目前子群組）
+      // 輸入頁底部改為「整個目前群組預覽」：用整個大群組資料做彙總（不只是目前子群組）
       renderGroupSummary(allGroupBills, allGroupMembers);
     }
 
@@ -2180,30 +2180,6 @@
       return groupNames;
     }
 
-    function renderGlobalSettlementChooser(groupNames) {
-      const content = groupNames.length
-        ? `
-          <p class="muted">請勾選這次要納入結算的大群組。每個大群組內部會再依子群組個別計算，最後才加總成全局結果。</p>
-          <div class="note-box">群組之間會先各自隔離計算，不會把所有預支明細直接混在一起。</div>
-          <form id="globalSettlementSelectionForm">
-            <div class="subsection">
-              ${groupNames.map((groupName) => `
-                <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;color:var(--text);font-weight:600;">
-                  <input type="checkbox" name="selected_groups" value="${escapeHtml(groupName)}" checked style="width:18px;height:18px;flex:0 0 auto;margin-top:2px;" />
-                  <span>${escapeHtml(groupName)}</span>
-                </label>
-              `).join("")}
-            </div>
-            <div class="button-row">
-              <button type="button" class="btn-primary" id="runGlobalSettlementBtn">開始結算</button>
-            </div>
-          </form>
-        `
-        : '<div class="empty">目前沒有任何可選擇的群組資料。</div>';
-
-      openGlobalSettlementModal(content);
-    }
-
     function buildGlobalBreakdownHtml(groupBreakdowns = []) {
       return groupBreakdowns.map((groupReport) => `
         <div class="subsection">
@@ -2226,7 +2202,7 @@
 
     function exportGlobalSettlementPdf() {
       if (!latestGlobalSettlementSnapshot) {
-        openGlobalSettlementModal('<div class="empty">請先完成一次全局結算後，再導出 PDF。</div>');
+        openGlobalSettlementModal('<div class="empty">請先完成一次本群組結算後，再導出 PDF。</div>');
         return;
       }
 
@@ -2242,7 +2218,7 @@
             `).join("")}
           </ol>
         `
-        : '<div class="empty">所選群組加總後已經平衡，沒有需要額外付款的對象。</div>';
+        : '<div class="empty">此群組加總後已經平衡，沒有需要額外付款的對象。</div>';
 
       const netTableRows = snapshot.netRows.length
         ? snapshot.netRows.map((row) => {
@@ -2272,7 +2248,7 @@
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>全局債務結算</title>
+          <title>${escapeHtml(snapshot.currentGroupName || "群組")} 債務結算</title>
           <style>
             :root { color-scheme: light; }
             body { font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans TC", sans-serif; margin: 24px; color: #0f172a; }
@@ -2295,25 +2271,25 @@
         </head>
         <body>
           <div class="meta">
-            <h1>全局債務結算</h1>
+            <h1>${escapeHtml(snapshot.currentGroupName || "目前群組")}債務結算</h1>
             <p>產生時間：${escapeHtml(generatedAt)}</p>
-            <p>納入群組：${escapeHtml(snapshot.chosenGroups.join("、"))}</p>
+            <p>群組名稱：${escapeHtml(snapshot.currentGroupName || "")}</p>
           </div>
           <div class="section">
             <h2>付款指引</h2>
             ${transferHtml}
           </div>
           <div class="section">
-            <h2>各群組分解報告</h2>
+            <h2>各子群組分解報告</h2>
             ${breakdownHtml || '<div class="empty">目前沒有可顯示的群組分解報告。</div>'}
           </div>
           <div class="section">
-            <h2>全局淨額總表</h2>
+            <h2>本群組淨額總表</h2>
             <table>
               <thead>
                 <tr>
                   <th>成員</th>
-                  <th>跨所選群組最終淨額</th>
+                  <th>本群組最終淨額</th>
                 </tr>
               </thead>
               <tbody>${netTableRows}</tbody>
@@ -2338,7 +2314,7 @@
 
     function exportGlobalSettlementXlsx() {
       if (!latestGlobalSettlementSnapshot) {
-        openGlobalSettlementModal('<div class="empty">請先完成一次全局結算後，再導出 Excel。</div>');
+        openGlobalSettlementModal('<div class="empty">請先完成一次本群組結算後，再導出 Excel。</div>');
         return;
       }
 
@@ -2540,9 +2516,9 @@
       };
 
       const addGlobalNetTable = (netRows = []) => {
-        // Header：B~E 合併成「跨所選群組最終淨額」
+        // Header：B~E 合併成「本群組最終淨額」
         setCell(cursorRow, 0, "成員", styles.tableHeader);
-        setCell(cursorRow, 1, "跨所選群組最終淨額", styles.tableHeader);
+        setCell(cursorRow, 1, "本群組最終淨額", styles.tableHeader);
         for (let c = 2; c <= MAX_COL; c += 1) {
           setCell(cursorRow, c, "", styles.tableHeader);
         }
@@ -2568,9 +2544,9 @@
       let cursorRow = 0;
 
       // ===== 標題區 =====
-      addMergedTextRow("全局債務結算", styles.title, 26);
+      addMergedTextRow(`${snapshot.currentGroupName || "目前群組"}債務結算`, styles.title, 26);
       addMergedTextRow(`產生時間：${generatedAt}`, styles.meta, 18);
-      addMergedTextRow(`納入群組：${(snapshot.chosenGroups || []).join("、")}`, styles.meta, 18);
+      addMergedTextRow(`群組名稱：${snapshot.currentGroupName || ""}`, styles.meta, 18);
       addBlankRow(1);
 
       // ===== 付款指引 =====
@@ -2588,8 +2564,8 @@
       }
       addBlankRow(1);
 
-      // ===== 各群組分解報告 =====
-      addMergedTextRow("各群組分解報告", styles.section, 20);
+      // ===== 子群組分解報告 =====
+      addMergedTextRow("子群組分解報告", styles.section, 20);
       const groupBreakdowns = snapshot.groupBreakdowns || [];
       if (!groupBreakdowns.length) {
         addMergedTextRow("目前沒有可顯示的群組分解報告。", styles.note, 18);
@@ -2634,8 +2610,8 @@
         });
       }
 
-      // ===== 全局淨額總表 =====
-      addMergedTextRow("全局淨額總表", styles.section, 20);
+      // ===== 本群組淨額總表 =====
+      addMergedTextRow("本群組淨額總表", styles.section, 20);
       addGlobalNetTable(snapshot.netRows || []);
 
       ws["!merges"] = merges;
@@ -2649,14 +2625,15 @@
       ws["!rows"] = rowsMeta;
       ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(cursorRow - 1, 0), c: MAX_COL } });
 
-      XLSX.utils.book_append_sheet(wb, ws, "全局債務結算");
-      XLSX.writeFile(wb, `global_settlement_${stamp}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, `${(snapshot.currentGroupName || "群組").slice(0, 20)}結算`);
+      const safeGroupName = String(snapshot.currentGroupName || "group").replace(/[\\/:*?"<>|]/g, "_");
+      XLSX.writeFile(wb, `${safeGroupName}_settlement_${stamp}.xlsx`);
     }
 
     // 保留舊的 CSV 版本（不掛在 UI 上），以免遇到 CDN 無法載入時完全沒路可走。
     function exportGlobalSettlementCsvRaw() {
       if (!latestGlobalSettlementSnapshot) {
-        openGlobalSettlementModal('<div class="empty">請先完成一次全局結算後，再導出 CSV。</div>');
+        openGlobalSettlementModal('<div class="empty">請先完成一次本群組結算後，再導出 CSV。</div>');
         return;
       }
 
@@ -2799,28 +2776,28 @@
       exportGlobalSettlementXlsx();
     }
 
-    async function runSelectedGlobalSettlement(selectedGroups) {
-      const chosenGroups = [...new Set((selectedGroups || []).map(normalizeName).filter(Boolean))];
+    async function runCurrentGroupSettlement(groupName) {
+      const targetGroup = normalizeName(groupName || currentGroupName);
 
-      if (!chosenGroups.length) {
-        globalSettlementContent.innerHTML = '<div class="empty">目前資料庫中沒有任何可納入全局結算的群組。</div>';
+      if (!targetGroup) {
+        globalSettlementContent.innerHTML = '<div class="empty">目前沒有鎖定任何群組，請先從首頁進入一個群組。</div>';
         return;
       }
 
-      globalSettlementContent.innerHTML = '<div class="empty">正在依照整個資料庫的群組資料進行隔離計算與全局結算...</div>';
+      globalSettlementContent.innerHTML = `<div class="empty">正在依照群組「${escapeHtml(targetGroup)}」的所有子群組資料進行結算...</div>`;
 
       const [billsResult, membersResult] = await Promise.all([
-        supabaseClient.from(BILLS_TABLE).select("*").in("group_name", chosenGroups),
-        supabaseClient.from(MEMBERS_TABLE).select("*").in("group_name", chosenGroups)
+        supabaseClient.from(BILLS_TABLE).select("*").eq("group_name", targetGroup),
+        supabaseClient.from(MEMBERS_TABLE).select("*").eq("group_name", targetGroup)
       ]);
 
       if (billsResult.error) {
-        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(billsResult.error, "讀取全局結算用的預支資料失敗"))}</div>`;
+        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(billsResult.error, "讀取目前群組的預支資料失敗"))}</div>`;
         return;
       }
 
       if (membersResult.error) {
-        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(membersResult.error, "讀取全局結算用的成員資料失敗"))}</div>`;
+        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(membersResult.error, "讀取目前群組的成員資料失敗"))}</div>`;
         return;
       }
 
@@ -2828,41 +2805,20 @@
       const allMembers = (membersResult.data || []).map(normalizeMemberRecord);
       const { uniqueBills: allBills, duplicateCount: totalDuplicateBillCount } = dedupeBills(rawBills);
       const totalBalanceMap = new Map();
-      const usableGroups = [];
-      const skippedGroups = [];
-      const groupBreakdowns = [];
+      const groupReport = buildGroupSettlementFromSubGroups(allBills, allMembers);
+      const groupBreakdowns = [{
+        groupName: targetGroup,
+        subgroupReports: groupReport.subgroupReports,
+        stats: groupReport.stats,
+        duplicateCount: groupReport.duplicateCount
+      }];
 
-      chosenGroups.forEach((groupName) => {
-        const groupBills = allBills.filter((row) => normalizeName(row.group_name) === groupName);
-        const groupMembers = allMembers.filter((row) => normalizeName(row.group_name) === groupName);
-        const groupReport = buildGroupSettlementFromSubGroups(groupBills, groupMembers);
-        const { stats, subgroupReports, duplicateCount } = groupReport;
-
-        if (!groupBills.length && !groupMembers.length) {
-          skippedGroups.push(groupName);
+      groupReport.stats.rows.forEach((row) => {
+        const personName = normalizeName(row.name);
+        if (!personName) {
           return;
         }
-
-        if (!stats.rows.length) {
-          skippedGroups.push(groupName);
-          return;
-        }
-
-        usableGroups.push(groupName);
-        groupBreakdowns.push({
-          groupName,
-          subgroupReports,
-          stats,
-          duplicateCount
-        });
-
-        stats.rows.forEach((row) => {
-          const personName = normalizeName(row.name);
-          if (!personName) {
-            return;
-          }
-          totalBalanceMap.set(personName, (totalBalanceMap.get(personName) || 0) + Number(row.net || 0));
-        });
+        totalBalanceMap.set(personName, (totalBalanceMap.get(personName) || 0) + Number(row.net || 0));
       });
 
       const netRows = [...totalBalanceMap.entries()]
@@ -2898,18 +2854,15 @@
             `).join("")}
           </ol>
         `
-        : '<div class="empty">所選群組加總後已經平衡，沒有需要額外付款的對象。</div>';
-
-      const skippedHtml = skippedGroups.length
-        ? `<div class="note-box warning-box">以下群組因為沒有有效資料或缺少有效權重，已被略過：${escapeHtml(skippedGroups.join("、"))}</div>`
-        : "";
+        : '<div class="empty">本群組加總後已經平衡，沒有需要額外付款的對象。</div>';
 
       const breakdownHtml = buildGlobalBreakdownHtml(groupBreakdowns);
 
       latestGlobalSettlementSnapshot = {
-        chosenGroups,
-        usableGroups,
-        skippedGroups,
+        currentGroupName: targetGroup,
+        chosenGroups: [targetGroup],
+        usableGroups: [targetGroup],
+        skippedGroups: [],
         totalDuplicateBillCount,
         netRows,
         transfers,
@@ -2917,11 +2870,10 @@
       };
 
       globalSettlementContent.innerHTML = `
-        <p class="muted">這裡會完整保留各子群組與大群組總報告，方便你在最終結算前核對權重、應付與實付資料。</p>
-        <div class="note-box">本次掃描群組：${escapeHtml(chosenGroups.join("、"))}</div>
-        ${usableGroups.length ? `<div class="note-box">成功參與計算的群組：${escapeHtml(usableGroups.join("、"))}</div>` : ""}
-        ${totalDuplicateBillCount > 0 ? `<div class="note-box warning-box">全局結算前已先去除 ${escapeHtml(String(totalDuplicateBillCount))} 筆重複 bill，只會處理每個 bill_id 一次。</div>` : ""}
-        ${skippedHtml}
+        <p class="muted">這裡顯示的報告、PDF 與 Excel 都共用同一份「目前群組結算快照」，可確保畫面與匯出內容完全一致。</p>
+        <div class="note-box">本次結算群組：${escapeHtml(targetGroup)}</div>
+        <div class="note-box">已自動涵蓋此群組底下所有子群組資料，不需要另外勾選。</div>
+        ${totalDuplicateBillCount > 0 ? `<div class="note-box warning-box">結算前已先去除 ${escapeHtml(String(totalDuplicateBillCount))} 筆重複 bill，只會處理每個 bill_id 一次。</div>` : ""}
         <div class="button-row">
           <button type="button" class="btn-primary" id="exportGlobalSettlementPdfBtn">導出 PDF</button>
           <button type="button" class="btn-secondary" id="exportGlobalSettlementCsvBtn">導出 Excel (.xlsx)</button>
@@ -2931,17 +2883,17 @@
           ${transferHtml}
         </div>
         <div class="subsection">
-          <h3>各群組分解報告</h3>
+          <h3>子群組分解報告</h3>
           ${breakdownHtml || '<div class="empty">目前沒有可顯示的群組分解報告。</div>'}
         </div>
         <div class="subsection">
-          <h3>全局淨額總表</h3>
+          <h3>本群組淨額總表</h3>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>成員</th>
-                  <th>跨所選群組最終淨額</th>
+                  <th>本群組最終淨額</th>
                 </tr>
               </thead>
               <tbody>${netTableRows}</tbody>
@@ -2950,29 +2902,29 @@
         </div>
       `;
 
-      globalSettlementHint.textContent = `已完成全資料庫結算：${chosenGroups.join("、")}`;
+      globalSettlementHint.textContent = `已完成群組「${targetGroup}」的債務結算。`;
     }
 
     async function openGlobalSettlement() {
       openGlobalSettlementBtn.disabled = true;
       openGlobalSettlementBtn.textContent = "結算中...";
-      globalSettlementHint.textContent = "正在掃描整個資料庫中的群組資料。";
+      globalSettlementHint.textContent = currentGroupName
+        ? `正在結算群組「${currentGroupName}」的所有子群組資料。`
+        : "目前沒有鎖定群組。";
 
       try {
-        const groupNames = await getDistinctGroupNames();
-        if (!groupNames.length) {
-          openGlobalSettlementModal('<div class="empty">目前資料庫中沒有任何可計算的群組資料。</div>');
-          globalSettlementHint.textContent = "資料庫中沒有任何群組資料。";
+        if (!currentGroupName) {
+          openGlobalSettlementModal('<div class="empty">請先從首頁進入一個群組，再執行債務結算。</div>');
+          globalSettlementHint.textContent = "請先從首頁進入一個群組。";
           return;
         }
-        openGlobalSettlementModal('<div class="empty">正在整合所有群組資料並執行最小化付款配對...</div>');
-        await runSelectedGlobalSettlement(groupNames);
-        globalSettlementHint.textContent = `已直接掃描全部群組並完成結算：${groupNames.join("、")}`;
+        openGlobalSettlementModal(`<div class="empty">正在整合群組「${escapeHtml(currentGroupName)}」的所有子群組資料並執行最小化付款配對...</div>`);
+        await runCurrentGroupSettlement(currentGroupName);
       } catch (error) {
-        globalSettlementHint.textContent = error.message || "讀取群組名稱失敗。";
+        globalSettlementHint.textContent = error.message || "執行群組結算失敗。";
       } finally {
         openGlobalSettlementBtn.disabled = false;
-        openGlobalSettlementBtn.textContent = "執行全局債務結算";
+        openGlobalSettlementBtn.textContent = "執行本群組債務結算";
       }
     }
 
