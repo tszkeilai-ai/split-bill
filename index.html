@@ -794,16 +794,21 @@
         return `bill_id:${explicitBillId}`;
       }
 
-      const rowId = normalizeName(bill?.id);
-      if (rowId) {
-        return `row_id:${rowId}`;
+      const normalizedItemName = normalizeName(bill?.item_name).toLowerCase().replace(/\s+/g, " ");
+      if (normalizedItemName) {
+        return [
+          "item_name",
+          normalizeName(bill?.group_name),
+          normalizeSubGroupName(bill?.sub_group),
+          normalizedItemName
+        ].join(":");
       }
 
       return [
         normalizeName(bill?.group_name),
         normalizeSubGroupName(bill?.sub_group),
-        normalizeName(bill?.payer),
-        normalizeName(bill?.item_name),
+        normalizeName(bill?.payer).toLowerCase(),
+        normalizeName(bill?.item_name).toLowerCase().replace(/\s+/g, " "),
         formatNumber(Number(bill?.amount || 0)),
         normalizeName(bill?.created_at)
       ].join("::");
@@ -1156,6 +1161,7 @@
               <td class="number">${formatNumber(member.weight)}</td>
               <td>
                 <button type="button" class="btn-warning" onclick="startMemberEdit(${Number(member.id)})">修改</button>
+                <button type="button" class="btn-danger" onclick="deleteMember(${Number(member.id)})">刪除</button>
               </td>
             </tr>
           `)
@@ -1205,6 +1211,7 @@
               <td class="number">${formatNumber(bill.amount)}</td>
               <td>
                 <button type="button" class="btn-warning" onclick="startBillEdit(${Number(bill.id)})">修改</button>
+                <button type="button" class="btn-danger" onclick="deleteBill(${Number(bill.id)})">刪除</button>
               </td>
             </tr>
           `)
@@ -1648,7 +1655,7 @@
 
       const payload = {
         member_name: normalizeName(memberNameInput.value),
-        weight: Number(weightInput.value),
+        weight: Number(weightInput.value || 1) || 1,
         group_name: currentGroupName,
         sub_group: normalizeSubGroupName(currentSubGroupName)
       };
@@ -1680,7 +1687,11 @@
 
       const result = memberIdInput.value
         ? await supabaseClient.from(MEMBERS_TABLE).update(payload).eq("id", memberIdInput.value)
-        : await supabaseClient.from(MEMBERS_TABLE).insert([payload]);
+        : await supabaseClient.from(MEMBERS_TABLE).insert([{
+            ...payload,
+            sub_group: normalizeSubGroupName(currentSubGroupName),
+            weight: Number(payload.weight || 1) || 1
+          }]);
 
       if (result.error) {
         setStatus(memberStatus, getErrorMessage(result.error, "儲存成員失敗"), "error");
@@ -1753,7 +1764,10 @@
 
       const result = billIdInput.value
         ? await supabaseClient.from(BILLS_TABLE).update(payload).eq("id", billIdInput.value)
-        : await supabaseClient.from(BILLS_TABLE).insert([payload]);
+        : await supabaseClient.from(BILLS_TABLE).insert([{
+            ...payload,
+            sub_group: normalizeSubGroupName(currentSubGroupName)
+          }]);
 
       if (result.error) {
         setStatus(billStatus, getErrorMessage(result.error, "儲存預支失敗"), "error");
@@ -1763,6 +1777,58 @@
       setStatus(billStatus, billIdInput.value ? "預支資料已更新。" : "預支資料已新增。", "success");
       resetBillForm();
       await loadExistingGroupNames();
+      await loadGroupData({ preserveBillStatus: true, preferredSubGroupName: currentSubGroupName });
+    }
+
+    async function deleteMember(id) {
+      const member = currentMembers.find((item) => String(item.id) === String(id));
+      if (!member) {
+        setStatus(memberStatus, "找不到這位成員資料。", "error");
+        return;
+      }
+
+      const confirmed = window.confirm(`確定要刪除成員「${normalizeName(member.member_name)}」嗎？`);
+      if (!confirmed) {
+        return;
+      }
+
+      const result = await supabaseClient.from(MEMBERS_TABLE).delete().eq("id", id);
+      if (result.error) {
+        setStatus(memberStatus, getErrorMessage(result.error, "刪除成員失敗"), "error");
+        return;
+      }
+
+      if (String(memberIdInput.value) === String(id)) {
+        resetMemberForm();
+      }
+
+      setStatus(memberStatus, `成員「${normalizeName(member.member_name)}」已刪除。`, "success");
+      await loadGroupData({ preserveMemberStatus: true, preferredSubGroupName: currentSubGroupName });
+    }
+
+    async function deleteBill(id) {
+      const bill = currentBills.find((item) => String(item.id) === String(id));
+      if (!bill) {
+        setStatus(billStatus, "找不到這筆預支資料。", "error");
+        return;
+      }
+
+      const confirmed = window.confirm(`確定要刪除預支「${normalizeName(bill.item_name)}」嗎？`);
+      if (!confirmed) {
+        return;
+      }
+
+      const result = await supabaseClient.from(BILLS_TABLE).delete().eq("id", id);
+      if (result.error) {
+        setStatus(billStatus, getErrorMessage(result.error, "刪除預支失敗"), "error");
+        return;
+      }
+
+      if (String(billIdInput.value) === String(id)) {
+        resetBillForm();
+      }
+
+      setStatus(billStatus, `預支「${normalizeName(bill.item_name)}」已刪除。`, "success");
       await loadGroupData({ preserveBillStatus: true, preferredSubGroupName: currentSubGroupName });
     }
 
@@ -2142,6 +2208,9 @@
       setStatus(billStatus, "正在編輯預支，背景已切換為淡粉紅色。", "success");
       billCard.scrollIntoView({ behavior: "smooth", block: "start" });
     };
+
+    window.deleteMember = deleteMember;
+    window.deleteBill = deleteBill;
 
     groupForm.addEventListener("submit", (event) => {
       event.preventDefault();
