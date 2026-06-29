@@ -1049,10 +1049,11 @@
     }
 
     function calculateGroupStats(bills, members) {
+      const { uniqueBills, duplicateCount } = dedupeBills(bills);
       const paidMap = new Map();
       const weightMap = new Map();
 
-      for (const bill of bills) {
+      for (const bill of uniqueBills) {
         const payer = normalizeName(bill.payer);
         const amount = Number(bill.amount || 0);
         if (!payer) {
@@ -1070,7 +1071,7 @@
         weightMap.set(memberName, (weightMap.get(memberName) || 0) + weight);
       }
 
-      const totalAmount = bills.reduce((sum, bill) => sum + Number(bill.amount || 0), 0);
+      const totalAmount = uniqueBills.reduce((sum, bill) => sum + Number(bill.amount || 0), 0);
       const totalWeight = [...weightMap.values()].reduce((sum, weight) => sum + Number(weight || 0), 0);
       const unitAmount = totalWeight > 0 ? totalAmount / totalWeight : 0;
 
@@ -1085,7 +1086,7 @@
         return { name, weight, paid, shouldPay, net };
       });
 
-      return { totalAmount, totalWeight, unitAmount, rows };
+      return { totalAmount, totalWeight, unitAmount, rows, uniqueBills, duplicateCount };
     }
 
     function renderWelcomeState() {
@@ -1253,7 +1254,7 @@
         return;
       }
 
-      const subgroupReports = calculateSubGroupReports(bills, members);
+      const subgroupReports = calculateSubGroupReports(stats.uniqueBills, members);
       const subgroupHtml = subgroupReports.map((report) => `
         <div class="subgroup-block">
           <h4 class="subgroup-title">${escapeHtml(report.subGroupName)}</h4>
@@ -1278,6 +1279,7 @@
 
       groupSummaryEl.innerHTML = `
         <div class="note-box">本群組會先依子群組個別計算，再整合為下方的大群組總報告。</div>
+        ${stats.duplicateCount > 0 ? `<div class="note-box warning-box">本區統計已先去除 ${escapeHtml(String(stats.duplicateCount))} 筆重複 bill，只會以每個 bill_id 的唯一消費計入總金額與每單位應付。</div>` : ""}
         ${subgroupHtml}
         <div class="subsection">
           <h3>大群組總報告</h3>
