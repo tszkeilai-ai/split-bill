@@ -788,6 +788,95 @@
       });
     }
 
+    function getBillDedupKey(bill) {
+      const explicitBillId = normalizeName(bill?.bill_id ?? bill?.billId ?? bill?.source_bill_id);
+      if (explicitBillId) {
+        return `bill_id:${explicitBillId}`;
+      }
+
+      const rowId = normalizeName(bill?.id);
+      if (rowId) {
+        return `row_id:${rowId}`;
+      }
+
+      return [
+        normalizeName(bill?.group_name),
+        normalizeSubGroupName(bill?.sub_group),
+        normalizeName(bill?.payer),
+        normalizeName(bill?.item_name),
+        formatNumber(Number(bill?.amount || 0)),
+        normalizeName(bill?.created_at)
+      ].join("::");
+    }
+
+    function dedupeBills(bills = []) {
+      const seen = new Set();
+      const uniqueBills = [];
+      let duplicateCount = 0;
+
+      for (const bill of bills) {
+        const dedupKey = getBillDedupKey(bill);
+        if (seen.has(dedupKey)) {
+          duplicateCount += 1;
+          continue;
+        }
+        seen.add(dedupKey);
+        uniqueBills.push(bill);
+      }
+
+      return {
+        uniqueBills,
+        duplicateCount
+      };
+    }
+
+    function aggregateSettlementRowsByName(rows = []) {
+      const totalMap = new Map();
+
+      for (const row of rows) {
+        const personName = normalizeName(row?.name);
+        if (!personName) {
+          continue;
+        }
+
+        const current = totalMap.get(personName) || {
+          name: personName,
+          weight: 0,
+          paid: 0,
+          shouldPay: 0,
+          net: 0
+        };
+
+        current.weight += Number(row?.weight || 0);
+        current.paid += Number(row?.paid || 0);
+        current.shouldPay += Number(row?.shouldPay || 0);
+        current.net += Number(row?.net || 0);
+        totalMap.set(personName, current);
+      }
+
+      return [...totalMap.values()].sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"));
+    }
+
+    function buildGroupSettlementFromSubGroups(groupBills = [], groupMembers = []) {
+      const { uniqueBills, duplicateCount } = dedupeBills(groupBills);
+      const subgroupReports = calculateSubGroupReports(uniqueBills, groupMembers);
+      const aggregatedRows = aggregateSettlementRowsByName(
+        subgroupReports.flatMap((report) => report.stats.rows || [])
+      );
+
+      return {
+        duplicateCount,
+        uniqueBills,
+        subgroupReports,
+        stats: {
+          totalAmount: subgroupReports.reduce((sum, report) => sum + Number(report.stats.totalAmount || 0), 0),
+          totalWeight: subgroupReports.reduce((sum, report) => sum + Number(report.stats.totalWeight || 0), 0),
+          unitAmount: 0,
+          rows: aggregatedRows
+        }
+      };
+    }
+
     function setStatus(element, message, type = "success") {
       element.textContent = message;
       element.className = "status " + type;
@@ -1827,8 +1916,9 @@
         return;
       }
 
-      const allBills = (billsResult.data || []).map(normalizeBillRecord);
+      const rawBills = (billsResult.data || []).map(normalizeBillRecord);
       const allMembers = (membersResult.data || []).map(normalizeMemberRecord);
+      const { uniqueBills: allBills, duplicateCount: totalDuplicateBillCount } = dedupeBills(rawBills);
       const totalBalanceMap = new Map();
       const usableGroups = [];
       const skippedGroups = [];
@@ -1837,15 +1927,15 @@
       chosenGroups.forEach((groupName) => {
         const groupBills = allBills.filter((row) => normalizeName(row.group_name) === groupName);
         const groupMembers = allMembers.filter((row) => normalizeName(row.group_name) === groupName);
-        const stats = calculateGroupStats(groupBills, groupMembers);
-        const subgroupReports = calculateSubGroupReports(groupBills, groupMembers);
+        const groupReport = buildGroupSettlementFromSubGroups(groupBills, groupMembers);
+        const { stats, subgroupReports, duplicateCount } = groupReport;
 
         if (!groupBills.length && !groupMembers.length) {
           skippedGroups.push(groupName);
           return;
         }
 
-        if (stats.totalWeight <= 0) {
+        if (!stats.rows.length) {
           skippedGroups.push(groupName);
           return;
         }
@@ -1854,11 +1944,16 @@
         groupBreakdowns.push({
           groupName,
           subgroupReports,
-          stats
+          stats,
+          duplicateCount
         });
 
         stats.rows.forEach((row) => {
-          totalBalanceMap.set(row.name, (totalBalanceMap.get(row.name) || 0) + row.net);
+          const personName = normalizeName(row.name);
+          if (!personName) {
+            return;
+          }
+          totalBalanceMap.set(personName, (totalBalanceMap.get(personName) || 0) + Number(row.net || 0));
         });
       });
 
@@ -1905,6 +2000,7 @@
         <div class="subsection">
           <h3>${escapeHtml(groupReport.groupName)}</h3>
           <div class="note-box">此大群組會先依子群組獨立計算，再彙整為本群組總報告。</div>
+          ${groupReport.duplicateCount > 0 ? `<div class="note-box warning-box">此群組已先去除 ${escapeHtml(String(groupReport.duplicateCount))} 筆重複的 bill 記錄，只保留每個 bill_id 的第一筆資料。</div>` : ""}
           ${groupReport.subgroupReports.map((subgroupReport) => `
             <div class="subgroup-block">
               <h4 class="subgroup-title">${escapeHtml(subgroupReport.subGroupName)}</h4>
@@ -1947,9 +2043,10 @@
       `).join("");
 
       globalSettlementContent.innerHTML = `
-        <p class="muted">本次只納入你勾選的大群組，且每個大群組都會先依子群組個別計算，再進行跨群組加總與債務最小化。</p>
+        <p class="muted">本次只納入你勾選的大群組，且每個大群組都會先依子群組個別計算，再按人名彙總各群組的淨額，不會在全局層重算權重。</p>
         <div class="note-box">本次納入群組：${escapeHtml(chosenGroups.join("、"))}</div>
         ${usableGroups.length ? `<div class="note-box">成功參與計算的群組：${escapeHtml(usableGroups.join("、"))}</div>` : ""}
+        ${totalDuplicateBillCount > 0 ? `<div class="note-box warning-box">全局結算前已先去除 ${escapeHtml(String(totalDuplicateBillCount))} 筆重複 bill，只會處理每個 bill_id 一次。</div>` : ""}
         ${skippedHtml}
         <div class="button-row">
           <button type="button" class="btn-light" id="backToGlobalChooserBtn">返回群組勾選</button>
