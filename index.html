@@ -626,6 +626,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Excel 匯出：使用 xlsx-js-style 以支援合併儲存格、字體加粗、邊框等格式 -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <script>
     const SUPABASE_URL = "https://zryatuqohbicnxcasqzl.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_SvaZt60lD68VdZaZbYbMFA_NpSO4Bgh";
@@ -2143,7 +2145,325 @@
       win.print();
     }
 
-    function exportGlobalSettlementCsv() {
+    function exportGlobalSettlementXlsx() {
+      if (!latestGlobalSettlementSnapshot) {
+        openGlobalSettlementModal('<div class="empty">請先完成一次全局結算後，再導出 Excel。</div>');
+        return;
+      }
+
+      if (!window.XLSX || !window.XLSX.utils) {
+        openGlobalSettlementModal('<div class="empty">Excel 匯出模組載入失敗（找不到 XLSX）。請確認網路可正常載入 jsDelivr CDN，或稍後重整再試。</div>');
+        return;
+      }
+
+      const snapshot = latestGlobalSettlementSnapshot;
+      const now = new Date();
+      const generatedAt = now.toLocaleString("zh-Hant");
+      const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+
+      const wb = XLSX.utils.book_new();
+      const ws = {};
+
+      const MAX_COL = 4; // A~E
+      const merges = [];
+      const rowsMeta = [];
+
+      const borderColor = "E2E8F0";
+      const makeBorder = () => ({
+        top: { style: "thin", color: { rgb: borderColor } },
+        bottom: { style: "thin", color: { rgb: borderColor } },
+        left: { style: "thin", color: { rgb: borderColor } },
+        right: { style: "thin", color: { rgb: borderColor } }
+      });
+
+      const styles = {
+        title: {
+          font: { bold: true, sz: 16, color: { rgb: "0F172A" } },
+          alignment: { horizontal: "center", vertical: "center", wrapText: true }
+        },
+        meta: {
+          font: { sz: 12, color: { rgb: "334155" } },
+          alignment: { horizontal: "left", vertical: "center", wrapText: true }
+        },
+        section: {
+          font: { bold: true, sz: 13, color: { rgb: "0F172A" } },
+          fill: { fgColor: { rgb: "F1F5F9" } },
+          alignment: { horizontal: "left", vertical: "center", wrapText: true }
+        },
+        groupTitle: {
+          font: { bold: true, sz: 12, color: { rgb: "0F172A" } },
+          fill: { fgColor: { rgb: "EEF4FF" } },
+          alignment: { horizontal: "left", vertical: "center", wrapText: true }
+        },
+        note: {
+          font: { sz: 11, color: { rgb: "475569" } },
+          alignment: { horizontal: "left", vertical: "top", wrapText: true }
+        },
+        warn: {
+          font: { sz: 11, color: { rgb: "9A3412" } },
+          fill: { fgColor: { rgb: "FFF7ED" } },
+          alignment: { horizontal: "left", vertical: "top", wrapText: true }
+        },
+        tableHeader: {
+          font: { bold: true, sz: 11, color: { rgb: "0F172A" } },
+          fill: { fgColor: { rgb: "F8FAFC" } },
+          alignment: { horizontal: "center", vertical: "center", wrapText: true },
+          border: makeBorder()
+        },
+        textCell: {
+          font: { sz: 11, color: { rgb: "0F172A" } },
+          alignment: { horizontal: "left", vertical: "center", wrapText: true },
+          border: makeBorder()
+        },
+        numberCell: {
+          font: { sz: 11, color: { rgb: "0F172A" } },
+          alignment: { horizontal: "right", vertical: "center" },
+          border: makeBorder()
+        },
+        positive: {
+          font: { bold: true, sz: 11, color: { rgb: "166534" } },
+          alignment: { horizontal: "left", vertical: "center", wrapText: true },
+          border: makeBorder()
+        },
+        negative: {
+          font: { bold: true, sz: 11, color: { rgb: "9A3412" } },
+          alignment: { horizontal: "left", vertical: "center", wrapText: true },
+          border: makeBorder()
+        },
+        zero: {
+          font: { bold: true, sz: 11, color: { rgb: "334155" } },
+          alignment: { horizontal: "left", vertical: "center", wrapText: true },
+          border: makeBorder()
+        }
+      };
+
+      const encode = (r, c) => XLSX.utils.encode_cell({ r, c });
+      const mergeRow = (r, c1 = 0, c2 = MAX_COL) => {
+        merges.push({ s: { r, c: c1 }, e: { r, c: c2 } });
+      };
+
+      const setRowHeight = (r, hpt) => {
+        rowsMeta[r] = rowsMeta[r] || {};
+        rowsMeta[r].hpt = hpt;
+      };
+
+      const setCell = (r, c, v, cellStyle, options = {}) => {
+        const addr = encode(r, c);
+        const cell = { v };
+        if (options.type) {
+          cell.t = options.type;
+        } else {
+          cell.t = typeof v === "number" ? "n" : "s";
+        }
+        if (options.numFmt) {
+          cell.z = options.numFmt;
+        }
+        if (cellStyle) {
+          cell.s = cellStyle;
+        }
+        ws[addr] = cell;
+      };
+
+      const addMergedTextRow = (text, style, height = 18) => {
+        setCell(cursorRow, 0, text, style);
+        for (let c = 1; c <= MAX_COL; c += 1) {
+          setCell(cursorRow, c, "", style);
+        }
+        mergeRow(cursorRow);
+        setRowHeight(cursorRow, height);
+        cursorRow += 1;
+      };
+
+      const addBlankRow = (count = 1) => {
+        for (let i = 0; i < count; i += 1) {
+          cursorRow += 1;
+        }
+      };
+
+      const settlementStyleByNet = (net) => {
+        const value = Number(net || 0);
+        if (value > EPSILON) return styles.positive;
+        if (value < -EPSILON) return styles.negative;
+        return styles.zero;
+      };
+
+      const groupSettlementText = (net) => {
+        const value = Number(net || 0);
+        if (value > EPSILON) return `可收回 ${formatNumber(value)} 元`;
+        if (value < -EPSILON) return `需支付 ${formatNumber(Math.abs(value))} 元`;
+        return `剛好 ${formatNumber(0)} 元`;
+      };
+
+      const globalNetText = (net) => {
+        const value = Number(net || 0);
+        if (value > EPSILON) return `可收 ${formatNumber(value)} 元`;
+        if (value < -EPSILON) return `應付 ${formatNumber(Math.abs(value))} 元`;
+        return `剛好 ${formatNumber(0)} 元`;
+      };
+
+      const addTableHeader = (headers, startCol = 0) => {
+        headers.forEach((text, idx) => {
+          setCell(cursorRow, startCol + idx, text, styles.tableHeader);
+        });
+        // 補齊到 MAX_COL，避免 !ref 太小導致 merge/樣式顯示不完整
+        for (let c = startCol + headers.length; c <= MAX_COL; c += 1) {
+          setCell(cursorRow, c, "", styles.tableHeader);
+        }
+        setRowHeight(cursorRow, 18);
+        cursorRow += 1;
+      };
+
+      const addSettlementRows = (rows, showWeight) => {
+        rows.forEach((row) => {
+          const name = normalizeName(row.name);
+          if (!name) return;
+
+          const paid = Number(row.paid || 0);
+          const shouldPay = Number(row.shouldPay || 0);
+          const net = Number(row.net || 0);
+
+          let col = 0;
+          setCell(cursorRow, col, name, styles.textCell);
+          col += 1;
+
+          if (showWeight) {
+            const weight = Number(row.weight || 0);
+            setCell(cursorRow, col, weight, styles.numberCell, { type: "n", numFmt: "0.00" });
+            col += 1;
+          }
+
+          setCell(cursorRow, col, paid, styles.numberCell, { type: "n", numFmt: "0.00" });
+          col += 1;
+          setCell(cursorRow, col, shouldPay, styles.numberCell, { type: "n", numFmt: "0.00" });
+          col += 1;
+          setCell(cursorRow, col, groupSettlementText(net), settlementStyleByNet(net));
+
+          // 補齊到 MAX_COL
+          for (let c = col + 1; c <= MAX_COL; c += 1) {
+            setCell(cursorRow, c, "", styles.textCell);
+          }
+
+          setRowHeight(cursorRow, 18);
+          cursorRow += 1;
+        });
+      };
+
+      const addGlobalNetTable = (netRows = []) => {
+        // Header：B~E 合併成「跨所選群組最終淨額」
+        setCell(cursorRow, 0, "成員", styles.tableHeader);
+        setCell(cursorRow, 1, "跨所選群組最終淨額", styles.tableHeader);
+        for (let c = 2; c <= MAX_COL; c += 1) {
+          setCell(cursorRow, c, "", styles.tableHeader);
+        }
+        merges.push({ s: { r: cursorRow, c: 1 }, e: { r: cursorRow, c: MAX_COL } });
+        setRowHeight(cursorRow, 18);
+        cursorRow += 1;
+
+        netRows.forEach((row) => {
+          const name = normalizeName(row.name);
+          if (!name) return;
+          const net = Number(row.net || 0);
+          setCell(cursorRow, 0, name, styles.textCell);
+          setCell(cursorRow, 1, globalNetText(net), settlementStyleByNet(net));
+          for (let c = 2; c <= MAX_COL; c += 1) {
+            setCell(cursorRow, c, "", settlementStyleByNet(net));
+          }
+          merges.push({ s: { r: cursorRow, c: 1 }, e: { r: cursorRow, c: MAX_COL } });
+          setRowHeight(cursorRow, 18);
+          cursorRow += 1;
+        });
+      };
+
+      let cursorRow = 0;
+
+      // ===== 標題區 =====
+      addMergedTextRow("全局債務結算", styles.title, 26);
+      addMergedTextRow(`產生時間：${generatedAt}`, styles.meta, 18);
+      addMergedTextRow(`納入群組：${(snapshot.chosenGroups || []).join("、")}`, styles.meta, 18);
+      addBlankRow(1);
+
+      // ===== 付款指引 =====
+      addMergedTextRow("付款指引", styles.section, 20);
+      if ((snapshot.transfers || []).length) {
+        snapshot.transfers.forEach((item, idx) => {
+          addMergedTextRow(
+            `${idx + 1}. ${normalizeName(item.from)} 應付給 ${normalizeName(item.to)}：${formatNumber(item.amount)} 元`,
+            styles.note,
+            18
+          );
+        });
+      } else {
+        addMergedTextRow("所選群組加總後已經平衡，沒有需要額外付款的對象。", styles.note, 18);
+      }
+      addBlankRow(1);
+
+      // ===== 各群組分解報告 =====
+      addMergedTextRow("各群組分解報告", styles.section, 20);
+      const groupBreakdowns = snapshot.groupBreakdowns || [];
+      if (!groupBreakdowns.length) {
+        addMergedTextRow("目前沒有可顯示的群組分解報告。", styles.note, 18);
+        addBlankRow(1);
+      } else {
+        groupBreakdowns.forEach((groupReport) => {
+          const groupName = normalizeName(groupReport.groupName);
+          addMergedTextRow(groupName || "（未命名群組）", styles.groupTitle, 20);
+          addMergedTextRow("此大群組會先依子群組獨立計算，再彙整為本群組總報告。", styles.note, 18);
+          if (Number(groupReport.duplicateCount || 0) > 0) {
+            addMergedTextRow(`此群組已先去除 ${String(groupReport.duplicateCount)} 筆重複的 bill 記錄，只保留每個 bill_id 的第一筆資料。`, styles.warn, 18);
+          }
+          addBlankRow(1);
+
+          (groupReport.subgroupReports || []).forEach((subgroupReport) => {
+            const subGroupName = normalizeSubGroupName(subgroupReport.subGroupName);
+            addMergedTextRow(`子群組：${subGroupName}`, styles.section, 18);
+            addBlankRow(1); // 子群組標題與成員表格之間空一行（對齊 PDF 段落）
+
+            const sortedRows = [...(subgroupReport?.stats?.rows || [])].sort((a, b) => {
+              return normalizeName(a.name).localeCompare(normalizeName(b.name), "zh-Hant");
+            });
+
+            if (sortedRows.length) {
+              addTableHeader(["成員", "權重 / 人數", "已付", "應付", "結算"]);
+              addSettlementRows(sortedRows, true);
+            } else {
+              addMergedTextRow("此子群組目前沒有足夠資料可供計算。", styles.note, 18);
+            }
+            addBlankRow(1);
+          });
+
+          // 本群組總報告
+          addMergedTextRow("本群組總報告", styles.section, 18);
+          addBlankRow(1);
+          const groupSortedRows = [...(groupReport?.stats?.rows || [])].sort((a, b) => {
+            return normalizeName(a.name).localeCompare(normalizeName(b.name), "zh-Hant");
+          });
+          addTableHeader(["成員", "已付", "應付", "結算"]);
+          addSettlementRows(groupSortedRows, false);
+          addBlankRow(2);
+        });
+      }
+
+      // ===== 全局淨額總表 =====
+      addMergedTextRow("全局淨額總表", styles.section, 20);
+      addGlobalNetTable(snapshot.netRows || []);
+
+      ws["!merges"] = merges;
+      ws["!cols"] = [
+        { wch: 18 }, // A 成員/標題
+        { wch: 14 }, // B 權重/已付
+        { wch: 14 }, // C 已付/應付
+        { wch: 14 }, // D 應付/結算
+        { wch: 28 }  // E 結算/長文字
+      ];
+      ws["!rows"] = rowsMeta;
+      ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(cursorRow - 1, 0), c: MAX_COL } });
+
+      XLSX.utils.book_append_sheet(wb, ws, "全局債務結算");
+      XLSX.writeFile(wb, `global_settlement_${stamp}.xlsx`);
+    }
+
+    // 保留舊的 CSV 版本（不掛在 UI 上），以免遇到 CDN 無法載入時完全沒路可走。
+    function exportGlobalSettlementCsvRaw() {
       if (!latestGlobalSettlementSnapshot) {
         openGlobalSettlementModal('<div class="empty">請先完成一次全局結算後，再導出 CSV。</div>');
         return;
@@ -2173,7 +2493,6 @@
         return `${label} ${settlementAmount(net)} 元`;
       };
 
-      // 1) 逐子群組輸出（與全局債務結算頁的分解報告一致）
       groupBreakdowns.forEach((groupReport) => {
         const groupName = normalizeName(groupReport.groupName);
         (groupReport.subgroupReports || []).forEach((subgroupReport) => {
@@ -2204,7 +2523,6 @@
           });
         });
 
-        // 2) 本群組總報告（仍一人一行，清楚標示群組名稱）
         const groupSortedRows = [...(groupReport?.stats?.rows || [])].sort((a, b) => {
           return normalizeName(a.name).localeCompare(normalizeName(b.name), "zh-Hant");
         });
@@ -2235,7 +2553,6 @@
         });
       });
 
-      // 3) 全局總匯表（方便樞紐分析：每人一行，且含已付/應付/最終淨額）
       const allNames = new Set([
         ...sumPaidMap.keys(),
         ...sumShouldPayMap.keys(),
@@ -2272,7 +2589,6 @@
         return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
       };
 
-      // Excel 對 CRLF 較友善，避免整份資料被塞到同一格
       const csvText = [header, ...rows].map((line) => line.map(escapeCsv).join(",")).join("\r\n");
       const blob = new Blob(["\ufeff" + csvText], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -2285,6 +2601,11 @@
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+    }
+
+    // 舊按鈕 id 保持不變：改成輸出 .xlsx
+    function exportGlobalSettlementCsv() {
+      exportGlobalSettlementXlsx();
     }
 
     async function runSelectedGlobalSettlement(selectedGroups) {
@@ -2418,7 +2739,7 @@
         <div class="button-row">
           <button type="button" class="btn-light" id="backToGlobalChooserBtn">返回群組勾選</button>
           <button type="button" class="btn-primary" id="exportGlobalSettlementPdfBtn">導出 PDF</button>
-          <button type="button" class="btn-secondary" id="exportGlobalSettlementCsvBtn">導出 Excel (CSV)</button>
+          <button type="button" class="btn-secondary" id="exportGlobalSettlementCsvBtn">導出 Excel (.xlsx)</button>
         </div>
         <div class="subsection">
           <h3>付款指引</h3>
