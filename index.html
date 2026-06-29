@@ -1113,7 +1113,8 @@
       renderPayerOptions();
     }
 
-    function buildSettlementRows(rows) {
+    function buildSettlementRows(rows, options = {}) {
+      const { showWeight = true } = options;
       return rows
         .map((row) => {
           let settlementText = `剛好 ${formatNumber(0)} 元`;
@@ -1130,7 +1131,7 @@
           return `
             <tr>
               <td>${escapeHtml(row.name)}</td>
-              <td class="number">${formatNumber(row.weight)}</td>
+              ${showWeight ? `<td class="number">${formatNumber(row.weight)}</td>` : ""}
               <td class="number">${formatNumber(row.paid)}</td>
               <td class="number">${formatNumber(row.shouldPay)}</td>
               <td class="${settlementClass}">${settlementText}</td>
@@ -1138,6 +1139,26 @@
           `;
         })
         .join("");
+    }
+
+    function buildSettlementTable(rows, options = {}) {
+      const { showWeight = true } = options;
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>成員</th>
+                ${showWeight ? "<th>權重 / 人數</th>" : ""}
+                <th>已付</th>
+                <th>應付</th>
+                <th>結算</th>
+              </tr>
+            </thead>
+            <tbody>${buildSettlementRows(rows, { showWeight })}</tbody>
+          </table>
+        </div>
+      `;
     }
 
     function renderMembers(members) {
@@ -1267,20 +1288,7 @@
         <div class="subgroup-block">
           <h4 class="subgroup-title">${escapeHtml(report.subGroupName)}</h4>
           ${report.stats.rows.length ? `
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>成員</th>
-                    <th>權重 / 人數</th>
-                    <th>已付</th>
-                    <th>應付</th>
-                    <th>結算</th>
-                  </tr>
-                </thead>
-                <tbody>${buildSettlementRows(report.stats.rows)}</tbody>
-              </table>
-            </div>
+            ${buildSettlementTable(report.stats.rows, { showWeight: true })}
           ` : '<div class="empty">此子群組目前沒有足夠資料可供計算。</div>'}
         </div>
       `).join("");
@@ -1291,20 +1299,7 @@
         ${subgroupHtml}
         <div class="subsection">
           <h3>大群組總報告</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>成員</th>
-                  <th>權重 / 人數</th>
-                  <th>已付</th>
-                  <th>應付</th>
-                  <th>結算</th>
-                </tr>
-              </thead>
-              <tbody>${buildSettlementRows(stats.rows)}</tbody>
-            </table>
-          </div>
+          ${buildSettlementTable(stats.rows, { showWeight: false })}
         </div>
       `;
     }
@@ -1955,6 +1950,26 @@
       openGlobalSettlementModal(content);
     }
 
+    function buildGlobalBreakdownHtml(groupBreakdowns = []) {
+      return groupBreakdowns.map((groupReport) => `
+        <div class="subsection">
+          <h3>${escapeHtml(groupReport.groupName)}</h3>
+          <div class="note-box">此大群組會先依子群組獨立計算，再彙整為本群組總報告。</div>
+          ${groupReport.duplicateCount > 0 ? `<div class="note-box warning-box">此群組已先去除 ${escapeHtml(String(groupReport.duplicateCount))} 筆重複的 bill 記錄，只保留每個 bill_id 的第一筆資料。</div>` : ""}
+          ${groupReport.subgroupReports.map((subgroupReport) => `
+            <div class="subgroup-block">
+              <h4 class="subgroup-title">${escapeHtml(subgroupReport.subGroupName)}</h4>
+              ${subgroupReport.stats.rows.length ? buildSettlementTable(subgroupReport.stats.rows, { showWeight: true }) : '<div class="empty">此子群組目前沒有足夠資料可供計算。</div>'}
+            </div>
+          `).join("")}
+          <div class="subsection">
+            <h4 class="subgroup-title">本群組總報告</h4>
+            ${buildSettlementTable(groupReport.stats.rows, { showWeight: true })}
+          </div>
+        </div>
+      `).join("");
+    }
+
     function exportGlobalSettlementPdf() {
       if (!latestGlobalSettlementSnapshot) {
         openGlobalSettlementModal('<div class="empty">請先完成一次全局結算後，再導出 PDF。</div>');
@@ -1995,6 +2010,8 @@
           }).join("")
         : '<tr><td colspan="2">目前沒有可彙總的成員淨額。</td></tr>';
 
+      const breakdownHtml = buildGlobalBreakdownHtml(snapshot.groupBreakdowns || []);
+
       const printHtml = `
         <!doctype html>
         <html lang="zh-Hant">
@@ -2031,6 +2048,10 @@
           <div class="section">
             <h2>付款指引</h2>
             ${transferHtml}
+          </div>
+          <div class="section">
+            <h2>各群組分解報告</h2>
+            ${breakdownHtml || '<div class="empty">目前沒有可顯示的群組分解報告。</div>'}
           </div>
           <div class="section">
             <h2>全局淨額總表</h2>
@@ -2171,17 +2192,20 @@
         ? `<div class="note-box warning-box">以下勾選群組因為沒有有效資料或缺少有效權重，已被略過：${escapeHtml(skippedGroups.join("、"))}</div>`
         : "";
 
+      const breakdownHtml = buildGlobalBreakdownHtml(groupBreakdowns);
+
       latestGlobalSettlementSnapshot = {
         chosenGroups,
         usableGroups,
         skippedGroups,
         totalDuplicateBillCount,
         netRows,
-        transfers
+        transfers,
+        groupBreakdowns
       };
 
       globalSettlementContent.innerHTML = `
-        <p class="muted">本頁只呈現全局層級的結算結果（成員、淨餘額、付款關係），不再顯示各子群組的權重 / 人數細節，以避免資訊過載。</p>
+        <p class="muted">這裡會完整保留各子群組與大群組總報告，方便你在最終結算前核對權重、應付與實付資料。</p>
         <div class="note-box">本次納入群組：${escapeHtml(chosenGroups.join("、"))}</div>
         ${usableGroups.length ? `<div class="note-box">成功參與計算的群組：${escapeHtml(usableGroups.join("、"))}</div>` : ""}
         ${totalDuplicateBillCount > 0 ? `<div class="note-box warning-box">全局結算前已先去除 ${escapeHtml(String(totalDuplicateBillCount))} 筆重複 bill，只會處理每個 bill_id 一次。</div>` : ""}
@@ -2193,6 +2217,10 @@
         <div class="subsection">
           <h3>付款指引</h3>
           ${transferHtml}
+        </div>
+        <div class="subsection">
+          <h3>各群組分解報告</h3>
+          ${breakdownHtml || '<div class="empty">目前沒有可顯示的群組分解報告。</div>'}
         </div>
         <div class="subsection">
           <h3>全局淨額總表</h3>
