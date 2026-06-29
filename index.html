@@ -2155,6 +2155,7 @@
       const rows = [];
       const sumPaidMap = new Map();
       const sumShouldPayMap = new Map();
+      const sumWeightMap = new Map();
 
       const netLabel = (net) => {
         const value = Number(net || 0);
@@ -2163,34 +2164,54 @@
         return "剛好";
       };
 
+      const settlementAmount = (net) => formatNumber(Math.abs(Number(net || 0)));
+      const settlementText = (net) => {
+        const label = netLabel(net);
+        if (label === "剛好") {
+          return `剛好 ${formatNumber(0)} 元`;
+        }
+        return `${label} ${settlementAmount(net)} 元`;
+      };
+
       // 1) 逐子群組輸出（與全局債務結算頁的分解報告一致）
       groupBreakdowns.forEach((groupReport) => {
         const groupName = normalizeName(groupReport.groupName);
         (groupReport.subgroupReports || []).forEach((subgroupReport) => {
           const subGroupName = normalizeSubGroupName(subgroupReport.subGroupName);
-          (subgroupReport?.stats?.rows || []).forEach((row) => {
+          const sortedRows = [...(subgroupReport?.stats?.rows || [])].sort((a, b) => {
+            return normalizeName(a.name).localeCompare(normalizeName(b.name), "zh-Hant");
+          });
+          sortedRows.forEach((row) => {
             const name = normalizeName(row.name);
             if (!name) return;
+            const weight = Number(row.weight || 0);
             const paid = Number(row.paid || 0);
             const shouldPay = Number(row.shouldPay || 0);
             const net = Number(row.net || 0);
             rows.push([
-              "子群組",
+              "子群組明細",
               groupName,
               subGroupName,
               name,
+              formatNumber(weight),
               formatNumber(paid),
               formatNumber(shouldPay),
               formatNumber(net),
-              netLabel(net)
+              netLabel(net),
+              settlementAmount(net),
+              settlementText(net)
             ]);
           });
         });
 
         // 2) 本群組總報告（仍一人一行，清楚標示群組名稱）
-        (groupReport?.stats?.rows || []).forEach((row) => {
+        const groupSortedRows = [...(groupReport?.stats?.rows || [])].sort((a, b) => {
+          return normalizeName(a.name).localeCompare(normalizeName(b.name), "zh-Hant");
+        });
+        groupSortedRows.forEach((row) => {
           const name = normalizeName(row.name);
           if (!name) return;
+          const weight = Number(row.weight || 0);
           const paid = Number(row.paid || 0);
           const shouldPay = Number(row.shouldPay || 0);
           const net = Number(row.net || 0);
@@ -2199,14 +2220,18 @@
             groupName,
             "本群組總報告",
             name,
+            formatNumber(weight),
             formatNumber(paid),
             formatNumber(shouldPay),
             formatNumber(net),
-            netLabel(net)
+            netLabel(net),
+            settlementAmount(net),
+            settlementText(net)
           ]);
 
           sumPaidMap.set(name, (sumPaidMap.get(name) || 0) + paid);
           sumShouldPayMap.set(name, (sumShouldPayMap.get(name) || 0) + shouldPay);
+          sumWeightMap.set(name, (sumWeightMap.get(name) || 0) + weight);
         });
       });
 
@@ -2230,21 +2255,25 @@
           "全局",
           "最終結算總表",
           name,
+          formatNumber(Number(sumWeightMap.get(name) || 0)),
           formatNumber(paid),
           formatNumber(shouldPay),
           formatNumber(net),
-          netLabel(net)
+          netLabel(net),
+          settlementAmount(net),
+          settlementText(net)
         ]);
       });
 
-      const header = ["類型", "群組", "子群組", "成員", "已付", "應付", "淨額", "收付"];
+      const header = ["區段", "群組", "子群組", "成員", "權重/人數", "已付", "應付", "淨額", "收付", "結算金額", "結算說明"];
 
       const escapeCsv = (value) => {
         const text = String(value ?? "");
-        return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+        return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
       };
 
-      const csvText = [header, ...rows].map((line) => line.map(escapeCsv).join(",")).join("\n");
+      // Excel 對 CRLF 較友善，避免整份資料被塞到同一格
+      const csvText = [header, ...rows].map((line) => line.map(escapeCsv).join(",")).join("\r\n");
       const blob = new Blob(["\ufeff" + csvText], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
