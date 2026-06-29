@@ -978,7 +978,8 @@
       renderPayerOptions(payerInput.value, safeSubGroupName);
       renderMembers(currentMembers);
       renderBills(currentBills);
-      renderGroupSummary(currentBills, currentMembers);
+      // 輸入頁底部改為「全局預覽模式」：用整個大群組資料做彙總（不只是目前子群組）
+      renderGroupSummary(allGroupBills, allGroupMembers);
     }
 
     function updateEditBackground() {
@@ -2149,55 +2150,101 @@
       }
 
       const snapshot = latestGlobalSettlementSnapshot;
-      const groupNames = (snapshot.chosenGroups || []).map(normalizeName).filter(Boolean);
       const groupBreakdowns = snapshot.groupBreakdowns || [];
 
-      const perGroupNetByName = new Map();
+      const rows = [];
+      const sumPaidMap = new Map();
+      const sumShouldPayMap = new Map();
+
+      const netLabel = (net) => {
+        const value = Number(net || 0);
+        if (value > EPSILON) return "可收";
+        if (value < -EPSILON) return "應付";
+        return "剛好";
+      };
+
+      // 1) 逐子群組輸出（與全局債務結算頁的分解報告一致）
       groupBreakdowns.forEach((groupReport) => {
         const groupName = normalizeName(groupReport.groupName);
-        if (!groupName) {
-          return;
-        }
-        const map = new Map();
+        (groupReport.subgroupReports || []).forEach((subgroupReport) => {
+          const subGroupName = normalizeSubGroupName(subgroupReport.subGroupName);
+          (subgroupReport?.stats?.rows || []).forEach((row) => {
+            const name = normalizeName(row.name);
+            if (!name) return;
+            const paid = Number(row.paid || 0);
+            const shouldPay = Number(row.shouldPay || 0);
+            const net = Number(row.net || 0);
+            rows.push([
+              "子群組",
+              groupName,
+              subGroupName,
+              name,
+              formatNumber(paid),
+              formatNumber(shouldPay),
+              formatNumber(net),
+              netLabel(net)
+            ]);
+          });
+        });
+
+        // 2) 本群組總報告（仍一人一行，清楚標示群組名稱）
         (groupReport?.stats?.rows || []).forEach((row) => {
           const name = normalizeName(row.name);
-          if (!name) {
-            return;
-          }
-          map.set(name, Number(row.net || 0));
+          if (!name) return;
+          const paid = Number(row.paid || 0);
+          const shouldPay = Number(row.shouldPay || 0);
+          const net = Number(row.net || 0);
+          rows.push([
+            "本群組總報告",
+            groupName,
+            "本群組總報告",
+            name,
+            formatNumber(paid),
+            formatNumber(shouldPay),
+            formatNumber(net),
+            netLabel(net)
+          ]);
+
+          sumPaidMap.set(name, (sumPaidMap.get(name) || 0) + paid);
+          sumShouldPayMap.set(name, (sumShouldPayMap.get(name) || 0) + shouldPay);
         });
-        perGroupNetByName.set(groupName, map);
       });
 
-      const allNames = new Set();
-      (snapshot.netRows || []).forEach((row) => {
-        const name = normalizeName(row.name);
-        if (name) {
-          allNames.add(name);
-        }
-      });
-      perGroupNetByName.forEach((map) => {
-        map.forEach((_net, name) => allNames.add(name));
+      // 3) 全局總匯表（方便樞紐分析：每人一行，且含已付/應付/最終淨額）
+      const allNames = new Set([
+        ...sumPaidMap.keys(),
+        ...sumShouldPayMap.keys(),
+        ...(snapshot.netRows || []).map((row) => normalizeName(row.name)).filter(Boolean)
+      ]);
+
+      const netMap = new Map(
+        (snapshot.netRows || []).map((row) => [normalizeName(row.name), Number(row.net || 0)])
+      );
+
+      [...allNames].sort((a, b) => a.localeCompare(b, "zh-Hant")).forEach((name) => {
+        const paid = Number(sumPaidMap.get(name) || 0);
+        const shouldPay = Number(sumShouldPayMap.get(name) || 0);
+        const net = Number(netMap.get(name) || (paid - shouldPay));
+        rows.push([
+          "全局總匯表",
+          "全局",
+          "最終結算總表",
+          name,
+          formatNumber(paid),
+          formatNumber(shouldPay),
+          formatNumber(net),
+          netLabel(net)
+        ]);
       });
 
-      const names = [...allNames].sort((a, b) => a.localeCompare(b, "zh-Hant"));
-      const netMap = new Map((snapshot.netRows || []).map((row) => [normalizeName(row.name), Number(row.net || 0)]));
-
-      const header = ["成員", ...groupNames.map((g) => `${g} 淨額`), "最終淨額"];
-      const rows = names.map((name) => {
-        const groupCells = groupNames.map((groupName) => {
-          const groupMap = perGroupNetByName.get(groupName);
-          return formatNumber(groupMap?.get(name) || 0);
-        });
-        return [name, ...groupCells, formatNumber(netMap.get(name) || 0)];
-      });
+      const header = ["類型", "群組", "子群組", "成員", "已付", "應付", "淨額", "收付"];
 
       const escapeCsv = (value) => {
         const text = String(value ?? "");
         return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
       };
-      const csvText = [header, ...rows].map((line) => line.map(escapeCsv).join(",")).join("\n");
 
+      const csvText = [header, ...rows].map((line) => line.map(escapeCsv).join(",")).join("\n");
       const blob = new Blob(["\ufeff" + csvText], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
