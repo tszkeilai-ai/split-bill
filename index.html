@@ -415,6 +415,53 @@
       font-size: 1rem;
     }
 
+    .home-hero {
+      display: grid;
+      gap: 10px;
+    }
+
+    .home-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .quick-group-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .quick-group-btn {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .quick-group-btn:hover {
+      background: #f8fafc;
+    }
+
+    .workspace-shell[hidden],
+    .home-view[hidden],
+    .workspace-view[hidden] {
+      display: none !important;
+    }
+
+    .workspace-top {
+      display: grid;
+      gap: 18px;
+    }
+
+    .workspace-title {
+      display: grid;
+      gap: 6px;
+    }
+
+    .danger-note {
+      color: #991b1b;
+    }
+
     @media (max-width: 640px) {
       .page {
         padding-left: 12px;
@@ -433,50 +480,71 @@
 </head>
 <body>
   <div class="page">
-    <section class="card">
-      <h1>分帳群組管理</h1>
-      <p class="muted">頁面順序已整理為群組、成員、預支、紀錄、全局結算與刪除群組。</p>
-      <form id="groupForm">
-        <div class="form-grid">
-          <div class="field">
-            <label for="groupInput">群組名稱</label>
-            <input id="groupInput" type="text" placeholder="輸入群組名稱後按 Enter 或點擊進入" autocomplete="off" />
+    <section class="card home-view" id="homeView">
+      <div class="home-grid">
+        <div class="home-hero">
+          <h1>分帳群組管理</h1>
+          <p class="muted">首頁只負責建立或選擇群組。進入後會切換到單一群組工作區，專心做資料輸入、結算與維護。</p>
+        </div>
+        <form id="groupForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="groupInput">新增或輸入群組名稱</label>
+              <input id="groupInput" type="text" placeholder="例如：日本旅遊、家庭帳本、公司聚餐" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="groupSelect">選擇既有群組</label>
+              <select id="groupSelect">
+                <option value="">請選擇已存在的群組</option>
+              </select>
+            </div>
           </div>
-          <div class="field">
-            <label for="groupSelect">快速切換群組</label>
-            <select id="groupSelect">
-              <option value="">請選擇已存在的群組</option>
-            </select>
+          <div class="button-row">
+            <button type="submit" class="btn-primary">進入工作區</button>
+            <button type="button" class="btn-light" id="resetBtn">清空</button>
+          </div>
+        </form>
+        <div class="hint" id="homeHint">輸入新群組名稱即可建立工作區，或直接選擇既有群組進入。</div>
+        <div class="subsection">
+          <div class="inline-head">
+            <h3>快速進入</h3>
+            <div class="quiet">從已存在群組直接開啟</div>
+          </div>
+          <div id="homeGroupQuickList" class="quick-group-list">
+            <div class="empty">正在讀取群組列表...</div>
           </div>
         </div>
-        <div class="button-row">
-          <button type="submit" class="btn-primary">進入</button>
-          <button type="button" class="btn-secondary" id="copyUrlBtn">複製目前網址</button>
-          <button type="button" class="btn-light" id="resetBtn">清除 / 重置</button>
-        </div>
-      </form>
-      <div class="group-meta">
-        <div class="badge">目前群組：<span id="currentGroupLabel">未選擇群組</span></div>
-        <div class="hint" id="groupHint">輸入群組名稱後即可進入。</div>
-      </div>
-      <div class="subsection">
-        <div class="form-grid">
-          <div class="field">
-            <label for="subGroupSelect">子群組選擇</label>
-            <select id="subGroupSelect">
-              <option value="子群組 1">子群組 1</option>
-            </select>
-          </div>
-        </div>
-        <div class="button-row">
-          <button type="button" class="btn-secondary" id="manageSubGroupBtn">修改子群組</button>
-          <button type="button" class="btn-primary" id="createSubGroupBtn">新增子群組</button>
-        </div>
-        <div class="hint" id="subGroupHint">目前使用子群組 1。</div>
       </div>
     </section>
 
-    <section class="card" id="memberCard">
+    <div class="workspace-shell workspace-view" id="workspaceShell" hidden>
+      <section class="card workspace-top" id="workspaceHeaderCard">
+        <div class="workspace-title">
+          <h1>群組工作區</h1>
+          <p class="muted">這個頁面只處理目前群組的資料輸入、群內彙總、全局結算與維護。</p>
+        </div>
+        <div class="group-meta">
+          <div class="badge">目前群組：<span id="currentGroupLabel">未選擇群組</span></div>
+          <div class="hint" id="groupHint">群組資料載入後會自動同步更新。</div>
+        </div>
+        <div class="subsection">
+          <div class="form-grid">
+            <div class="field">
+              <label for="subGroupSelect">子群組選擇</label>
+              <select id="subGroupSelect">
+                <option value="子群組 1">子群組 1</option>
+              </select>
+            </div>
+          </div>
+          <div class="button-row">
+            <button type="button" class="btn-secondary" id="manageSubGroupBtn">修改子群組</button>
+            <button type="button" class="btn-primary" id="createSubGroupBtn">新增子群組</button>
+          </div>
+          <div class="hint" id="subGroupHint">目前使用子群組 1。</div>
+        </div>
+      </section>
+
+    <section class="card workspace-view" id="memberCard">
       <h2 id="memberFormTitle">新增成員</h2>
       <p class="muted">這裡新增的成員，會成為「新增預支」中的付款人下拉選單來源。</p>
       <form id="memberForm">
@@ -513,7 +581,7 @@
       </div>
     </section>
 
-    <section class="card" id="billCard">
+    <section class="card workspace-view" id="billCard">
       <h2 id="billFormTitle">新增預支</h2>
       <p class="muted">付款人必須從成員下拉選單選擇，並嚴格使用 `payer`、`item_name`、`amount`、`group_name` 欄位。</p>
       <form id="billForm">
@@ -546,7 +614,7 @@
       </form>
     </section>
 
-    <section class="card">
+    <section class="card workspace-view">
       <div class="section-head">
         <h2>預支紀錄列表</h2>
         <div class="quiet" id="billCount">0 筆</div>
@@ -573,22 +641,25 @@
       </div>
     </section>
 
-    <section class="card action-panel">
+    <section class="card action-panel workspace-view">
       <h2>全局債務結算</h2>
-      <p class="muted">會自動讀取所有有資料的群組，先合併每位成員在各群組的最終淨額，再以債務最小化演算法配對最大債權與最大債務。</p>
+      <p class="muted">按下後會直接掃描整個資料庫中所有有資料的群組，不再出現二次篩選彈窗，並自動產出最小化付款配對。</p>
       <div class="button-row">
-        <button type="button" class="btn-primary" id="openGlobalSettlementBtn">開啟全局債務結算</button>
+        <button type="button" class="btn-primary" id="openGlobalSettlementBtn">執行全局債務結算</button>
       </div>
       <div class="hint" id="globalSettlementHint">尚未執行全局結算。</div>
     </section>
 
-    <section class="card delete-panel">
-      <h2>刪除目前群組</h2>
-      <p>此操作會刪除目前群組的所有成員與預支資料，系統會強制出現二次確認視窗以避免誤刪。</p>
+    <section class="card delete-panel workspace-view">
+      <h2>維護操作</h2>
+      <p>可返回首頁，或用安全刪除流程移除目前群組。刪除時必須手動輸入正確群組名稱才會解鎖。</p>
       <div class="button-row">
+        <button type="button" class="btn-light" id="returnHomeBtn">返回首頁</button>
         <button type="button" class="btn-danger" id="deleteGroupBtn">刪除目前群組</button>
       </div>
+      <div class="hint danger-note" id="deleteGroupHint">刪除後會同步移除這個群組的 `bills` 與 `members`，完成後自動返回首頁。</div>
     </section>
+    </div>
   </div>
 
   <div class="modal" id="globalSettlementModal" aria-hidden="true">
@@ -625,12 +696,37 @@
     </div>
   </div>
 
+  <div class="modal" id="deleteGroupModal" aria-hidden="true">
+    <div class="modal-dialog subgroup-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="deleteGroupModalTitle">
+      <div class="modal-head">
+        <h2 id="deleteGroupModalTitle">安全刪除目前群組</h2>
+        <button type="button" class="icon-btn" id="closeDeleteGroupModalBtn" aria-label="關閉">✕</button>
+      </div>
+      <div class="subgroup-modal-body">
+        <p class="muted">為避免誤刪，請在下方輸入完整群組名稱後，系統才會解鎖刪除按鈕。</p>
+        <div class="note-box warning-box">請輸入：<strong id="deleteGroupTargetLabel">-</strong></div>
+        <div class="field">
+          <label for="deleteGroupConfirmInput">確認群組名稱</label>
+          <input id="deleteGroupConfirmInput" type="text" placeholder="請手動輸入目前群組名稱" autocomplete="off" />
+        </div>
+        <div id="deleteGroupModalStatus" class="status"></div>
+        <div class="button-row">
+          <button type="button" class="btn-danger" id="confirmDeleteGroupBtn" disabled>確認刪除</button>
+          <button type="button" class="btn-light" id="cancelDeleteGroupBtn">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Excel 匯出：使用 xlsx-js-style 以支援合併儲存格、字體加粗、邊框等格式 -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <script>
-    const SUPABASE_URL = "https://zryatuqohbicnxcasqzl.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_SvaZt60lD68VdZaZbYbMFA_NpSO4Bgh";
+    const DEFAULT_SUPABASE_URL = "https://zryatuqohbicnxcasqzl.supabase.co";
+    const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_SvaZt60lD68VdZaZbYbMFA_NpSO4Bgh";
+    const SUPABASE_URL = window.APP_CONFIG?.SUPABASE_URL || DEFAULT_SUPABASE_URL;
+    const SUPABASE_ANON_KEY = window.APP_CONFIG?.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
     const BILLS_TABLE = "bills";
     const MEMBERS_TABLE = "members";
     const EPSILON = 0.005;
@@ -638,12 +734,17 @@
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const homeView = document.getElementById("homeView");
+    const homeHint = document.getElementById("homeHint");
+    const homeGroupQuickList = document.getElementById("homeGroupQuickList");
+    const workspaceShell = document.getElementById("workspaceShell");
     const groupForm = document.getElementById("groupForm");
     const groupInput = document.getElementById("groupInput");
     const groupSelect = document.getElementById("groupSelect");
-    const copyUrlBtn = document.getElementById("copyUrlBtn");
     const resetBtn = document.getElementById("resetBtn");
+    const returnHomeBtn = document.getElementById("returnHomeBtn");
     const deleteGroupBtn = document.getElementById("deleteGroupBtn");
+    const deleteGroupHint = document.getElementById("deleteGroupHint");
     const subGroupSelect = document.getElementById("subGroupSelect");
     const manageSubGroupBtn = document.getElementById("manageSubGroupBtn");
     const createSubGroupBtn = document.getElementById("createSubGroupBtn");
@@ -701,6 +802,14 @@
     const saveSubGroupBtn = document.getElementById("saveSubGroupBtn");
     const returnSubGroupBtn = document.getElementById("returnSubGroupBtn");
     const closeSubGroupModalBtn = document.getElementById("closeSubGroupModalBtn");
+
+    const deleteGroupModal = document.getElementById("deleteGroupModal");
+    const deleteGroupTargetLabel = document.getElementById("deleteGroupTargetLabel");
+    const deleteGroupConfirmInput = document.getElementById("deleteGroupConfirmInput");
+    const deleteGroupModalStatus = document.getElementById("deleteGroupModalStatus");
+    const confirmDeleteGroupBtn = document.getElementById("confirmDeleteGroupBtn");
+    const cancelDeleteGroupBtn = document.getElementById("cancelDeleteGroupBtn");
+    const closeDeleteGroupModalBtn = document.getElementById("closeDeleteGroupModalBtn");
 
     let currentGroupName = "";
     let currentSubGroupName = DEFAULT_SUB_GROUP_NAME;
@@ -910,6 +1019,27 @@
       return url.toString();
     }
 
+    function buildHomeUrl() {
+      return buildGroupUrl("");
+    }
+
+    function enterGroupWorkspace(groupName) {
+      const targetGroup = normalizeName(groupName || groupInput.value || groupSelect.value);
+      if (!targetGroup) {
+        homeHint.textContent = "請先輸入群組名稱，或從既有群組中選擇一個。";
+        return;
+      }
+      window.location.href = buildGroupUrl(targetGroup);
+    }
+
+    function setPageMode(mode) {
+      const isHomeMode = mode === "home";
+      homeView.hidden = !isHomeMode;
+      workspaceShell.hidden = isHomeMode;
+      document.body.classList.toggle("home-mode", isHomeMode);
+      document.body.classList.toggle("workspace-mode", !isHomeMode);
+    }
+
     function isPermissionError(error) {
       const message = String(error?.message || "").toLowerCase();
       const code = String(error?.code || "");
@@ -1034,6 +1164,17 @@
       groupSelect.innerHTML = options.join("");
     }
 
+    function renderHomeGroupQuickList(groupNames = []) {
+      if (!groupNames.length) {
+        homeGroupQuickList.innerHTML = '<div class="empty">目前還沒有既有群組，直接輸入名稱就能建立第一個群組。</div>';
+        return;
+      }
+
+      homeGroupQuickList.innerHTML = groupNames
+        .map((groupName) => `<button type="button" class="quick-group-btn" data-group-entry="${escapeHtml(groupName)}">${escapeHtml(groupName)}</button>`)
+        .join("");
+    }
+
     function renderPayerOptions(selectedValue = "", subGroupName = normalizeSubGroupName(billSubGroupNameInput?.value)) {
       const memberNames = [...new Set(
         currentMembers
@@ -1102,16 +1243,20 @@
       updateGroupHeader("");
       currentSubGroupName = DEFAULT_SUB_GROUP_NAME;
       currentSubGroupOptions = [DEFAULT_SUB_GROUP_NAME];
+      groupInput.value = "";
+      groupSelect.value = "";
       allGroupBills = [];
       allGroupMembers = [];
+      currentBills = [];
+      currentMembers = [];
       renderSubGroupSelectOptions(currentSubGroupOptions, currentSubGroupName);
       totalAmountEl.textContent = "0.00";
       totalWeightEl.textContent = "0.00";
       unitAmountEl.textContent = "0.00";
       memberCount.textContent = "0 人";
       billCount.textContent = "0 筆";
-      memberInlineList.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
-      billListEl.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
+      memberInlineList.innerHTML = '<div class="empty">請先從首頁進入一個群組。</div>';
+      billListEl.innerHTML = '<div class="empty">請先從首頁進入一個群組。</div>';
       groupSummaryEl.innerHTML = '<div class="empty">進入群組後，這裡會顯示本群組的應收應付結果。</div>';
       renderPayerOptions();
     }
@@ -1393,7 +1538,15 @@
         });
       }
 
-      renderGroupSelectOptions([...groups].sort((a, b) => a.localeCompare(b, "zh-Hant")));
+      const sortedGroups = [...groups].sort((a, b) => a.localeCompare(b, "zh-Hant"));
+      renderGroupSelectOptions(sortedGroups);
+      renderHomeGroupQuickList(sortedGroups);
+
+      if (!sortedGroups.length) {
+        homeHint.textContent = "目前資料庫還沒有群組，直接輸入名稱就能建立第一個工作區。";
+      } else {
+        homeHint.textContent = "可直接輸入新群組名稱，或從下拉選單與快速入口進入既有群組。";
+      }
     }
 
     async function migrateNullSubGroups() {
@@ -1659,21 +1812,57 @@
       }
     }
 
+    function openDeleteGroupModal() {
+      if (!currentGroupName) {
+        deleteGroupHint.textContent = "目前沒有可刪除的群組。";
+        return;
+      }
+
+      deleteGroupTargetLabel.textContent = currentGroupName;
+      deleteGroupConfirmInput.value = "";
+      clearStatus(deleteGroupModalStatus);
+      confirmDeleteGroupBtn.disabled = true;
+      deleteGroupModal.classList.add("is-open");
+      deleteGroupModal.setAttribute("aria-hidden", "false");
+      deleteGroupConfirmInput.focus();
+    }
+
+    function closeDeleteGroupModal() {
+      deleteGroupModal.classList.remove("is-open");
+      deleteGroupModal.setAttribute("aria-hidden", "true");
+      deleteGroupConfirmInput.value = "";
+      confirmDeleteGroupBtn.disabled = true;
+      clearStatus(deleteGroupModalStatus);
+    }
+
+    function syncDeleteGroupGuard() {
+      const matched = normalizeName(deleteGroupConfirmInput.value) === normalizeName(currentGroupName);
+      confirmDeleteGroupBtn.disabled = !matched;
+      if (!deleteGroupConfirmInput.value) {
+        clearStatus(deleteGroupModalStatus);
+        return;
+      }
+      if (matched) {
+        setStatus(deleteGroupModalStatus, "群組名稱正確，可以執行刪除。", "success");
+      } else {
+        setStatus(deleteGroupModalStatus, "輸入的群組名稱不符，刪除按鈕仍維持鎖定。", "error");
+      }
+    }
+
     async function deleteCurrentGroup() {
       if (!currentGroupName) {
-        groupHint.textContent = "目前沒有可刪除的群組。";
+        deleteGroupHint.textContent = "目前沒有可刪除的群組。";
         return;
       }
 
-      const firstConfirm = window.confirm(`確定要刪除群組「${currentGroupName}」的所有資料嗎？`);
-      if (!firstConfirm) {
+      if (normalizeName(deleteGroupConfirmInput.value) !== normalizeName(currentGroupName)) {
+        setStatus(deleteGroupModalStatus, "請先輸入完全一致的群組名稱。", "error");
+        confirmDeleteGroupBtn.disabled = true;
         return;
       }
 
-      const secondConfirm = window.confirm(`請再次確認：刪除群組「${currentGroupName}」後將無法復原。是否繼續？`);
-      if (!secondConfirm) {
-        return;
-      }
+      confirmDeleteGroupBtn.disabled = true;
+      setStatus(deleteGroupModalStatus, "正在刪除目前群組資料...", "success");
 
       const [deleteBillsResult, deleteMembersResult] = await Promise.all([
         supabaseClient.from(BILLS_TABLE).delete().eq("group_name", currentGroupName),
@@ -1681,12 +1870,14 @@
       ]);
 
       if (deleteBillsResult.error) {
-        setStatus(billStatus, getErrorMessage(deleteBillsResult.error, "刪除群組失敗"), "error");
+        setStatus(deleteGroupModalStatus, getErrorMessage(deleteBillsResult.error, "刪除群組失敗"), "error");
+        syncDeleteGroupGuard();
         return;
       }
 
       if (deleteMembersResult.error) {
-        setStatus(memberStatus, getErrorMessage(deleteMembersResult.error, "刪除群組失敗"), "error");
+        setStatus(deleteGroupModalStatus, getErrorMessage(deleteMembersResult.error, "刪除群組失敗"), "error");
+        syncDeleteGroupGuard();
         return;
       }
 
@@ -1700,8 +1891,8 @@
       resetBillForm();
       resetMemberForm();
       await loadExistingGroupNames();
-      globalSettlementHint.textContent = "目前群組已刪除。";
-      window.location.href = buildGroupUrl("");
+      closeDeleteGroupModal();
+      window.location.href = buildHomeUrl();
     }
 
     async function saveMember(event) {
@@ -2612,16 +2803,11 @@
       const chosenGroups = [...new Set((selectedGroups || []).map(normalizeName).filter(Boolean))];
 
       if (!chosenGroups.length) {
-        globalSettlementContent.innerHTML = `
-          <div class="empty">請至少勾選一個群組後再進行結算。</div>
-          <div class="button-row">
-            <button type="button" class="btn-light" id="backToGlobalChooserBtn">返回群組勾選</button>
-          </div>
-        `;
+        globalSettlementContent.innerHTML = '<div class="empty">目前資料庫中沒有任何可納入全局結算的群組。</div>';
         return;
       }
 
-      globalSettlementContent.innerHTML = '<div class="empty">正在依照勾選群組進行隔離計算與全局結算...</div>';
+      globalSettlementContent.innerHTML = '<div class="empty">正在依照整個資料庫的群組資料進行隔離計算與全局結算...</div>';
 
       const [billsResult, membersResult] = await Promise.all([
         supabaseClient.from(BILLS_TABLE).select("*").in("group_name", chosenGroups),
@@ -2629,12 +2815,12 @@
       ]);
 
       if (billsResult.error) {
-        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(billsResult.error, "讀取勾選群組的預支資料失敗"))}</div>`;
+        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(billsResult.error, "讀取全局結算用的預支資料失敗"))}</div>`;
         return;
       }
 
       if (membersResult.error) {
-        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(membersResult.error, "讀取勾選群組的成員資料失敗"))}</div>`;
+        globalSettlementContent.innerHTML = `<div class="empty">${escapeHtml(getErrorMessage(membersResult.error, "讀取全局結算用的成員資料失敗"))}</div>`;
         return;
       }
 
@@ -2715,7 +2901,7 @@
         : '<div class="empty">所選群組加總後已經平衡，沒有需要額外付款的對象。</div>';
 
       const skippedHtml = skippedGroups.length
-        ? `<div class="note-box warning-box">以下勾選群組因為沒有有效資料或缺少有效權重，已被略過：${escapeHtml(skippedGroups.join("、"))}</div>`
+        ? `<div class="note-box warning-box">以下群組因為沒有有效資料或缺少有效權重，已被略過：${escapeHtml(skippedGroups.join("、"))}</div>`
         : "";
 
       const breakdownHtml = buildGlobalBreakdownHtml(groupBreakdowns);
@@ -2732,12 +2918,11 @@
 
       globalSettlementContent.innerHTML = `
         <p class="muted">這裡會完整保留各子群組與大群組總報告，方便你在最終結算前核對權重、應付與實付資料。</p>
-        <div class="note-box">本次納入群組：${escapeHtml(chosenGroups.join("、"))}</div>
+        <div class="note-box">本次掃描群組：${escapeHtml(chosenGroups.join("、"))}</div>
         ${usableGroups.length ? `<div class="note-box">成功參與計算的群組：${escapeHtml(usableGroups.join("、"))}</div>` : ""}
         ${totalDuplicateBillCount > 0 ? `<div class="note-box warning-box">全局結算前已先去除 ${escapeHtml(String(totalDuplicateBillCount))} 筆重複 bill，只會處理每個 bill_id 一次。</div>` : ""}
         ${skippedHtml}
         <div class="button-row">
-          <button type="button" class="btn-light" id="backToGlobalChooserBtn">返回群組勾選</button>
           <button type="button" class="btn-primary" id="exportGlobalSettlementPdfBtn">導出 PDF</button>
           <button type="button" class="btn-secondary" id="exportGlobalSettlementCsvBtn">導出 Excel (.xlsx)</button>
         </div>
@@ -2765,16 +2950,13 @@
         </div>
       `;
 
-      globalSettlementHint.textContent = `已依照勾選群組完成結算：${chosenGroups.join("、")}`;
+      globalSettlementHint.textContent = `已完成全資料庫結算：${chosenGroups.join("、")}`;
     }
 
     async function openGlobalSettlement() {
       openGlobalSettlementBtn.disabled = true;
-      openGlobalSettlementBtn.textContent = "載入群組中...";
-      globalSettlementHint.textContent = "正在讀取可供勾選的群組名稱。";
-
-      openGlobalSettlementBtn.disabled = false;
-      openGlobalSettlementBtn.textContent = "開啟全局債務結算";
+      openGlobalSettlementBtn.textContent = "結算中...";
+      globalSettlementHint.textContent = "正在掃描整個資料庫中的群組資料。";
 
       try {
         const groupNames = await getDistinctGroupNames();
@@ -2783,10 +2965,14 @@
           globalSettlementHint.textContent = "資料庫中沒有任何群組資料。";
           return;
         }
-        renderGlobalSettlementChooser(groupNames);
-        globalSettlementHint.textContent = "請先勾選要納入本次結算的子群組。";
+        openGlobalSettlementModal('<div class="empty">正在整合所有群組資料並執行最小化付款配對...</div>');
+        await runSelectedGlobalSettlement(groupNames);
+        globalSettlementHint.textContent = `已直接掃描全部群組並完成結算：${groupNames.join("、")}`;
       } catch (error) {
         globalSettlementHint.textContent = error.message || "讀取群組名稱失敗。";
+      } finally {
+        openGlobalSettlementBtn.disabled = false;
+        openGlobalSettlementBtn.textContent = "執行全局債務結算";
       }
     }
 
@@ -2836,21 +3022,25 @@
 
     groupForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      const groupName = normalizeName(groupInput.value);
-      if (!groupName) {
-        groupHint.textContent = "請先輸入群組名稱。";
-        return;
-      }
-      switchGroup(groupName);
+      enterGroupWorkspace(groupInput.value);
     });
 
-    groupSelect.addEventListener("change", async () => {
+    groupSelect.addEventListener("change", () => {
       const selectedGroup = normalizeName(groupSelect.value);
       if (!selectedGroup) {
         return;
       }
-      await switchGroup(selectedGroup);
+      enterGroupWorkspace(selectedGroup);
     });
+
+    homeGroupQuickList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-group-entry]");
+      if (!button) {
+        return;
+      }
+      enterGroupWorkspace(button.getAttribute("data-group-entry"));
+    });
+
     subGroupSelect.addEventListener("change", () => {
       currentSubGroupName = normalizeSubGroupName(subGroupSelect.value);
       resetMemberForm();
@@ -2859,11 +3049,15 @@
       groupHint.textContent = `目前顯示群組「${currentGroupName}」中子群組「${currentSubGroupName}」的資料。`;
     });
 
-    copyUrlBtn.addEventListener("click", copyCurrentUrl);
     resetBtn.addEventListener("click", () => {
-      window.location.href = buildGroupUrl("");
+      groupInput.value = "";
+      groupSelect.value = "";
+      homeHint.textContent = "輸入新群組名稱即可建立工作區，或直接選擇既有群組進入。";
     });
-    deleteGroupBtn.addEventListener("click", deleteCurrentGroup);
+    returnHomeBtn.addEventListener("click", () => {
+      window.location.href = buildHomeUrl();
+    });
+    deleteGroupBtn.addEventListener("click", openDeleteGroupModal);
     manageSubGroupBtn.addEventListener("click", () => openSubGroupModal("edit"));
     createSubGroupBtn.addEventListener("click", () => openSubGroupModal("create"));
     subGroupModalForm.addEventListener("submit", async (event) => {
@@ -2872,6 +3066,10 @@
     });
     returnSubGroupBtn.addEventListener("click", closeSubGroupModal);
     closeSubGroupModalBtn.addEventListener("click", closeSubGroupModal);
+    deleteGroupConfirmInput.addEventListener("input", syncDeleteGroupGuard);
+    confirmDeleteGroupBtn.addEventListener("click", deleteCurrentGroup);
+    cancelDeleteGroupBtn.addEventListener("click", closeDeleteGroupModal);
+    closeDeleteGroupModalBtn.addEventListener("click", closeDeleteGroupModal);
 
     memberForm.addEventListener("submit", saveMember);
     memberCancelBtn.addEventListener("click", resetMemberForm);
@@ -2886,16 +3084,6 @@
     globalSettlementModal.addEventListener("click", (event) => {
       if (event.target === globalSettlementModal) {
         closeGlobalSettlementModal();
-      }
-
-      if (event.target && event.target.id === "runGlobalSettlementBtn") {
-        const checkedGroups = [...globalSettlementModal.querySelectorAll('input[name="selected_groups"]:checked')]
-          .map((input) => input.value);
-        runSelectedGlobalSettlement(checkedGroups);
-      }
-
-      if (event.target && event.target.id === "backToGlobalChooserBtn") {
-        openGlobalSettlement();
       }
 
       if (event.target && event.target.id === "exportGlobalSettlementPdfBtn") {
@@ -2913,6 +3101,12 @@
       }
     });
 
+    deleteGroupModal.addEventListener("click", (event) => {
+      if (event.target === deleteGroupModal) {
+        closeDeleteGroupModal();
+      }
+    });
+
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && globalSettlementModal.classList.contains("is-open")) {
         closeGlobalSettlementModal();
@@ -2921,6 +3115,11 @@
 
       if (event.key === "Escape" && subGroupModal.classList.contains("is-open")) {
         closeSubGroupModal();
+        return;
+      }
+
+      if (event.key === "Escape" && deleteGroupModal.classList.contains("is-open")) {
+        closeDeleteGroupModal();
       }
     });
 
@@ -2931,17 +3130,17 @@
       await migrateNullSubGroups();
       currentGroupName = getGroupNameFromUrl();
       currentSubGroupName = DEFAULT_SUB_GROUP_NAME;
-      groupInput.value = currentGroupName;
+      groupInput.value = "";
       updateGroupHeader(currentGroupName);
       renderSubGroupSelectOptions([DEFAULT_SUB_GROUP_NAME], DEFAULT_SUB_GROUP_NAME);
       resetMemberForm();
       resetBillForm();
       await loadExistingGroupNames();
-      groupSelect.value = currentGroupName;
-
       if (currentGroupName) {
+        setPageMode("workspace");
         await loadGroupData();
       } else {
+        setPageMode("home");
         renderWelcomeState();
       }
     }
