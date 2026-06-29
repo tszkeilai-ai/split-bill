@@ -705,6 +705,7 @@
     let currentSubGroupOptions = [DEFAULT_SUB_GROUP_NAME];
     let subGroupModalMode = "edit";
     let subGroupModalOriginalName = DEFAULT_SUB_GROUP_NAME;
+    let latestGlobalSettlementSnapshot = null;
     let allGroupBills = [];
     let allGroupMembers = [];
     let currentBills = [];
@@ -1954,6 +1955,112 @@
       openGlobalSettlementModal(content);
     }
 
+    function exportGlobalSettlementPdf() {
+      if (!latestGlobalSettlementSnapshot) {
+        openGlobalSettlementModal('<div class="empty">請先完成一次全局結算後，再導出 PDF。</div>');
+        return;
+      }
+
+      const snapshot = latestGlobalSettlementSnapshot;
+      const now = new Date();
+      const generatedAt = now.toLocaleString("zh-Hant");
+
+      const transferHtml = snapshot.transfers.length
+        ? `
+          <ol class="transfer-list">
+            ${snapshot.transfers.map((item) => `
+              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)} 元</li>
+            `).join("")}
+          </ol>
+        `
+        : '<div class="empty">所選群組加總後已經平衡，沒有需要額外付款的對象。</div>';
+
+      const netTableRows = snapshot.netRows.length
+        ? snapshot.netRows.map((row) => {
+            let label = `剛好 ${formatNumber(0)} 元`;
+            let className = "settlement-zero";
+            if (row.net > EPSILON) {
+              label = `可收 ${formatNumber(row.net)} 元`;
+              className = "settlement-positive";
+            } else if (row.net < -EPSILON) {
+              label = `應付 ${formatNumber(Math.abs(row.net))} 元`;
+              className = "settlement-negative";
+            }
+            return `
+              <tr>
+                <td>${escapeHtml(row.name)}</td>
+                <td class="${className}">${label}</td>
+              </tr>
+            `;
+          }).join("")
+        : '<tr><td colspan="2">目前沒有可彙總的成員淨額。</td></tr>';
+
+      const printHtml = `
+        <!doctype html>
+        <html lang="zh-Hant">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>全局債務結算</title>
+          <style>
+            :root { color-scheme: light; }
+            body { font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans TC", sans-serif; margin: 24px; color: #0f172a; }
+            h1 { font-size: 20px; margin: 0 0 8px; }
+            p { margin: 6px 0; color: #334155; }
+            .meta { margin-bottom: 16px; }
+            .note { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 12px; margin: 12px 0; }
+            .section { margin-top: 18px; }
+            .section h2 { font-size: 16px; margin: 0 0 10px; }
+            table { width: 100%; border-collapse: collapse; font-size: 14px; }
+            th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: left; }
+            th { background: #f1f5f9; }
+            .settlement-positive { color: #166534; font-weight: 700; }
+            .settlement-negative { color: #9a3412; font-weight: 700; }
+            .settlement-zero { color: #334155; font-weight: 700; }
+            ol { padding-left: 18px; margin: 0; }
+            li + li { margin-top: 6px; }
+            @media print { body { margin: 10mm; } }
+          </style>
+        </head>
+        <body>
+          <div class="meta">
+            <h1>全局債務結算</h1>
+            <p>產生時間：${escapeHtml(generatedAt)}</p>
+            <p>納入群組：${escapeHtml(snapshot.chosenGroups.join("、"))}</p>
+          </div>
+          <div class="section">
+            <h2>付款指引</h2>
+            ${transferHtml}
+          </div>
+          <div class="section">
+            <h2>全局淨額總表</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>成員</th>
+                  <th>跨所選群組最終淨額</th>
+                </tr>
+              </thead>
+              <tbody>${netTableRows}</tbody>
+            </table>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const win = window.open("", "_blank");
+      if (!win) {
+        openGlobalSettlementModal('<div class="empty">無法開啟新視窗導出 PDF，請確認瀏覽器沒有封鎖彈出視窗。</div>');
+        return;
+      }
+
+      win.document.open();
+      win.document.write(printHtml);
+      win.document.close();
+      win.focus();
+      win.print();
+    }
+
     async function runSelectedGlobalSettlement(selectedGroups) {
       const chosenGroups = [...new Set((selectedGroups || []).map(normalizeName).filter(Boolean))];
 
@@ -2064,68 +2171,28 @@
         ? `<div class="note-box warning-box">以下勾選群組因為沒有有效資料或缺少有效權重，已被略過：${escapeHtml(skippedGroups.join("、"))}</div>`
         : "";
 
-      const breakdownHtml = groupBreakdowns.map((groupReport) => `
-        <div class="subsection">
-          <h3>${escapeHtml(groupReport.groupName)}</h3>
-          <div class="note-box">此大群組會先依子群組獨立計算，再彙整為本群組總報告。</div>
-          ${groupReport.duplicateCount > 0 ? `<div class="note-box warning-box">此群組已先去除 ${escapeHtml(String(groupReport.duplicateCount))} 筆重複的 bill 記錄，只保留每個 bill_id 的第一筆資料。</div>` : ""}
-          ${groupReport.subgroupReports.map((subgroupReport) => `
-            <div class="subgroup-block">
-              <h4 class="subgroup-title">${escapeHtml(subgroupReport.subGroupName)}</h4>
-              ${subgroupReport.stats.rows.length ? `
-                <div class="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>成員</th>
-                        <th>權重 / 人數</th>
-                        <th>已付</th>
-                        <th>應付</th>
-                        <th>結算</th>
-                      </tr>
-                    </thead>
-                    <tbody>${buildSettlementRows(subgroupReport.stats.rows)}</tbody>
-                  </table>
-                </div>
-              ` : '<div class="empty">此子群組目前沒有足夠資料可供計算。</div>'}
-            </div>
-          `).join("")}
-          <div class="subsection">
-            <h4 class="subgroup-title">本群組總報告</h4>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>成員</th>
-                    <th>權重 / 人數</th>
-                    <th>已付</th>
-                    <th>應付</th>
-                    <th>結算</th>
-                  </tr>
-                </thead>
-                <tbody>${buildSettlementRows(groupReport.stats.rows)}</tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `).join("");
+      latestGlobalSettlementSnapshot = {
+        chosenGroups,
+        usableGroups,
+        skippedGroups,
+        totalDuplicateBillCount,
+        netRows,
+        transfers
+      };
 
       globalSettlementContent.innerHTML = `
-        <p class="muted">本次只納入你勾選的大群組，且每個大群組都會先依子群組個別計算，再按人名彙總各群組的淨額，不會在全局層重算權重。</p>
+        <p class="muted">本頁只呈現全局層級的結算結果（成員、淨餘額、付款關係），不再顯示各子群組的權重 / 人數細節，以避免資訊過載。</p>
         <div class="note-box">本次納入群組：${escapeHtml(chosenGroups.join("、"))}</div>
         ${usableGroups.length ? `<div class="note-box">成功參與計算的群組：${escapeHtml(usableGroups.join("、"))}</div>` : ""}
         ${totalDuplicateBillCount > 0 ? `<div class="note-box warning-box">全局結算前已先去除 ${escapeHtml(String(totalDuplicateBillCount))} 筆重複 bill，只會處理每個 bill_id 一次。</div>` : ""}
         ${skippedHtml}
         <div class="button-row">
           <button type="button" class="btn-light" id="backToGlobalChooserBtn">返回群組勾選</button>
+          <button type="button" class="btn-primary" id="exportGlobalSettlementPdfBtn">導出 PDF</button>
         </div>
         <div class="subsection">
           <h3>付款指引</h3>
           ${transferHtml}
-        </div>
-        <div class="subsection">
-          <h3>各群組分解報告</h3>
-          ${breakdownHtml || '<div class="empty">目前沒有可顯示的群組分解報告。</div>'}
         </div>
         <div class="subsection">
           <h3>全局淨額總表</h3>
@@ -2274,6 +2341,10 @@
 
       if (event.target && event.target.id === "backToGlobalChooserBtn") {
         openGlobalSettlement();
+      }
+
+      if (event.target && event.target.id === "exportGlobalSettlementPdfBtn") {
+        exportGlobalSettlementPdf();
       }
     });
 
