@@ -811,11 +811,6 @@
         <div class="workspace-hero">
           <div class="workspace-title">
             <h1>分帳群組管理</h1>
-            <p class="muted">首頁專注在建立或進入群組，進入後再切換到單一群組工作區，讓輸入、檢視與結算流程更聚焦。</p>
-          </div>
-          <div class="home-hero-meta">
-            <span class="badge">快速進入已存在群組</span>
-            <span class="pill">支援多子群組工作流</span>
           </div>
         </div>
       </section>
@@ -823,8 +818,7 @@
       <section class="card quick-access-card">
         <div class="inline-head">
           <div>
-            <h3>快速進入</h3>
-            <div class="quiet">從最近已存在的群組，直接一鍵打開工作區。</div>
+            <h3>🕒 最近使用</h3>
           </div>
         </div>
         <div id="homeGroupQuickList" class="quick-group-list">
@@ -835,8 +829,7 @@
       <form id="groupForm" class="home-entry-grid">
         <section class="card entry-card create-entry">
           <div>
-            <h2>建立新群組</h2>
-            <p class="muted">輸入新的群組名稱後直接建立工作區，適合立即開始記帳。</p>
+            <h2>➕ 建立新群組</h2>
           </div>
           <div class="field">
             <label for="groupInput">新群組名稱</label>
@@ -850,8 +843,7 @@
 
         <section class="card entry-card existing-entry">
           <div>
-            <h2>進入既有群組</h2>
-            <p class="muted">從下拉選單選擇既有群組，或直接搭配上方快速入口進入。</p>
+            <h2>📂 進入既有群組</h2>
           </div>
           <div class="field">
             <label for="groupSelect">既有群組</label>
@@ -864,8 +856,6 @@
           </div>
         </section>
       </form>
-
-      <div class="hint" id="homeHint">輸入新群組名稱即可建立工作區，或直接選擇既有群組進入。</div>
     </section>
 
     <div class="workspace-shell workspace-view" id="workspaceShell" hidden>
@@ -1126,6 +1116,7 @@
     const MEMBERS_TABLE = "members";
     const EPSILON = 0.005;
     const DEFAULT_SUB_GROUP_NAME = "子群組 1";
+    const RECENT_GROUPS_STORAGE_KEY = "split-group-recent-history";
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -1231,6 +1222,32 @@
     let allGroupMembers = [];
     let currentBills = [];
     let currentMembers = [];
+
+    function getRecentGroupNames() {
+      try {
+        const raw = window.localStorage.getItem(RECENT_GROUPS_STORAGE_KEY);
+        const parsed = JSON.parse(raw || "[]");
+        return Array.isArray(parsed) ? parsed.map(normalizeName).filter(Boolean) : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveRecentGroupName(groupName) {
+      const normalized = normalizeName(groupName);
+      if (!normalized) {
+        return;
+      }
+
+      const recentGroups = getRecentGroupNames().filter((name) => name !== normalized);
+      const nextGroups = [normalized, ...recentGroups].slice(0, 3);
+
+      try {
+        window.localStorage.setItem(RECENT_GROUPS_STORAGE_KEY, JSON.stringify(nextGroups));
+      } catch (error) {
+        // 忽略 localStorage 不可用的情況，避免影響主要流程
+      }
+    }
 
     function formatNumber(value) {
       const number = Number(value || 0);
@@ -1436,9 +1453,9 @@
     function enterGroupWorkspace(groupName) {
       const targetGroup = normalizeName(groupName || groupInput.value || groupSelect.value);
       if (!targetGroup) {
-        homeHint.textContent = "請先輸入群組名稱，或從既有群組中選擇一個。";
         return;
       }
+      saveRecentGroupName(targetGroup);
       window.location.href = buildGroupUrl(targetGroup);
     }
 
@@ -1580,7 +1597,12 @@
         return;
       }
 
-      homeGroupQuickList.innerHTML = groupNames
+      const existingGroupSet = new Set((groupNames || []).map(normalizeName).filter(Boolean));
+      const recentGroups = getRecentGroupNames().filter((groupName) => existingGroupSet.has(groupName));
+      const fallbackGroups = (groupNames || []).filter((groupName) => !recentGroups.includes(groupName));
+      const displayGroups = [...recentGroups, ...fallbackGroups].slice(0, 3);
+
+      homeGroupQuickList.innerHTML = displayGroups
         .map((groupName) => `<button type="button" class="quick-group-btn" data-group-entry="${escapeHtml(groupName)}">${escapeHtml(groupName)}</button>`)
         .join("");
     }
@@ -1951,12 +1973,6 @@
       const sortedGroups = [...groups].sort((a, b) => a.localeCompare(b, "zh-Hant"));
       renderGroupSelectOptions(sortedGroups);
       renderHomeGroupQuickList(sortedGroups);
-
-      if (!sortedGroups.length) {
-        homeHint.textContent = "目前資料庫還沒有群組，直接輸入名稱就能建立第一個工作區。";
-      } else {
-        homeHint.textContent = "可直接輸入新群組名稱，或從下拉選單與快速入口進入既有群組。";
-      }
     }
 
     async function migrateNullSubGroups() {
@@ -4032,7 +4048,6 @@
     resetBtn.addEventListener("click", () => {
       groupInput.value = "";
       groupSelect.value = "";
-      homeHint.textContent = "輸入新群組名稱即可建立工作區，或直接選擇既有群組進入。";
     });
     returnHomeBtn.addEventListener("click", () => {
       window.location.href = buildHomeUrl();
@@ -4109,7 +4124,6 @@
       enterExistingGroupBtn.addEventListener("click", () => {
         const selectedGroup = normalizeName(groupSelect.value);
         if (!selectedGroup) {
-          homeHint.textContent = "請先選擇一個既有群組。";
           return;
         }
         enterGroupWorkspace(selectedGroup);
