@@ -291,15 +291,19 @@
     .subgroup-toolbar-main {
       min-width: 0;
       flex: 1 1 auto;
+      max-width: 100%;
     }
 
     .subgroup-select-shell {
       position: relative;
       min-width: 0;
+      max-width: 100%;
     }
 
     .subgroup-select {
       appearance: none;
+      width: 100%;
+      max-width: 100%;
       min-height: 38px;
       padding: 8px 38px 8px 12px;
       font-size: 0.95rem;
@@ -307,6 +311,9 @@
       background: linear-gradient(180deg, #ffffff, #f8fbff);
       border-color: #cfe0ff;
       box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .subgroup-select-icon {
@@ -324,6 +331,7 @@
       align-items: center;
       gap: 6px;
       justify-content: flex-end;
+      margin-left: auto;
       flex-shrink: 0;
       flex-wrap: nowrap;
     }
