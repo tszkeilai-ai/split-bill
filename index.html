@@ -281,43 +281,57 @@
     .subgroup-toolbar {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 18px;
-      align-items: start;
+      gap: 12px;
+      align-items: center;
     }
 
     .subgroup-toolbar-main {
-      display: grid;
-      gap: 12px;
+      min-width: 0;
     }
 
-    .subgroup-tabs {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 2px;
-      scrollbar-width: thin;
+    .subgroup-select-shell {
+      position: relative;
+      min-width: 0;
     }
 
-    .subgroup-tab {
-      white-space: nowrap;
-      background: #f8fafc;
-      color: #334155;
-      border: 1px solid #d8e4f5;
-      box-shadow: none;
+    .subgroup-select {
+      appearance: none;
+      padding-right: 44px;
+      font-weight: 700;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      border-color: #cfe0ff;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
     }
 
-    .subgroup-tab.is-active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
+    .subgroup-select-icon {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      color: #64748b;
+      font-size: 1rem;
+      pointer-events: none;
     }
 
     .subgroup-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    .toolbar-icon-btn {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      padding: 0;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      line-height: 1;
     }
 
     .visually-hidden-field {
@@ -880,8 +894,7 @@
 
     @media (max-width: 980px) {
       .workspace-main-grid,
-      .home-entry-grid,
-      .subgroup-toolbar {
+      .home-entry-grid {
         grid-template-columns: 1fr;
       }
 
@@ -938,7 +951,7 @@
       }
 
       .button-row > button:not(.icon-action-btn),
-      .subgroup-actions > button {
+      .subgroup-actions > button:not(.toolbar-icon-btn) {
         width: 100%;
       }
 
@@ -949,6 +962,21 @@
 
       .title-subgroup {
         margin-left: 0;
+      }
+
+      .subgroup-toolbar {
+        gap: 8px;
+      }
+
+      .toolbar-icon-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border-radius: 10px;
+      }
+
+      .subgroup-select {
+        padding-right: 40px;
       }
 
       #editModal {
@@ -1093,7 +1121,6 @@
           </div>
           <div class="workspace-header-meta">
             <div class="badge">目前群組：<span id="currentGroupLabel">未選擇群組</span></div>
-            <div class="pill">目前子群組：<span id="currentSubGroupDisplay">子群組 1</span></div>
           </div>
         </div>
         <div class="hint" id="groupHint">群組資料載入後會自動同步更新。</div>
@@ -1102,26 +1129,18 @@
       <section class="card sticky-subgroup-bar workspace-view" id="stickySubgroupBar">
         <div class="subgroup-toolbar">
           <div class="subgroup-toolbar-main">
-            <div class="inline-head">
-              <div>
-                <h3>子群組導覽</h3>
-                <div class="quiet">切換子群組後，下方成員與記帳工作面板會立即同步切換。</div>
-              </div>
-            </div>
-            <div class="visually-hidden-field">
-              <label for="subGroupSelect">子群組選擇</label>
-              <select id="subGroupSelect">
+            <div class="subgroup-select-shell">
+              <select id="subGroupSelect" class="subgroup-select" aria-label="切換子群組">
                 <option value="子群組 1">子群組 1</option>
               </select>
+              <span class="subgroup-select-icon" aria-hidden="true">▾</span>
             </div>
-            <div id="subGroupTabs" class="subgroup-tabs" aria-label="子群組切換列"></div>
-            <div class="hint" id="subGroupHint">目前使用子群組 1。</div>
           </div>
 
-          <div class="subgroup-actions">
-            <button type="button" class="btn-highlight" id="openAllBillsOverviewBtn">🔍 檢視全子群組明細總覽</button>
-            <button type="button" class="btn-secondary" id="manageSubGroupBtn">修改子群組</button>
-            <button type="button" class="btn-primary" id="createSubGroupBtn">新增子群組</button>
+          <div class="subgroup-actions" aria-label="子群組工具列">
+            <button type="button" class="btn-highlight toolbar-icon-btn" id="openAllBillsOverviewBtn" aria-label="檢視全子群組明細總覽" title="檢視全子群組明細總覽">🔍</button>
+            <button type="button" class="btn-secondary toolbar-icon-btn" id="manageSubGroupBtn" aria-label="修改子群組" title="修改子群組">📝</button>
+            <button type="button" class="btn-primary toolbar-icon-btn" id="createSubGroupBtn" aria-label="新增子群組" title="新增子群組">➕</button>
           </div>
         </div>
       </section>
@@ -1425,7 +1444,7 @@
     const createSubGroupBtn = document.getElementById("createSubGroupBtn");
     const currentGroupLabel = document.getElementById("currentGroupLabel");
     const groupHint = document.getElementById("groupHint");
-    const subGroupHint = document.getElementById("subGroupHint");
+    const subGroupHint = document.getElementById("subGroupHint") || groupHint;
     const globalSettlementHint = document.getElementById("globalSettlementHint");
 
     const memberCard = document.getElementById("memberCard");
@@ -1509,8 +1528,6 @@
     const closeDeleteGroupModalBtn = document.getElementById("closeDeleteGroupModalBtn");
 
     const enterExistingGroupBtn = document.getElementById("enterExistingGroupBtn");
-    const currentSubGroupDisplay = document.getElementById("currentSubGroupDisplay");
-    const subGroupTabs = document.getElementById("subGroupTabs");
     const memberActiveSubGroup = document.getElementById("memberActiveSubGroup");
     const billActiveSubGroup = document.getElementById("billActiveSubGroup");
     const memberEditBadge = document.getElementById("memberEditBadge");
@@ -1831,9 +1848,6 @@
       billSubGroupNameInput.value = safeSubGroupName;
       memberSubGroupNameInput.readOnly = true;
       billSubGroupNameInput.readOnly = true;
-      subGroupHint.textContent = currentGroupName
-        ? `目前使用子群組：${safeSubGroupName}`
-        : `目前使用${DEFAULT_SUB_GROUP_NAME}。`;
     }
 
     function renderSubGroupSelectOptions(options = [], selectedValue = DEFAULT_SUB_GROUP_NAME) {
@@ -3793,21 +3807,7 @@
     }
 
     function renderSubGroupTabs() {
-      if (!subGroupTabs) {
-        return;
-      }
-
-      if (!currentSubGroupOptions.length) {
-        subGroupTabs.innerHTML = "";
-        return;
-      }
-
-      subGroupTabs.innerHTML = currentSubGroupOptions
-        .map((name) => {
-          const isActive = normalizeSubGroupName(name) === normalizeSubGroupName(currentSubGroupName);
-          return `<button type="button" class="subgroup-tab${isActive ? " is-active" : ""}" data-subgroup-tab="${escapeHtml(name)}">${escapeHtml(name)}</button>`;
-        })
-        .join("");
+      return;
     }
 
     function syncCurrentSubGroupInputs() {
@@ -3817,15 +3817,8 @@
       billSubGroupNameInput.value = safeSubGroupName;
       memberSubGroupNameInput.readOnly = true;
       billSubGroupNameInput.readOnly = true;
-      if (currentSubGroupDisplay) currentSubGroupDisplay.textContent = safeSubGroupName;
       if (memberActiveSubGroup) memberActiveSubGroup.textContent = safeSubGroupName;
       if (billActiveSubGroup) billActiveSubGroup.textContent = safeSubGroupName;
-      if (subGroupHint) {
-        subGroupHint.textContent = currentGroupName
-          ? `目前使用子群組：${safeSubGroupName}`
-          : `目前使用${DEFAULT_SUB_GROUP_NAME}。`;
-      }
-      renderSubGroupTabs();
     }
 
     function renderSubGroupSelectOptions(options = [], selectedValue = DEFAULT_SUB_GROUP_NAME) {
@@ -4675,16 +4668,6 @@
           return;
         }
         enterGroupWorkspace(selectedGroup);
-      });
-    }
-
-    if (subGroupTabs) {
-      subGroupTabs.addEventListener("click", (event) => {
-        const tabButton = event.target.closest("[data-subgroup-tab]");
-        if (!tabButton) {
-          return;
-        }
-        selectCurrentSubGroup(tabButton.getAttribute("data-subgroup-tab"));
       });
     }
 
