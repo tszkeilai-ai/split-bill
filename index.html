@@ -648,9 +648,35 @@
       width: min(1180px, 100%);
     }
 
+    .edit-modal-dialog {
+      width: min(560px, 100%);
+    }
+
     .subgroup-modal-body {
       display: grid;
       gap: 14px;
+    }
+
+    .edit-modal-body {
+      display: grid;
+      gap: 16px;
+    }
+
+    .edit-modal-panel[hidden] {
+      display: none !important;
+    }
+
+    .edit-modal-subgroup {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      font-size: 0.9rem;
+      font-weight: 700;
     }
 
     .transfer-list {
@@ -800,6 +826,31 @@
 
       .title-subgroup {
         margin-left: 0;
+      }
+
+      #editModal {
+        align-items: flex-end;
+        padding: 0;
+      }
+
+      .edit-modal-dialog {
+        width: 100%;
+        max-height: 86vh;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        padding-bottom: 22px;
+        animation: slide-up 0.2s ease;
+      }
+    }
+
+    @keyframes slide-up {
+      from {
+        transform: translateY(18px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
       }
     }
   </style>
@@ -1060,6 +1111,69 @@
     </div>
   </div>
 
+  <div class="modal" id="editModal" aria-hidden="true">
+    <div class="modal-dialog edit-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="editModalTitle">✏️ 修改資料</h2>
+          <div class="overview-kicker" id="editModalSubtitle">修改後會立即同步更新列表與統計。</div>
+        </div>
+        <button type="button" class="icon-btn" id="closeEditModalBtn" aria-label="關閉">✕</button>
+      </div>
+
+      <div class="edit-modal-body">
+        <div class="edit-modal-subgroup" id="editModalSubGroupLabel">子群組：子群組 1</div>
+
+        <form id="editMemberForm" class="edit-modal-panel" hidden>
+          <input type="hidden" id="editMemberId" />
+          <input type="hidden" id="editMemberOriginalName" />
+          <input type="hidden" id="editMemberOriginalSubGroup" />
+          <div class="form-grid">
+            <div class="field">
+              <label for="editMemberName">成員名稱</label>
+              <input id="editMemberName" type="text" placeholder="例如：小明、小華、小孩" required />
+            </div>
+            <div class="field">
+              <label for="editMemberWeight">權重 / 人數</label>
+              <input id="editMemberWeight" type="number" min="0.01" step="0.01" required />
+            </div>
+          </div>
+          <div id="editMemberStatus" class="status"></div>
+          <div class="button-row">
+            <button type="submit" class="btn-primary" id="confirmEditMemberBtn">確認修改</button>
+            <button type="button" class="btn-light" id="cancelEditMemberBtn">取消</button>
+          </div>
+        </form>
+
+        <form id="editBillForm" class="edit-modal-panel" hidden>
+          <input type="hidden" id="editBillId" />
+          <input type="hidden" id="editBillSubGroup" />
+          <div class="form-grid">
+            <div class="field">
+              <label for="editBillItemName">項目名稱</label>
+              <input id="editBillItemName" type="text" placeholder="例如：晚餐、飲料、交通" required />
+            </div>
+            <div class="field">
+              <label for="editBillAmount">金額</label>
+              <input id="editBillAmount" type="number" min="0.01" step="0.01" placeholder="0.00" required />
+            </div>
+            <div class="field">
+              <label for="editBillPayer">付款人</label>
+              <select id="editBillPayer" required>
+                <option value="">請選擇付款人</option>
+              </select>
+            </div>
+          </div>
+          <div id="editBillStatus" class="status"></div>
+          <div class="button-row">
+            <button type="submit" class="btn-primary" id="confirmEditBillBtn">確認修改</button>
+            <button type="button" class="btn-light" id="cancelEditBillBtn">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div class="modal" id="subGroupModal" aria-hidden="true">
     <div class="modal-dialog subgroup-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="subGroupModalTitle">
       <div class="modal-head">
@@ -1178,6 +1292,28 @@
     const globalSettlementContent = document.getElementById("globalSettlementContent");
     const closeGlobalSettlementBtn = document.getElementById("closeGlobalSettlementBtn");
     const closeGlobalSettlementBtnBottom = document.getElementById("closeGlobalSettlementBtnBottom");
+
+    const editModal = document.getElementById("editModal");
+    const editModalTitle = document.getElementById("editModalTitle");
+    const editModalSubtitle = document.getElementById("editModalSubtitle");
+    const editModalSubGroupLabel = document.getElementById("editModalSubGroupLabel");
+    const closeEditModalBtn = document.getElementById("closeEditModalBtn");
+    const editMemberForm = document.getElementById("editMemberForm");
+    const editMemberIdInput = document.getElementById("editMemberId");
+    const editMemberOriginalNameInput = document.getElementById("editMemberOriginalName");
+    const editMemberOriginalSubGroupInput = document.getElementById("editMemberOriginalSubGroup");
+    const editMemberNameInput = document.getElementById("editMemberName");
+    const editMemberWeightInput = document.getElementById("editMemberWeight");
+    const editMemberStatus = document.getElementById("editMemberStatus");
+    const cancelEditMemberBtn = document.getElementById("cancelEditMemberBtn");
+    const editBillForm = document.getElementById("editBillForm");
+    const editBillIdInput = document.getElementById("editBillId");
+    const editBillSubGroupInput = document.getElementById("editBillSubGroup");
+    const editBillItemNameInput = document.getElementById("editBillItemName");
+    const editBillAmountInput = document.getElementById("editBillAmount");
+    const editBillPayerInput = document.getElementById("editBillPayer");
+    const editBillStatus = document.getElementById("editBillStatus");
+    const cancelEditBillBtn = document.getElementById("cancelEditBillBtn");
 
     const subGroupModal = document.getElementById("subGroupModal");
     const subGroupModalForm = document.getElementById("subGroupModalForm");
@@ -3844,6 +3980,211 @@
       allBillsOverviewModal.setAttribute("aria-hidden", "true");
     }
 
+    function closeEditModal() {
+      editModal.classList.remove("is-open");
+      editModal.setAttribute("aria-hidden", "true");
+      editMemberForm.hidden = true;
+      editBillForm.hidden = true;
+      editMemberIdInput.value = "";
+      editMemberOriginalNameInput.value = "";
+      editMemberOriginalSubGroupInput.value = "";
+      editMemberNameInput.value = "";
+      editMemberWeightInput.value = "";
+      editBillIdInput.value = "";
+      editBillSubGroupInput.value = "";
+      editBillItemNameInput.value = "";
+      editBillAmountInput.value = "";
+      editBillPayerInput.innerHTML = '<option value="">請選擇付款人</option>';
+      clearStatus(editMemberStatus);
+      clearStatus(editBillStatus);
+    }
+
+    function openEditModal(mode, subGroupName) {
+      const safeSubGroupName = normalizeSubGroupName(subGroupName);
+      editModalTitle.textContent = mode === "member" ? "✏️ 修改成員資料" : "✏️ 修改預支紀錄";
+      editModalSubtitle.textContent = mode === "member"
+        ? "修改後會同步更新成員列表，必要時也會同步更新付款人名稱。"
+        : "修改後會立即同步更新預支列表與群組統計。";
+      editModalSubGroupLabel.textContent = `子群組：${safeSubGroupName}`;
+      editMemberForm.hidden = mode !== "member";
+      editBillForm.hidden = mode !== "bill";
+      clearStatus(editMemberStatus);
+      clearStatus(editBillStatus);
+      editModal.classList.add("is-open");
+      editModal.setAttribute("aria-hidden", "false");
+    }
+
+    function renderEditBillPayerOptions(subGroupName, selectedValue = "") {
+      const safeSubGroupName = normalizeSubGroupName(subGroupName);
+      const memberNames = [...new Set(
+        allGroupMembers
+          .filter((member) => normalizeSubGroupName(member.sub_group) === safeSubGroupName)
+          .map((member) => normalizeName(member.member_name))
+          .filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b, "zh-Hant"));
+
+      const hasMembers = memberNames.length > 0;
+      const options = [
+        `<option value="">${hasMembers ? "請選擇付款人" : "請先新增成員"}</option>`
+      ];
+
+      memberNames.forEach((name) => {
+        const selected = name === selectedValue ? " selected" : "";
+        options.push(`<option value="${escapeHtml(name)}"${selected}>${escapeHtml(name)}</option>`);
+      });
+
+      editBillPayerInput.innerHTML = options.join("");
+      editBillPayerInput.disabled = !hasMembers;
+      editBillPayerInput.value = memberNames.includes(selectedValue) ? selectedValue : "";
+    }
+
+    async function submitEditMember(event) {
+      event.preventDefault();
+
+      if (!currentGroupName) {
+        setStatus(editMemberStatus, "請先進入群組後再修改成員。", "error");
+        return;
+      }
+
+      const payload = {
+        member_name: normalizeName(editMemberNameInput.value),
+        weight: Number(editMemberWeightInput.value || 1) || 1,
+        group_name: currentGroupName,
+        sub_group: normalizeSubGroupName(editMemberOriginalSubGroupInput.value || currentSubGroupName)
+      };
+
+      if (!payload.member_name || Number.isNaN(payload.weight)) {
+        setStatus(editMemberStatus, "請完整填寫成員資料。", "error");
+        return;
+      }
+
+      if (payload.weight <= 0) {
+        setStatus(editMemberStatus, "權重 / 人數必須大於 0。", "error");
+        return;
+      }
+
+      const editingId = String(editMemberIdInput.value || "");
+      const duplicated = allGroupMembers.some((member) => {
+        const sameName = normalizeName(member.member_name) === payload.member_name;
+        const sameSubGroup = normalizeSubGroupName(member.sub_group) === payload.sub_group;
+        const differentRow = String(member.id) !== editingId;
+        return sameName && sameSubGroup && differentRow;
+      });
+
+      if (duplicated) {
+        setStatus(editMemberStatus, "這個子群組已存在同名成員，請改用其他名稱。", "error");
+        return;
+      }
+
+      const originalName = normalizeName(editMemberOriginalNameInput.value);
+      const originalSubGroup = normalizeSubGroupName(editMemberOriginalSubGroupInput.value);
+
+      const result = await supabaseClient
+        .from(MEMBERS_TABLE)
+        .update(payload)
+        .eq("id", editingId)
+        .select()
+        .single();
+
+      if (result.error) {
+        setStatus(editMemberStatus, getErrorMessage(result.error, "修改成員失敗"), "error");
+        return;
+      }
+
+      if (originalName && originalName !== payload.member_name) {
+        const billRenameResult = await supabaseClient
+          .from(BILLS_TABLE)
+          .update({ payer: payload.member_name, sub_group: payload.sub_group })
+          .eq("group_name", currentGroupName)
+          .eq("payer", originalName)
+          .eq("sub_group", originalSubGroup);
+
+        if (billRenameResult.error) {
+          setStatus(editMemberStatus, getErrorMessage(billRenameResult.error, "成員已更新，但同步付款人名稱失敗"), "error");
+          return;
+        }
+
+        allGroupBills = allGroupBills.map((bill) => {
+          if (
+            normalizeName(bill.payer) === originalName &&
+            normalizeSubGroupName(bill.sub_group) === originalSubGroup
+          ) {
+            return {
+              ...bill,
+              payer: payload.member_name,
+              sub_group: payload.sub_group,
+              sub_group_name: payload.sub_group
+            };
+          }
+          return bill;
+        });
+      }
+
+      allGroupMembers = upsertRecordById(allGroupMembers, normalizeMemberRecord(result.data));
+      setStatus(memberStatus, "成員已更新。", "success");
+      closeEditModal();
+      applyCurrentSubGroupView();
+      await loadExistingGroupNames();
+    }
+
+    async function submitEditBill(event) {
+      event.preventDefault();
+
+      if (!currentGroupName) {
+        setStatus(editBillStatus, "請先進入群組後再修改預支。", "error");
+        return;
+      }
+
+      const subGroupName = normalizeSubGroupName(editBillSubGroupInput.value || currentSubGroupName);
+      const payload = {
+        item_name: normalizeName(editBillItemNameInput.value),
+        amount: Number(editBillAmountInput.value),
+        payer: normalizeName(editBillPayerInput.value),
+        group_name: currentGroupName,
+        sub_group: subGroupName
+      };
+
+      const validPayers = new Set(
+        allGroupMembers
+          .filter((member) => normalizeSubGroupName(member.sub_group) === payload.sub_group)
+          .map((member) => normalizeName(member.member_name))
+          .filter(Boolean)
+      );
+
+      if (!payload.item_name || !payload.payer || Number.isNaN(payload.amount)) {
+        setStatus(editBillStatus, "請完整填寫預支資料。", "error");
+        return;
+      }
+
+      if (payload.amount <= 0) {
+        setStatus(editBillStatus, "金額必須大於 0。", "error");
+        return;
+      }
+
+      if (!validPayers.has(payload.payer)) {
+        setStatus(editBillStatus, "付款人必須從同一個子群組的成員清單中選擇。", "error");
+        return;
+      }
+
+      const result = await supabaseClient
+        .from(BILLS_TABLE)
+        .update(payload)
+        .eq("id", editBillIdInput.value)
+        .select()
+        .single();
+
+      if (result.error) {
+        setStatus(editBillStatus, getErrorMessage(result.error, "修改預支失敗"), "error");
+        return;
+      }
+
+      allGroupBills = upsertRecordById(allGroupBills, normalizeBillRecord(result.data));
+      setStatus(billStatus, "預支資料已更新。", "success");
+      closeEditModal();
+      applyCurrentSubGroupView();
+      await loadExistingGroupNames();
+    }
+
     async function jumpToBillEditFromOverview(id) {
       const bill = allGroupBills.find((item) => String(item.id) === String(id));
       if (!bill) {
@@ -3980,18 +4321,13 @@
         return;
       }
 
-      memberIdInput.value = member.id;
-      memberOriginalNameInput.value = normalizeName(member.member_name);
-      memberOriginalSubGroupInput.value = normalizeSubGroupName(member.sub_group);
-      memberNameInput.value = normalizeName(member.member_name);
-      memberSubGroupNameInput.value = normalizeSubGroupName(member.sub_group);
-      weightInput.value = member.weight ?? 1;
-      memberFormTitle.textContent = "修改成員";
-      memberSubmitBtn.textContent = "更新";
-      setMemberEditMode(true);
-      setBillEditMode(false);
-      setStatus(memberStatus, "已進入成員編輯模式。", "success");
-      memberCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      editMemberIdInput.value = member.id;
+      editMemberOriginalNameInput.value = normalizeName(member.member_name);
+      editMemberOriginalSubGroupInput.value = normalizeSubGroupName(member.sub_group);
+      editMemberNameInput.value = normalizeName(member.member_name);
+      editMemberWeightInput.value = member.weight ?? 1;
+      openEditModal("member", member.sub_group);
+      window.setTimeout(() => editMemberNameInput.focus(), 0);
     };
 
     window.startBillEdit = function startBillEdit(id) {
@@ -4001,17 +4337,13 @@
         return;
       }
 
-      billIdInput.value = bill.id;
-      itemNameInput.value = normalizeName(bill.item_name);
-      billSubGroupNameInput.value = normalizeSubGroupName(bill.sub_group);
-      amountInput.value = bill.amount ?? "";
-      renderPayerOptions(normalizeName(bill.payer), normalizeSubGroupName(bill.sub_group));
-      billFormTitle.textContent = "修改預支";
-      billSubmitBtn.textContent = "更新";
-      setBillEditMode(true);
-      setMemberEditMode(false);
-      setStatus(billStatus, "已進入預支編輯模式。", "success");
-      billCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      editBillIdInput.value = bill.id;
+      editBillSubGroupInput.value = normalizeSubGroupName(bill.sub_group);
+      editBillItemNameInput.value = normalizeName(bill.item_name);
+      editBillAmountInput.value = bill.amount ?? "";
+      renderEditBillPayerOptions(bill.sub_group, normalizeName(bill.payer));
+      openEditModal("bill", bill.sub_group);
+      window.setTimeout(() => editBillItemNameInput.focus(), 0);
     };
 
     window.deleteBill = deleteBill;
@@ -4068,9 +4400,14 @@
 
     memberForm.addEventListener("submit", saveMember);
     memberCancelBtn.addEventListener("click", resetMemberForm);
+    editMemberForm.addEventListener("submit", submitEditMember);
+    cancelEditMemberBtn.addEventListener("click", closeEditModal);
 
     billForm.addEventListener("submit", saveBill);
     billCancelBtn.addEventListener("click", resetBillForm);
+    editBillForm.addEventListener("submit", submitEditBill);
+    cancelEditBillBtn.addEventListener("click", closeEditModal);
+    closeEditModalBtn.addEventListener("click", closeEditModal);
 
     openGlobalSettlementBtn.addEventListener("click", openGlobalSettlement);
     closeGlobalSettlementBtn.addEventListener("click", closeGlobalSettlementModal);
@@ -4093,6 +4430,12 @@
     subGroupModal.addEventListener("click", (event) => {
       if (event.target === subGroupModal) {
         closeSubGroupModal();
+      }
+    });
+
+    editModal.addEventListener("click", (event) => {
+      if (event.target === editModal) {
+        closeEditModal();
       }
     });
 
@@ -4178,6 +4521,11 @@
     });
 
     document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && editModal.classList.contains("is-open")) {
+        closeEditModal();
+        return;
+      }
+
       if (event.key === "Escape" && allBillsOverviewModal.classList.contains("is-open")) {
         closeAllBillsOverview();
       }
