@@ -427,6 +427,35 @@
       background: linear-gradient(135deg, #dbeafe, #bfdbfe);
     }
 
+    .table-action-row {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+
+    .icon-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .action-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.98rem;
+      line-height: 1;
+    }
+
+    .action-label {
+      display: inline;
+      line-height: 1;
+    }
+
     .status {
       min-height: 24px;
       margin-top: 10px;
@@ -493,6 +522,16 @@
       border-bottom: 1px solid #e5e7eb;
       text-align: left;
       vertical-align: middle;
+    }
+
+    .member-table th.actions-cell,
+    .member-table td.actions-cell,
+    .bill-table th.actions-cell,
+    .bill-table td.actions-cell,
+    .overview-table th.actions-cell,
+    .overview-table td.actions-cell {
+      text-align: right;
+      white-space: nowrap;
     }
 
     th {
@@ -744,13 +783,9 @@
       color: #334155;
     }
 
-    .overview-table td.actions-cell,
-    .overview-table th.actions-cell {
-      text-align: right;
-    }
-
-    .overview-table .button-row,
-    .bill-table .button-row {
+    .overview-table .table-action-row,
+    .bill-table .table-action-row,
+    .member-table .table-action-row {
       margin-top: 0;
       justify-content: flex-end;
     }
@@ -861,14 +896,25 @@
 
     @media (max-width: 640px) {
       .page {
-        padding-left: 12px;
-        padding-right: 12px;
+        padding: 20px 6px 40px;
       }
 
       .card,
       .modal-dialog {
-        padding: 16px;
-        border-radius: 20px;
+        padding: 14px;
+        border-radius: 18px;
+      }
+
+      .card {
+        margin-bottom: 12px;
+      }
+
+      .workspace-shell,
+      .workspace-top,
+      .workspace-main-grid,
+      .home-view,
+      .home-entry-grid {
+        gap: 12px;
       }
 
       h1 {
@@ -876,7 +922,13 @@
       }
 
       table {
-        min-width: 600px;
+        min-width: 0;
+        table-layout: auto;
+      }
+
+      th,
+      td {
+        padding: 10px 8px;
       }
 
       .button-row,
@@ -885,8 +937,13 @@
         grid-template-columns: 1fr;
       }
 
-      .button-row > button,
+      .button-row > button:not(.icon-action-btn),
       .subgroup-actions > button {
+        width: 100%;
+      }
+
+      input,
+      select {
         width: 100%;
       }
 
@@ -910,12 +967,54 @@
 
       .bill-table {
         min-width: 0;
+        table-layout: auto;
       }
 
-      .bill-table .button-row {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+      .net-amount-cell {
+        min-width: 0;
+      }
+
+      .table-action-row {
+        width: 76px;
+        gap: 6px;
+      }
+
+      .icon-action-btn {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        padding: 0;
+        gap: 0;
+        border-radius: 10px;
+      }
+
+      .action-label {
+        display: none;
+      }
+
+      .action-icon {
+        font-size: 1rem;
+      }
+
+      .member-table th.actions-cell,
+      .member-table td.actions-cell,
+      .bill-table th.actions-cell,
+      .bill-table td.actions-cell,
+      .overview-table th.actions-cell,
+      .overview-table td.actions-cell {
+        width: 76px;
+      }
+
+      .bill-table th:nth-child(1),
+      .bill-table td:nth-child(1) {
+        width: auto;
+      }
+
+      .bill-table th:nth-child(2),
+      .bill-table td:nth-child(2),
+      .bill-table th:nth-child(3),
+      .bill-table td:nth-child(3) {
+        width: auto;
       }
     }
 
@@ -1972,6 +2071,21 @@
       `;
     }
 
+    function buildListActionButtons(editAttributes, deleteAttributes) {
+      return `
+        <div class="table-action-row">
+          <button type="button" class="btn-warning icon-action-btn" ${editAttributes} aria-label="修改" title="修改">
+            <span class="action-icon" aria-hidden="true">✏️</span>
+            <span class="action-label">修改</span>
+          </button>
+          <button type="button" class="btn-danger icon-action-btn" ${deleteAttributes} aria-label="刪除" title="刪除">
+            <span class="action-icon" aria-hidden="true">🗑️</span>
+            <span class="action-label">刪除</span>
+          </button>
+        </div>
+      `;
+    }
+
     function renderMembers(members) {
       memberCount.textContent = `${members.length} 人`;
 
@@ -1992,9 +2106,11 @@
             <tr>
               <td>${escapeHtml(member.member_name)}</td>
               <td class="number">${formatNumber(member.weight)}</td>
-              <td>
-                <button type="button" class="btn-warning" onclick="startMemberEdit(${Number(member.id)})">修改</button>
-                <button type="button" class="btn-danger" onclick="deleteMember(${Number(member.id)})">刪除</button>
+              <td class="actions-cell">
+                ${buildListActionButtons(
+                  `onclick="startMemberEdit(${Number(member.id)})"`,
+                  `onclick="deleteMember(${Number(member.id)})"`
+                )}
               </td>
             </tr>
           `)
@@ -2004,12 +2120,12 @@
           <div class="subgroup-block">
             <h4 class="subgroup-title">${escapeHtml(subGroupName)}</h4>
             <div class="table-wrap">
-              <table>
+              <table class="member-table">
                 <thead>
                   <tr>
                     <th>成員名稱</th>
                     <th>權重 / 人數</th>
-                    <th>操作</th>
+                    <th class="actions-cell">操作</th>
                   </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -2042,9 +2158,11 @@
               <td>${escapeHtml(bill.item_name)}</td>
               <td>${escapeHtml(bill.payer)}</td>
               <td class="number">${formatNumber(bill.amount)}</td>
-              <td>
-                <button type="button" class="btn-warning" onclick="startBillEdit(${Number(bill.id)})">修改</button>
-                <button type="button" class="btn-danger" onclick="deleteBill(${Number(bill.id)})">刪除</button>
+              <td class="actions-cell">
+                ${buildListActionButtons(
+                  `onclick="startBillEdit(${Number(bill.id)})"`,
+                  `onclick="deleteBill(${Number(bill.id)})"`
+                )}
               </td>
             </tr>
           `)
@@ -2054,13 +2172,13 @@
           <div class="subgroup-block">
             <h4 class="subgroup-title">${escapeHtml(subGroupName)}</h4>
             <div class="table-wrap">
-              <table>
+              <table class="bill-table">
                 <thead>
                   <tr>
                     <th>項目名稱</th>
                     <th>付款人</th>
                     <th>金額</th>
-                    <th>操作</th>
+                    <th class="actions-cell">操作</th>
                   </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -3830,10 +3948,10 @@
             <td class="number">${formatNumber(bill.amount)}</td>
             <td>${escapeHtml(bill.payer)}</td>
             <td class="actions-cell">
-              <div class="button-row">
-                <button type="button" class="btn-warning" onclick="startBillEdit(${Number(bill.id)})">修改</button>
-                <button type="button" class="btn-danger" onclick="deleteBill(${Number(bill.id)})">刪除</button>
-              </div>
+              ${buildListActionButtons(
+                `onclick="startBillEdit(${Number(bill.id)})"`,
+                `onclick="deleteBill(${Number(bill.id)})"`
+              )}
             </td>
           </tr>
         `)
@@ -4009,10 +4127,10 @@
           <td>${escapeHtml(bill.payer)}</td>
           <td>${formatDateDisplay(bill.created_at)}</td>
           <td class="actions-cell">
-            <div class="button-row">
-              <button type="button" class="btn-warning" data-overview-action="edit" data-bill-id="${Number(bill.id)}">修改</button>
-              <button type="button" class="btn-danger" data-overview-action="delete" data-bill-id="${Number(bill.id)}">刪除</button>
-            </div>
+            ${buildListActionButtons(
+              `data-overview-action="edit" data-bill-id="${Number(bill.id)}"`,
+              `data-overview-action="delete" data-bill-id="${Number(bill.id)}"`
+            )}
           </td>
         </tr>
       `).join("");
