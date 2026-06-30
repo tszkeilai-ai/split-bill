@@ -6,37 +6,44 @@
   <title>分帳群組管理</title>
   <style>
     :root {
-      --bg: #f5f7fb;
+      --bg: #f3f6fb;
       --card: #ffffff;
       --line: #d9e2f1;
+      --line-strong: #bfd0ea;
       --text: #1f2937;
       --muted: #6b7280;
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
+      --primary-soft: #eaf2ff;
       --danger: #dc2626;
       --danger-soft: #fff1f2;
       --soft: #eef4ff;
       --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.06);
       --success: #0f766e;
+      --success-soft: #ecfdf5;
       --warning: #b45309;
-      --edit-bg: #ffe6e6;
+      --warning-soft: #fff7ed;
+      --edit-ring: 0 0 0 1px rgba(37, 99, 235, 0.14), 0 0 0 6px rgba(37, 99, 235, 0.08), 0 16px 40px rgba(37, 99, 235, 0.12);
     }
 
     * {
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
       font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
       color: var(--text);
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 28%),
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 30%),
+        var(--bg);
       line-height: 1.5;
-      transition: background-color 0.2s ease;
-    }
-
-    body.edit-active {
-      background: var(--edit-bg);
     }
 
     button,
@@ -46,49 +53,52 @@
     }
 
     .page {
-      max-width: 1080px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 24px 16px 48px;
+      padding: 28px 18px 56px;
     }
 
     .card {
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 20px;
+      border-radius: 24px;
       box-shadow: var(--shadow);
-      padding: 20px;
+      padding: 22px;
       margin-bottom: 18px;
-      transition: background-color 0.2s ease, border-color 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      scroll-margin-top: 136px;
     }
 
     .card.edit-mode {
-      background: var(--edit-bg);
-      border-color: #f1b5b5;
-    }
-
-    .delete-panel {
-      margin-top: 34px;
+      border-color: rgba(37, 99, 235, 0.55);
+      box-shadow: var(--edit-ring);
     }
 
     h1,
     h2,
     h3,
+    h4,
     p {
       margin-top: 0;
     }
 
     h1 {
-      font-size: 1.55rem;
+      font-size: 1.75rem;
       margin-bottom: 10px;
     }
 
     h2 {
-      font-size: 1.15rem;
+      font-size: 1.16rem;
       margin-bottom: 8px;
     }
 
     h3 {
       font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 0.98rem;
       margin-bottom: 10px;
     }
 
@@ -99,19 +109,16 @@
       font-size: 0.94rem;
     }
 
-    .group-meta {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-top: 14px;
+    .muted strong,
+    .hint strong {
+      color: var(--text);
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
+      padding: 9px 14px;
       border-radius: 999px;
       background: #eff6ff;
       color: #1e40af;
@@ -119,9 +126,207 @@
       border: 1px solid #bfdbfe;
     }
 
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: #f8fafc;
+      color: #334155;
+      border: 1px solid #dbe6f3;
+    }
+
+    .edit-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      border: 1px solid #bfd4ff;
+      color: var(--primary-dark);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .edit-badge[hidden] {
+      display: none !important;
+    }
+
+    .section-head,
+    .inline-head,
+    .form-title-row,
+    .workspace-hero,
+    .workspace-header-meta,
+    .overview-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .subsection {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .home-view {
+      display: grid;
+      gap: 18px;
+    }
+
+    .home-hero-card {
+      display: grid;
+      gap: 14px;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.10), rgba(14, 165, 233, 0.06)),
+        #ffffff;
+    }
+
+    .home-hero-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .home-entry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .entry-card {
+      height: 100%;
+      margin-bottom: 0;
+      display: grid;
+      gap: 14px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .entry-card.create-entry {
+      border-color: #c7d7f4;
+    }
+
+    .entry-card.existing-entry {
+      border-color: #d8e4f5;
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+
+    .quick-access-card {
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      border-color: #cfe0ff;
+    }
+
+    .quick-group-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .quick-group-btn {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid #c9d8ef;
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.06);
+    }
+
+    .quick-group-btn:hover {
+      background: #f8fbff;
+      border-color: #9ec0ff;
+    }
+
+    .workspace-shell {
+      display: grid;
+      gap: 18px;
+    }
+
+    .workspace-top {
+      display: grid;
+      gap: 16px;
+    }
+
+    .workspace-title {
+      display: grid;
+      gap: 8px;
+    }
+
+    .workspace-header-meta {
+      justify-content: flex-start;
+    }
+
+    .workspace-main-grid {
+      display: grid;
+      grid-template-columns: minmax(320px, 0.85fr) minmax(420px, 1.15fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .sticky-subgroup-bar {
+      position: sticky;
+      top: 14px;
+      z-index: 80;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px);
+      border-color: rgba(191, 208, 234, 0.95);
+      box-shadow: 0 18px 34px rgba(15, 23, 42, 0.10);
+    }
+
+    .subgroup-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .subgroup-toolbar-main {
+      display: grid;
+      gap: 12px;
+    }
+
+    .subgroup-tabs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: thin;
+    }
+
+    .subgroup-tab {
+      white-space: nowrap;
+      background: #f8fafc;
+      color: #334155;
+      border: 1px solid #d8e4f5;
+      box-shadow: none;
+    }
+
+    .subgroup-tab.is-active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
+    }
+
+    .subgroup-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .visually-hidden-field {
+      display: none;
+    }
+
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 14px;
     }
 
@@ -142,9 +347,10 @@
       width: 100%;
       padding: 12px 13px;
       border: 1px solid var(--line);
-      border-radius: 12px;
+      border-radius: 14px;
       background: #fff;
       color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     input:focus,
@@ -163,11 +369,11 @@
 
     button {
       border: 0;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 11px 16px;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.04s ease, opacity 0.2s ease, background-color 0.2s ease;
+      transition: transform 0.04s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     button:active {
@@ -196,16 +402,29 @@
     .btn-secondary {
       background: var(--soft);
       color: var(--primary);
+      border: 1px solid #d7e6ff;
     }
 
     .btn-warning {
-      background: #fff7ed;
+      background: var(--warning-soft);
       color: var(--warning);
+      border: 1px solid #fed7aa;
     }
 
     .btn-danger {
       background: var(--danger);
       color: #fff;
+    }
+
+    .btn-highlight {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      color: #1d4ed8;
+      border: 1px solid #93c5fd;
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn-highlight:hover {
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
     }
 
     .status {
@@ -223,21 +442,6 @@
       color: var(--danger);
     }
 
-    .section-head,
-    .inline-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .subsection {
-      margin-top: 18px;
-      padding-top: 18px;
-      border-top: 1px solid #e5e7eb;
-    }
-
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -247,7 +451,7 @@
 
     .stat {
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 14px;
       background: #fafcff;
     }
@@ -266,8 +470,8 @@
 
     .empty {
       padding: 18px;
-      border: 1px dashed var(--line);
-      border-radius: 14px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 16px;
       color: var(--muted);
       background: #fcfdff;
       text-align: center;
@@ -288,7 +492,7 @@
       padding: 12px 10px;
       border-bottom: 1px solid #e5e7eb;
       text-align: left;
-      vertical-align: top;
+      vertical-align: middle;
     }
 
     th {
@@ -296,6 +500,10 @@
       font-size: 0.9rem;
       font-weight: 700;
       white-space: nowrap;
+      background: #fbfcfe;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
 
     td.number {
@@ -321,9 +529,68 @@
       text-align: left;
     }
 
+    .delete-panel {
+      margin-top: 6px;
+    }
+
     .delete-panel p {
       color: var(--muted);
       margin-bottom: 0;
+    }
+
+    .note-box {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #f8fafc;
+      color: var(--muted);
+      border: 1px solid #e2e8f0;
+    }
+
+    .warning-box {
+      background: var(--warning-soft);
+      border-color: #fed7aa;
+      color: #9a3412;
+    }
+
+    .success-box {
+      background: var(--success-soft);
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+
+    .subgroup-block + .subgroup-block {
+      margin-top: 18px;
+    }
+
+    .subgroup-title {
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    .title-subgroup {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      margin-left: 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .bill-workbench {
+      display: grid;
+      gap: 6px;
+    }
+
+    .workbench-list-section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid #e5e7eb;
     }
 
     .modal {
@@ -334,7 +601,7 @@
       align-items: center;
       justify-content: center;
       padding: 18px;
-      z-index: 1000;
+      z-index: 1200;
     }
 
     .modal.is-open {
@@ -342,11 +609,11 @@
     }
 
     .modal-dialog {
-      width: min(860px, 100%);
-      max-height: min(88vh, 900px);
+      width: min(960px, 100%);
+      max-height: min(88vh, 920px);
       overflow: auto;
       background: #fff;
-      border-radius: 20px;
+      border-radius: 24px;
       box-shadow: 0 20px 70px rgba(15, 23, 42, 0.25);
       padding: 20px;
     }
@@ -377,6 +644,10 @@
       width: min(520px, 100%);
     }
 
+    .overview-modal-dialog {
+      width: min(1180px, 100%);
+    }
+
     .subgroup-modal-body {
       display: grid;
       gap: 14px;
@@ -391,55 +662,87 @@
       margin-top: 8px;
     }
 
-    .note-box {
-      margin-top: 14px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: #f8fafc;
+    .danger-note {
+      color: #991b1b;
+    }
+
+    .overview-kicker {
+      font-size: 0.9rem;
       color: var(--muted);
-      border: 1px solid #e2e8f0;
     }
 
-    .warning-box {
-      background: #fff7ed;
-      border-color: #fed7aa;
-      color: #9a3412;
-    }
-
-    .subgroup-block + .subgroup-block {
-      margin-top: 18px;
-    }
-
-    .subgroup-title {
-      margin-bottom: 10px;
-      font-size: 1rem;
-    }
-
-    .home-hero {
-      display: grid;
-      gap: 10px;
-    }
-
-    .home-grid {
-      display: grid;
-      gap: 18px;
-    }
-
-    .quick-group-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 8px;
-    }
-
-    .quick-group-btn {
-      background: #fff;
-      color: var(--text);
-      border: 1px solid var(--line);
-    }
-
-    .quick-group-btn:hover {
+    .overview-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
       background: #f8fafc;
+      border: 1px solid #dbe6f3;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .overview-table td.actions-cell,
+    .overview-table th.actions-cell {
+      text-align: right;
+    }
+
+    .overview-table .button-row,
+    .bill-table .button-row {
+      margin-top: 0;
+      justify-content: flex-end;
+    }
+
+    .net-amount-cell {
+      min-width: 260px;
+    }
+
+    .net-amount-track {
+      position: relative;
+      height: 36px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(248, 113, 113, 0.12) 0%, rgba(248, 113, 113, 0.03) 49%, rgba(34, 197, 94, 0.03) 51%, rgba(34, 197, 94, 0.12) 100%);
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
+
+    .net-amount-axis {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: calc(50% - 1px);
+      width: 2px;
+      background: rgba(148, 163, 184, 0.6);
+      border-radius: 999px;
+    }
+
+    .net-amount-fill {
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      border-radius: 999px;
+      opacity: 0.92;
+    }
+
+    .net-amount-fill.is-positive {
+      background: linear-gradient(90deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.35));
+    }
+
+    .net-amount-fill.is-negative {
+      background: linear-gradient(90deg, rgba(248, 113, 113, 0.35), rgba(248, 113, 113, 0.12));
+    }
+
+    .net-amount-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 14px;
+      font-weight: 700;
+      z-index: 1;
+      font-variant-numeric: tabular-nums;
     }
 
     .workspace-shell[hidden],
@@ -448,18 +751,20 @@
       display: none !important;
     }
 
-    .workspace-top {
-      display: grid;
-      gap: 18px;
-    }
+    @media (max-width: 980px) {
+      .workspace-main-grid,
+      .home-entry-grid,
+      .subgroup-toolbar {
+        grid-template-columns: 1fr;
+      }
 
-    .workspace-title {
-      display: grid;
-      gap: 6px;
-    }
+      .subgroup-actions {
+        justify-content: flex-start;
+      }
 
-    .danger-note {
-      color: #991b1b;
+      .sticky-subgroup-bar {
+        top: 10px;
+      }
     }
 
     @media (max-width: 640px) {
@@ -468,161 +773,236 @@
         padding-right: 12px;
       }
 
-      .card {
+      .card,
+      .modal-dialog {
         padding: 16px;
+        border-radius: 20px;
+      }
+
+      h1 {
+        font-size: 1.48rem;
       }
 
       table {
-        min-width: 560px;
+        min-width: 600px;
+      }
+
+      .button-row,
+      .subgroup-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .button-row > button,
+      .subgroup-actions > button {
+        width: 100%;
+      }
+
+      .title-subgroup {
+        margin-left: 0;
       }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <section class="card home-view" id="homeView">
-      <div class="home-grid">
-        <div class="home-hero">
-          <h1>分帳群組管理</h1>
-          <p class="muted">首頁只負責建立或選擇群組。進入後會切換到單一群組工作區，專心做資料輸入、結算與維護。</p>
+    <section class="home-view" id="homeView">
+      <section class="card home-hero-card">
+        <div class="workspace-hero">
+          <div class="workspace-title">
+            <h1>分帳群組管理</h1>
+            <p class="muted">首頁專注在建立或進入群組，進入後再切換到單一群組工作區，讓輸入、檢視與結算流程更聚焦。</p>
+          </div>
+          <div class="home-hero-meta">
+            <span class="badge">快速進入已存在群組</span>
+            <span class="pill">支援多子群組工作流</span>
+          </div>
         </div>
-        <form id="groupForm">
-          <div class="form-grid">
-            <div class="field">
-              <label for="groupInput">新增或輸入群組名稱</label>
-              <input id="groupInput" type="text" placeholder="例如：日本旅遊、家庭帳本、公司聚餐" autocomplete="off" />
-            </div>
-            <div class="field">
-              <label for="groupSelect">選擇既有群組</label>
-              <select id="groupSelect">
-                <option value="">請選擇已存在的群組</option>
-              </select>
-            </div>
+      </section>
+
+      <section class="card quick-access-card">
+        <div class="inline-head">
+          <div>
+            <h3>快速進入</h3>
+            <div class="quiet">從最近已存在的群組，直接一鍵打開工作區。</div>
+          </div>
+        </div>
+        <div id="homeGroupQuickList" class="quick-group-list">
+          <div class="empty">正在讀取群組列表...</div>
+        </div>
+      </section>
+
+      <form id="groupForm" class="home-entry-grid">
+        <section class="card entry-card create-entry">
+          <div>
+            <h2>建立新群組</h2>
+            <p class="muted">輸入新的群組名稱後直接建立工作區，適合立即開始記帳。</p>
+          </div>
+          <div class="field">
+            <label for="groupInput">新群組名稱</label>
+            <input id="groupInput" type="text" placeholder="例如：日本旅遊、家庭帳本、公司聚餐" autocomplete="off" />
           </div>
           <div class="button-row">
-            <button type="submit" class="btn-primary">進入工作區</button>
+            <button type="submit" class="btn-primary">建立並進入</button>
             <button type="button" class="btn-light" id="resetBtn">清空</button>
           </div>
-        </form>
-        <div class="hint" id="homeHint">輸入新群組名稱即可建立工作區，或直接選擇既有群組進入。</div>
-        <div class="subsection">
-          <div class="inline-head">
-            <h3>快速進入</h3>
-            <div class="quiet">從已存在群組直接開啟</div>
+        </section>
+
+        <section class="card entry-card existing-entry">
+          <div>
+            <h2>進入既有群組</h2>
+            <p class="muted">從下拉選單選擇既有群組，或直接搭配上方快速入口進入。</p>
           </div>
-          <div id="homeGroupQuickList" class="quick-group-list">
-            <div class="empty">正在讀取群組列表...</div>
+          <div class="field">
+            <label for="groupSelect">既有群組</label>
+            <select id="groupSelect">
+              <option value="">請選擇已存在的群組</option>
+            </select>
           </div>
-        </div>
-      </div>
+          <div class="button-row">
+            <button type="button" class="btn-secondary" id="enterExistingGroupBtn">進入所選群組</button>
+          </div>
+        </section>
+      </form>
+
+      <div class="hint" id="homeHint">輸入新群組名稱即可建立工作區，或直接選擇既有群組進入。</div>
     </section>
 
     <div class="workspace-shell workspace-view" id="workspaceShell" hidden>
       <section class="card workspace-top" id="workspaceHeaderCard">
-        <div class="workspace-title">
-          <h1>群組工作區</h1>
-          <p class="muted">這個頁面只處理目前群組的資料輸入、群內彙總、群組結算與維護。</p>
+        <div class="workspace-hero">
+          <div class="workspace-title">
+            <h1>群組工作區</h1>
+            <p class="muted">集中處理目前群組的資料輸入、子群組切換、群內彙總與債務結算。</p>
+          </div>
+          <div class="workspace-header-meta">
+            <div class="badge">目前群組：<span id="currentGroupLabel">未選擇群組</span></div>
+            <div class="pill">目前子群組：<span id="currentSubGroupDisplay">子群組 1</span></div>
+          </div>
         </div>
-        <div class="group-meta">
-          <div class="badge">目前群組：<span id="currentGroupLabel">未選擇群組</span></div>
-          <div class="hint" id="groupHint">群組資料載入後會自動同步更新。</div>
-        </div>
-        <div class="subsection">
-          <div class="form-grid">
-            <div class="field">
+        <div class="hint" id="groupHint">群組資料載入後會自動同步更新。</div>
+      </section>
+
+      <section class="card sticky-subgroup-bar workspace-view" id="stickySubgroupBar">
+        <div class="subgroup-toolbar">
+          <div class="subgroup-toolbar-main">
+            <div class="inline-head">
+              <div>
+                <h3>子群組導覽</h3>
+                <div class="quiet">切換子群組後，下方成員與記帳工作面板會立即同步切換。</div>
+              </div>
+            </div>
+            <div class="visually-hidden-field">
               <label for="subGroupSelect">子群組選擇</label>
               <select id="subGroupSelect">
                 <option value="子群組 1">子群組 1</option>
               </select>
             </div>
+            <div id="subGroupTabs" class="subgroup-tabs" aria-label="子群組切換列"></div>
+            <div class="hint" id="subGroupHint">目前使用子群組 1。</div>
           </div>
-          <div class="button-row">
+
+          <div class="subgroup-actions">
+            <button type="button" class="btn-highlight" id="openAllBillsOverviewBtn">🔍 檢視全子群組明細總覽</button>
             <button type="button" class="btn-secondary" id="manageSubGroupBtn">修改子群組</button>
             <button type="button" class="btn-primary" id="createSubGroupBtn">新增子群組</button>
           </div>
-          <div class="hint" id="subGroupHint">目前使用子群組 1。</div>
         </div>
       </section>
 
-    <section class="card workspace-view" id="memberCard">
-      <h2 id="memberFormTitle">新增成員</h2>
-      <p class="muted">這裡新增的成員，會成為「新增預支」中的付款人下拉選單來源。</p>
-      <form id="memberForm">
-        <input type="hidden" id="memberId" />
-        <input type="hidden" id="memberOriginalName" />
-        <input type="hidden" id="memberOriginalSubGroup" />
-        <div class="form-grid">
-          <div class="field">
-            <label for="memberName">成員名稱</label>
-            <input id="memberName" type="text" placeholder="例如：小明、小華、小孩" required />
+      <div class="workspace-main-grid">
+        <section class="card workspace-view" id="memberCard">
+          <div class="form-title-row">
+            <h2><span id="memberFormTitle">新增成員</span><span class="title-subgroup" id="memberActiveSubGroup">子群組 1</span></h2>
+            <span class="edit-badge" id="memberEditBadge" hidden>[ 編輯中 ]</span>
           </div>
-          <div class="field">
-            <label for="memberSubGroupName">子群組名稱</label>
-            <input id="memberSubGroupName" type="text" placeholder="未填寫時預設為子群組 1" />
-          </div>
-          <div class="field">
-            <label for="weight">權重 / 人數</label>
-            <input id="weight" type="number" min="0.01" step="0.01" value="1" required />
-          </div>
-        </div>
-        <div class="button-row">
-          <button type="submit" class="btn-primary" id="memberSubmitBtn">儲存</button>
-          <button type="button" class="btn-light" id="memberCancelBtn">清空</button>
-        </div>
-        <div id="memberStatus" class="status"></div>
-      </form>
+          <p class="muted">這裡新增的成員，會成為同子群組內「新增預支」的付款人下拉選單來源。</p>
+          <form id="memberForm">
+            <input type="hidden" id="memberId" />
+            <input type="hidden" id="memberOriginalName" />
+            <input type="hidden" id="memberOriginalSubGroup" />
+            <div class="form-grid">
+              <div class="field">
+                <label for="memberName">成員名稱</label>
+                <input id="memberName" type="text" placeholder="例如：小明、小華、小孩" required />
+              </div>
+              <div class="field visually-hidden-field" id="memberSubGroupField">
+                <label for="memberSubGroupName">子群組名稱</label>
+                <input id="memberSubGroupName" type="text" placeholder="未填寫時預設為子群組 1" />
+              </div>
+              <div class="field">
+                <label for="weight">權重 / 人數</label>
+                <input id="weight" type="number" min="0.01" step="0.01" value="1" required />
+              </div>
+            </div>
+            <div class="button-row">
+              <button type="submit" class="btn-primary" id="memberSubmitBtn">儲存</button>
+              <button type="button" class="btn-light" id="memberCancelBtn">清空</button>
+            </div>
+            <div id="memberStatus" class="status"></div>
+          </form>
 
-      <div class="subsection">
-        <div class="inline-head">
-          <h3>目前成員</h3>
-          <div class="quiet" id="memberCount">0 人</div>
-        </div>
-        <div id="memberInlineList"></div>
+          <div class="subsection">
+            <div class="inline-head">
+              <h3>目前成員</h3>
+              <div class="quiet" id="memberCount">0 人</div>
+            </div>
+            <div id="memberInlineList"></div>
+          </div>
+        </section>
+
+        <section class="card workspace-view bill-workbench" id="billCard">
+          <div class="form-title-row">
+            <h2><span id="billFormTitle">新增預支</span><span class="title-subgroup" id="billActiveSubGroup">子群組 1</span></h2>
+            <span class="edit-badge" id="billEditBadge" hidden>[ 編輯中 ]</span>
+          </div>
+          <p class="muted">記帳工作面板將新增與檢視整合在同一區。儲存後會保留付款人，清空其餘欄位並把焦點送回項目名稱。</p>
+          <form id="billForm">
+            <input type="hidden" id="billId" />
+            <div class="form-grid">
+              <div class="field">
+                <label for="itemName">項目名稱</label>
+                <input id="itemName" type="text" placeholder="例如：晚餐、飲料、交通" required tabindex="1" />
+              </div>
+              <div class="field visually-hidden-field" id="billSubGroupField">
+                <label for="billSubGroupName">子群組名稱</label>
+                <input id="billSubGroupName" type="text" placeholder="未填寫時預設為子群組 1" />
+              </div>
+              <div class="field">
+                <label for="amount">金額</label>
+                <input id="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required tabindex="2" />
+              </div>
+              <div class="field">
+                <label for="payer">付款人</label>
+                <select id="payer" required tabindex="3">
+                  <option value="">請先新增成員</option>
+                </select>
+              </div>
+            </div>
+            <div class="button-row">
+              <button type="submit" class="btn-primary" id="billSubmitBtn" tabindex="4">儲存</button>
+              <button type="button" class="btn-light" id="billCancelBtn">清空</button>
+            </div>
+            <div id="billStatus" class="status"></div>
+          </form>
+
+          <div class="workbench-list-section" id="billListSection">
+            <div class="section-head">
+              <h3>預支紀錄列表</h3>
+              <div class="quiet" id="billCount">0 筆</div>
+            </div>
+            <div id="billList"></div>
+          </div>
+        </section>
       </div>
-    </section>
 
-    <section class="card workspace-view" id="billCard">
-      <h2 id="billFormTitle">新增預支</h2>
-      <p class="muted">付款人必須從成員下拉選單選擇，並嚴格使用 `payer`、`item_name`、`amount`、`group_name` 欄位。</p>
-      <form id="billForm">
-        <input type="hidden" id="billId" />
-        <div class="form-grid">
-          <div class="field">
-            <label for="itemName">項目名稱</label>
-            <input id="itemName" type="text" placeholder="例如：晚餐、飲料、交通" required />
-          </div>
-          <div class="field">
-            <label for="billSubGroupName">子群組名稱</label>
-            <input id="billSubGroupName" type="text" placeholder="未填寫時預設為子群組 1" />
-          </div>
-          <div class="field">
-            <label for="amount">金額</label>
-            <input id="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required />
-          </div>
-          <div class="field">
-            <label for="payer">付款人</label>
-            <select id="payer" required>
-              <option value="">請先新增成員</option>
-            </select>
+      <section class="card workspace-view">
+        <div class="section-head">
+          <div>
+            <h2>本群組收支概覽</h2>
+            <div class="quiet">輸入資料時，會同步顯示整個大群組底下各子群組與最終淨額關係。</div>
           </div>
         </div>
-        <div class="button-row">
-          <button type="submit" class="btn-primary" id="billSubmitBtn">儲存</button>
-          <button type="button" class="btn-light" id="billCancelBtn">清空</button>
-        </div>
-        <div id="billStatus" class="status"></div>
-      </form>
-    </section>
-
-    <section class="card workspace-view">
-      <div class="section-head">
-        <h2>預支紀錄列表</h2>
-        <div class="quiet" id="billCount">0 筆</div>
-      </div>
-      <div id="billList"></div>
-
-      <div class="subsection">
-        <h3>本群組收支概覽</h3>
         <div class="stats">
           <div class="stat">
             <small>總金額</small>
@@ -638,27 +1018,26 @@
           </div>
         </div>
         <div id="groupSummary"></div>
-      </div>
-    </section>
+      </section>
 
-    <section class="card action-panel workspace-view">
-      <h2>債務結算</h2>
-      <p class="muted">按下後會直接鎖定目前 `group_name`，自動整合這個群組底下所有子群組資料並產出最小化付款配對，不再進行二次篩選。</p>
-      <div class="button-row">
-        <button type="button" class="btn-primary" id="openGlobalSettlementBtn">執行本群組債務結算</button>
-      </div>
-      <div class="hint" id="globalSettlementHint">尚未執行本群組結算。</div>
-    </section>
+      <section class="card action-panel workspace-view">
+        <h2>債務結算</h2>
+        <p class="muted">按下後會直接鎖定目前 `group_name`，自動整合這個群組底下所有子群組資料並產出最小化付款配對，不再進行二次篩選。</p>
+        <div class="button-row">
+          <button type="button" class="btn-primary" id="openGlobalSettlementBtn">執行本群組債務結算</button>
+        </div>
+        <div class="hint" id="globalSettlementHint">尚未執行本群組結算。</div>
+      </section>
 
-    <section class="card delete-panel workspace-view">
-      <h2>維護操作</h2>
-      <p>可返回首頁，或用安全刪除流程移除目前群組。刪除時必須手動輸入正確群組名稱才會解鎖。</p>
-      <div class="button-row">
-        <button type="button" class="btn-light" id="returnHomeBtn">返回首頁</button>
-        <button type="button" class="btn-danger" id="deleteGroupBtn">刪除目前群組</button>
-      </div>
-      <div class="hint danger-note" id="deleteGroupHint">刪除後會同步移除這個群組的 `bills` 與 `members`，完成後自動返回首頁。</div>
-    </section>
+      <section class="card delete-panel workspace-view">
+        <h2>維護操作</h2>
+        <p>可返回首頁，或用安全刪除流程移除目前群組。刪除時必須手動輸入正確群組名稱才會解鎖。</p>
+        <div class="button-row">
+          <button type="button" class="btn-light" id="returnHomeBtn">返回首頁</button>
+          <button type="button" class="btn-danger" id="deleteGroupBtn">刪除目前群組</button>
+        </div>
+        <div class="hint danger-note" id="deleteGroupHint">刪除後會同步移除這個群組的 `bills` 與 `members`，完成後自動返回首頁。</div>
+      </section>
     </div>
   </div>
 
@@ -671,6 +1050,22 @@
       <div id="globalSettlementContent"></div>
       <div class="button-row">
         <button type="button" class="btn-light" id="closeGlobalSettlementBtnBottom">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="allBillsOverviewModal" aria-hidden="true">
+    <div class="modal-dialog overview-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="allBillsOverviewTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="allBillsOverviewTitle">全子群組消費明細總覽</h2>
+          <div class="overview-kicker">一次檢視目前大群組底下所有子群組的消費項目，並可直接跳轉到主畫面修改。</div>
+        </div>
+        <button type="button" class="icon-btn" id="closeAllBillsOverviewBtn" aria-label="關閉">✕</button>
+      </div>
+      <div id="allBillsOverviewContent"></div>
+      <div class="button-row">
+        <button type="button" class="btn-light" id="closeAllBillsOverviewBtnBottom">關閉</button>
       </div>
     </div>
   </div>
@@ -810,6 +1205,21 @@
     const confirmDeleteGroupBtn = document.getElementById("confirmDeleteGroupBtn");
     const cancelDeleteGroupBtn = document.getElementById("cancelDeleteGroupBtn");
     const closeDeleteGroupModalBtn = document.getElementById("closeDeleteGroupModalBtn");
+
+    const enterExistingGroupBtn = document.getElementById("enterExistingGroupBtn");
+    const currentSubGroupDisplay = document.getElementById("currentSubGroupDisplay");
+    const subGroupTabs = document.getElementById("subGroupTabs");
+    const memberActiveSubGroup = document.getElementById("memberActiveSubGroup");
+    const billActiveSubGroup = document.getElementById("billActiveSubGroup");
+    const memberEditBadge = document.getElementById("memberEditBadge");
+    const billEditBadge = document.getElementById("billEditBadge");
+    const memberSubGroupField = document.getElementById("memberSubGroupField");
+    const billSubGroupField = document.getElementById("billSubGroupField");
+    const openAllBillsOverviewBtn = document.getElementById("openAllBillsOverviewBtn");
+    const allBillsOverviewModal = document.getElementById("allBillsOverviewModal");
+    const allBillsOverviewContent = document.getElementById("allBillsOverviewContent");
+    const closeAllBillsOverviewBtn = document.getElementById("closeAllBillsOverviewBtn");
+    const closeAllBillsOverviewBtnBottom = document.getElementById("closeAllBillsOverviewBtnBottom");
 
     let currentGroupName = "";
     let currentSubGroupName = DEFAULT_SUB_GROUP_NAME;
@@ -2972,6 +3382,624 @@
     window.deleteMember = deleteMember;
     window.deleteBill = deleteBill;
 
+
+
+    function compareByCreatedAtDesc(a, b) {
+      const left = new Date(a?.created_at || 0).getTime();
+      const right = new Date(b?.created_at || 0).getTime();
+      return (Number.isFinite(right) ? right : 0) - (Number.isFinite(left) ? left : 0);
+    }
+
+    function formatDateDisplay(value) {
+      const raw = normalizeName(value);
+      if (!raw) {
+        return "—";
+      }
+      const parsed = new Date(raw);
+      if (Number.isNaN(parsed.getTime())) {
+        return escapeHtml(raw);
+      }
+      return escapeHtml(parsed.toLocaleString("zh-Hant", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      }));
+    }
+
+    function upsertRecordById(records = [], record) {
+      const normalized = record ? { ...record } : null;
+      if (!normalized) {
+        return [...records];
+      }
+      const next = [...records];
+      const index = next.findIndex((item) => String(item.id) === String(normalized.id));
+      if (index >= 0) {
+        next[index] = normalized;
+      } else {
+        next.unshift(normalized);
+      }
+      return next.sort(compareByCreatedAtDesc);
+    }
+
+    function removeRecordById(records = [], id) {
+      return [...records].filter((item) => String(item.id) !== String(id));
+    }
+
+    function renderSubGroupTabs() {
+      if (!subGroupTabs) {
+        return;
+      }
+
+      if (!currentSubGroupOptions.length) {
+        subGroupTabs.innerHTML = "";
+        return;
+      }
+
+      subGroupTabs.innerHTML = currentSubGroupOptions
+        .map((name) => {
+          const isActive = normalizeSubGroupName(name) === normalizeSubGroupName(currentSubGroupName);
+          return `<button type="button" class="subgroup-tab${isActive ? " is-active" : ""}" data-subgroup-tab="${escapeHtml(name)}">${escapeHtml(name)}</button>`;
+        })
+        .join("");
+    }
+
+    function syncCurrentSubGroupInputs() {
+      const safeSubGroupName = normalizeSubGroupName(currentSubGroupName);
+      currentSubGroupName = safeSubGroupName;
+      memberSubGroupNameInput.value = safeSubGroupName;
+      billSubGroupNameInput.value = safeSubGroupName;
+      memberSubGroupNameInput.readOnly = true;
+      billSubGroupNameInput.readOnly = true;
+      if (currentSubGroupDisplay) currentSubGroupDisplay.textContent = safeSubGroupName;
+      if (memberActiveSubGroup) memberActiveSubGroup.textContent = safeSubGroupName;
+      if (billActiveSubGroup) billActiveSubGroup.textContent = safeSubGroupName;
+      if (subGroupHint) {
+        subGroupHint.textContent = currentGroupName
+          ? `目前使用子群組：${safeSubGroupName}`
+          : `目前使用${DEFAULT_SUB_GROUP_NAME}。`;
+      }
+      renderSubGroupTabs();
+    }
+
+    function renderSubGroupSelectOptions(options = [], selectedValue = DEFAULT_SUB_GROUP_NAME) {
+      const uniqueOptions = [...new Set((options || []).map(normalizeSubGroupName).filter(Boolean))];
+      if (!uniqueOptions.length) {
+        uniqueOptions.push(DEFAULT_SUB_GROUP_NAME);
+      }
+
+      currentSubGroupOptions = uniqueOptions.sort((a, b) => a.localeCompare(b, "zh-Hant"));
+      const safeSelected = currentSubGroupOptions.includes(normalizeSubGroupName(selectedValue))
+        ? normalizeSubGroupName(selectedValue)
+        : currentSubGroupOptions[0];
+
+      subGroupSelect.innerHTML = currentSubGroupOptions
+        .map((name) => {
+          const selected = name === safeSelected ? " selected" : "";
+          return `<option value="${escapeHtml(name)}"${selected}>${escapeHtml(name)}</option>`;
+        })
+        .join("");
+
+      currentSubGroupName = safeSelected;
+      subGroupSelect.value = safeSelected;
+      syncCurrentSubGroupInputs();
+    }
+
+    function updateEditBackground() {
+      document.body.classList.remove("edit-active");
+    }
+
+    function setMemberEditMode(enabled) {
+      const active = Boolean(enabled);
+      memberCard.classList.toggle("edit-mode", active);
+      if (memberEditBadge) {
+        memberEditBadge.hidden = !active;
+      }
+      updateEditBackground();
+    }
+
+    function setBillEditMode(enabled) {
+      const active = Boolean(enabled);
+      billCard.classList.toggle("edit-mode", active);
+      if (billEditBadge) {
+        billEditBadge.hidden = !active;
+      }
+      updateEditBackground();
+    }
+
+    function resetMemberForm(options = {}) {
+      memberIdInput.value = "";
+      memberOriginalNameInput.value = "";
+      memberOriginalSubGroupInput.value = "";
+      memberNameInput.value = "";
+      memberSubGroupNameInput.value = normalizeSubGroupName(currentSubGroupName);
+      weightInput.value = "1";
+      memberFormTitle.textContent = "新增成員";
+      memberSubmitBtn.textContent = "儲存";
+      setMemberEditMode(false);
+      if (!options.preserveStatus) {
+        clearStatus(memberStatus);
+      }
+      syncCurrentSubGroupInputs();
+    }
+
+    function resetBillForm(options = {}) {
+      const preservePayer = Boolean(options.preservePayer);
+      const desiredPayer = preservePayer ? normalizeName(options.payer ?? payerInput.value) : "";
+      billIdInput.value = "";
+      itemNameInput.value = "";
+      billSubGroupNameInput.value = normalizeSubGroupName(currentSubGroupName);
+      amountInput.value = "";
+      billFormTitle.textContent = "新增預支";
+      billSubmitBtn.textContent = "儲存";
+      setBillEditMode(false);
+      if (!options.preserveStatus) {
+        clearStatus(billStatus);
+      }
+      renderPayerOptions(desiredPayer, normalizeSubGroupName(currentSubGroupName));
+      syncCurrentSubGroupInputs();
+      if (options.focusItem) {
+        window.setTimeout(() => {
+          itemNameInput.focus();
+          itemNameInput.select();
+        }, 0);
+      }
+    }
+
+    function applyCurrentSubGroupView() {
+      const safeSubGroupName = normalizeSubGroupName(currentSubGroupName);
+      currentSubGroupName = safeSubGroupName;
+      currentBills = allGroupBills.filter((bill) => normalizeSubGroupName(bill.sub_group) === safeSubGroupName);
+      currentMembers = allGroupMembers.filter((member) => normalizeSubGroupName(member.sub_group) === safeSubGroupName);
+      syncCurrentSubGroupInputs();
+      renderPayerOptions(payerInput.value, safeSubGroupName);
+      renderMembers(currentMembers);
+      renderBills(currentBills);
+      renderGroupSummary(allGroupBills, allGroupMembers);
+      if (allBillsOverviewModal.classList.contains("is-open")) {
+        renderAllBillsOverview();
+      }
+    }
+
+    function renderBills(bills) {
+      const safeBills = [...(bills || [])].sort(compareByCreatedAtDesc);
+      billCount.textContent = `${safeBills.length} 筆`;
+
+      if (!currentGroupName) {
+        billListEl.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
+        return;
+      }
+
+      if (!safeBills.length) {
+        billListEl.innerHTML = `<div class="empty">目前子群組「${escapeHtml(normalizeSubGroupName(currentSubGroupName))}」還沒有預支資料。</div>`;
+        return;
+      }
+
+      const rows = safeBills
+        .map((bill) => `
+          <tr>
+            <td>${escapeHtml(bill.item_name)}</td>
+            <td class="number">${formatNumber(bill.amount)}</td>
+            <td>${escapeHtml(bill.payer)}</td>
+            <td>${formatDateDisplay(bill.created_at)}</td>
+            <td class="actions-cell">
+              <div class="button-row">
+                <button type="button" class="btn-warning" onclick="startBillEdit(${Number(bill.id)})">修改</button>
+                <button type="button" class="btn-danger" onclick="deleteBill(${Number(bill.id)})">刪除</button>
+              </div>
+            </td>
+          </tr>
+        `)
+        .join("");
+
+      billListEl.innerHTML = `
+        <div class="table-wrap">
+          <table class="bill-table">
+            <thead>
+              <tr>
+                <th>項目名稱</th>
+                <th>金額</th>
+                <th>付款人</th>
+                <th>日期</th>
+                <th class="actions-cell">操作</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function buildNetAmountCell(row, maxAbsNet) {
+      const net = Number(row.net || 0);
+      const absNet = Math.abs(net);
+      const ratio = maxAbsNet > 0 ? absNet / maxAbsNet : 0;
+      const fillWidth = Math.max(0, Math.min(50, ratio * 50));
+
+      let label = `剛好 ${formatNumber(0)} 元`;
+      let className = "settlement-zero";
+      let fillHtml = "";
+
+      if (net > EPSILON) {
+        label = `可收 ${formatNumber(net)} 元`;
+        className = "settlement-positive";
+        fillHtml = `<span class="net-amount-fill is-positive" style="left: 50%; width: ${fillWidth.toFixed(2)}%;"></span>`;
+      } else if (net < -EPSILON) {
+        label = `應付 ${formatNumber(absNet)} 元`;
+        className = "settlement-negative";
+        fillHtml = `<span class="net-amount-fill is-negative" style="left: ${(50 - fillWidth).toFixed(2)}%; width: ${fillWidth.toFixed(2)}%;"></span>`;
+      }
+
+      return `
+        <div class="net-amount-cell">
+          <div class="net-amount-track">
+            <span class="net-amount-axis"></span>
+            ${fillHtml}
+            <span class="net-amount-text ${className}">${label}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderGroupSummary(bills, members) {
+      const stats = calculateGroupStats(bills, members);
+      totalAmountEl.textContent = formatNumber(stats.totalAmount);
+      totalWeightEl.textContent = formatNumber(stats.totalWeight);
+      unitAmountEl.textContent = formatNumber(stats.unitAmount);
+
+      if (!currentGroupName) {
+        groupSummaryEl.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
+        return;
+      }
+
+      if (!members.length) {
+        groupSummaryEl.innerHTML = '<div class="empty">這個群組尚無成員資料，因此無法計算每人應付金額。</div>';
+        return;
+      }
+
+      if (!stats.rows.length) {
+        groupSummaryEl.innerHTML = '<div class="empty">目前沒有可計算的資料。</div>';
+        return;
+      }
+
+      const subgroupReports = calculateSubGroupReports(stats.uniqueBills, members);
+      const subgroupHtml = subgroupReports.map((report) => `
+        <div class="subgroup-block">
+          <h4 class="subgroup-title">${escapeHtml(report.subGroupName)}</h4>
+          ${report.stats.rows.length
+            ? buildSettlementTable(report.stats.rows, { showWeight: true })
+            : '<div class="empty">此子群組目前沒有足夠資料可供計算。</div>'}
+        </div>
+      `).join("");
+
+      const groupBalanceMap = new Map(
+        (stats.rows || [])
+          .filter((row) => normalizeName(row.name))
+          .map((row) => [normalizeName(row.name), Number(row.net || 0)])
+      );
+      const groupTransfers = minimizeDebts(groupBalanceMap);
+      const netRows = [...groupBalanceMap.entries()]
+        .map(([name, net]) => ({ name, net }))
+        .sort((a, b) => b.net - a.net);
+      const maxAbsNet = netRows.reduce((maxValue, row) => Math.max(maxValue, Math.abs(Number(row.net || 0))), 0);
+
+      const netTableRows = netRows.length
+        ? netRows.map((row) => `
+            <tr>
+              <td>${escapeHtml(row.name)}</td>
+              <td>${buildNetAmountCell(row, maxAbsNet)}</td>
+            </tr>
+          `).join("")
+        : '<tr><td colspan="2">目前沒有可彙總的成員淨額。</td></tr>';
+
+      const transferHtml = groupTransfers.length
+        ? `
+          <ol class="transfer-list">
+            ${groupTransfers.map((item) => `
+              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)} 元</li>
+            `).join("")}
+          </ol>
+        `
+        : '<div class="empty">目前子群組加總後已經平衡，沒有需要額外付款的對象。</div>';
+
+      groupSummaryEl.innerHTML = `
+        <div class="note-box">本區會先顯示各子群組分攤明細，最下方提供「最終結算總表」讓你在輸入資料時就能即時看到整體應收應付關係。</div>
+        ${stats.duplicateCount > 0 ? `<div class="note-box warning-box">本區統計已先去除 ${escapeHtml(String(stats.duplicateCount))} 筆重複 bill，只會以每個 bill_id 的唯一消費計入總金額與每單位應付。</div>` : ""}
+        ${subgroupHtml}
+        <div class="subsection">
+          <h3>大群組總報告</h3>
+          ${buildSettlementTable(stats.rows, { showWeight: false })}
+        </div>
+        <div class="subsection">
+          <h3>最終結算總表</h3>
+          <div class="note-box">這裡會把所有子群組的淨額加總為整體結果，並提供最少筆數的付款指引。</div>
+          <div class="subsection">
+            <h4 class="subgroup-title">付款指引</h4>
+            ${transferHtml}
+          </div>
+          <div class="subsection">
+            <h4 class="subgroup-title">淨額總表</h4>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>成員</th>
+                    <th>最終淨額</th>
+                  </tr>
+                </thead>
+                <tbody>${netTableRows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectCurrentSubGroup(subGroupName, options = {}) {
+      currentSubGroupName = normalizeSubGroupName(subGroupName);
+      subGroupSelect.value = currentSubGroupName;
+      if (options.resetForms !== false) {
+        resetMemberForm();
+        resetBillForm();
+      }
+      applyCurrentSubGroupView();
+      groupHint.textContent = `目前顯示群組「${currentGroupName}」中子群組「${currentSubGroupName}」的資料。`;
+    }
+
+    /**
+     * 全子群組明細總覽 Modal
+     * 1. 顯示目前大群組底下所有子群組的 bill。
+     * 2. 點擊修改時，先關閉彈窗，再切換到目標子群組，最後把資料帶回主畫面表單。
+     * 3. 刪除則沿用既有 deleteBill 後端流程，避免破壞原本資料邏輯。
+     */
+    function renderAllBillsOverview() {
+      if (!currentGroupName) {
+        allBillsOverviewContent.innerHTML = '<div class="empty">請先進入群組後，再檢視全子群組明細總覽。</div>';
+        return;
+      }
+
+      const sortedBills = [...allGroupBills].sort((a, b) => {
+        const byGroup = normalizeSubGroupName(a.sub_group).localeCompare(normalizeSubGroupName(b.sub_group), "zh-Hant");
+        if (byGroup !== 0) {
+          return byGroup;
+        }
+        return compareByCreatedAtDesc(a, b);
+      });
+
+      if (!sortedBills.length) {
+        allBillsOverviewContent.innerHTML = '<div class="empty">目前這個大群組還沒有任何消費明細。</div>';
+        return;
+      }
+
+      const rows = sortedBills.map((bill) => `
+        <tr>
+          <td>${escapeHtml(normalizeSubGroupName(bill.sub_group))}</td>
+          <td>${escapeHtml(bill.item_name)}</td>
+          <td class="number">${formatNumber(bill.amount)}</td>
+          <td>${escapeHtml(bill.payer)}</td>
+          <td>${formatDateDisplay(bill.created_at)}</td>
+          <td class="actions-cell">
+            <div class="button-row">
+              <button type="button" class="btn-warning" data-overview-action="edit" data-bill-id="${Number(bill.id)}">修改</button>
+              <button type="button" class="btn-danger" data-overview-action="delete" data-bill-id="${Number(bill.id)}">刪除</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      allBillsOverviewContent.innerHTML = `
+        <div class="overview-head">
+          <div class="note-box">目前顯示大群組「${escapeHtml(currentGroupName)}」底下全部子群組的消費明細，可直接跨子群組跳轉修改。</div>
+          <div class="overview-count">${escapeHtml(String(sortedBills.length))} 筆明細</div>
+        </div>
+        <div class="subsection">
+          <div class="table-wrap">
+            <table class="overview-table">
+              <thead>
+                <tr>
+                  <th>子群組名稱</th>
+                  <th>項目名稱</th>
+                  <th>金額</th>
+                  <th>付款人</th>
+                  <th>日期</th>
+                  <th class="actions-cell">操作</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function openAllBillsOverview() {
+      if (!currentGroupName) {
+        groupHint.textContent = "請先選擇大群組後，再查看全子群組明細。";
+        return;
+      }
+      renderAllBillsOverview();
+      allBillsOverviewModal.classList.add("is-open");
+      allBillsOverviewModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeAllBillsOverview() {
+      allBillsOverviewModal.classList.remove("is-open");
+      allBillsOverviewModal.setAttribute("aria-hidden", "true");
+    }
+
+    async function jumpToBillEditFromOverview(id) {
+      const bill = allGroupBills.find((item) => String(item.id) === String(id));
+      if (!bill) {
+        renderAllBillsOverview();
+        return;
+      }
+
+      closeAllBillsOverview();
+      selectCurrentSubGroup(normalizeSubGroupName(bill.sub_group));
+      window.setTimeout(() => {
+        window.startBillEdit(id);
+      }, 80);
+    }
+
+    async function deleteBillFromOverview(id) {
+      const bill = allGroupBills.find((item) => String(item.id) === String(id));
+      if (!bill) {
+        renderAllBillsOverview();
+        return;
+      }
+
+      closeAllBillsOverview();
+      selectCurrentSubGroup(normalizeSubGroupName(bill.sub_group));
+      await deleteBill(id);
+    }
+
+    async function saveBill(event) {
+      event.preventDefault();
+
+      if (!currentGroupName) {
+        setStatus(billStatus, "請先在上方輸入群組名稱並點擊進入。", "error");
+        return;
+      }
+
+      if (!currentMembers.length) {
+        setStatus(billStatus, "請先新增成員，再建立預支資料。", "error");
+        return;
+      }
+
+      const activeSubGroup = normalizeSubGroupName(currentSubGroupName);
+      const payload = {
+        item_name: normalizeName(itemNameInput.value),
+        amount: Number(amountInput.value),
+        payer: normalizeName(payerInput.value),
+        group_name: currentGroupName,
+        sub_group: activeSubGroup
+      };
+
+      const validPayers = new Set(
+        currentMembers
+          .filter((member) => normalizeSubGroupName(member.sub_group) === payload.sub_group)
+          .map((member) => normalizeName(member.member_name))
+          .filter(Boolean)
+      );
+
+      if (!payload.item_name || !payload.payer || Number.isNaN(payload.amount)) {
+        setStatus(billStatus, "請完整填寫預支資料。", "error");
+        return;
+      }
+
+      if (payload.amount <= 0) {
+        setStatus(billStatus, "金額必須大於 0。", "error");
+        return;
+      }
+
+      if (!validPayers.has(payload.payer)) {
+        setStatus(billStatus, "付款人必須從同一個子群組的成員清單中選擇。", "error");
+        return;
+      }
+
+      const editingId = normalizeName(billIdInput.value);
+      const result = editingId
+        ? await supabaseClient.from(BILLS_TABLE).update(payload).eq("id", editingId).select().single()
+        : await supabaseClient.from(BILLS_TABLE).insert([{
+            ...payload,
+            sub_group: activeSubGroup
+          }]).select().single();
+
+      if (result.error) {
+        setStatus(billStatus, getErrorMessage(result.error, "儲存預支失敗"), "error");
+        return;
+      }
+
+      const normalizedResult = normalizeBillRecord(result.data || {
+        ...payload,
+        id: editingId || `temp-${Date.now()}`,
+        created_at: new Date().toISOString()
+      });
+
+      allGroupBills = upsertRecordById(allGroupBills, normalizedResult);
+      setStatus(billStatus, editingId ? "預支資料已更新。" : "預支資料已新增。", "success");
+      resetBillForm({
+        preservePayer: true,
+        payer: payload.payer,
+        preserveStatus: true,
+        focusItem: true
+      });
+      applyCurrentSubGroupView();
+      await loadExistingGroupNames();
+    }
+
+    async function deleteBill(id) {
+      const bill = allGroupBills.find((item) => String(item.id) === String(id));
+      if (!bill) {
+        setStatus(billStatus, "找不到這筆預支資料。", "error");
+        return;
+      }
+
+      const confirmed = window.confirm(`確定要刪除預支「${normalizeName(bill.item_name)}」嗎？`);
+      if (!confirmed) {
+        return;
+      }
+
+      const result = await supabaseClient.from(BILLS_TABLE).delete().eq("id", id);
+      if (result.error) {
+        setStatus(billStatus, getErrorMessage(result.error, "刪除預支失敗"), "error");
+        return;
+      }
+
+      if (String(billIdInput.value) === String(id)) {
+        resetBillForm({ focusItem: true });
+      }
+
+      allGroupBills = removeRecordById(allGroupBills, id);
+      setStatus(billStatus, `預支「${normalizeName(bill.item_name)}」已刪除。`, "success");
+      applyCurrentSubGroupView();
+      await loadExistingGroupNames();
+    }
+
+    window.startMemberEdit = function startMemberEdit(id) {
+      const member = currentMembers.find((item) => String(item.id) === String(id));
+      if (!member) {
+        setStatus(memberStatus, "找不到這位成員資料。", "error");
+        return;
+      }
+
+      memberIdInput.value = member.id;
+      memberOriginalNameInput.value = normalizeName(member.member_name);
+      memberOriginalSubGroupInput.value = normalizeSubGroupName(member.sub_group);
+      memberNameInput.value = normalizeName(member.member_name);
+      memberSubGroupNameInput.value = normalizeSubGroupName(member.sub_group);
+      weightInput.value = member.weight ?? 1;
+      memberFormTitle.textContent = "修改成員";
+      memberSubmitBtn.textContent = "更新";
+      setMemberEditMode(true);
+      setBillEditMode(false);
+      setStatus(memberStatus, "已進入成員編輯模式。", "success");
+      memberCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    window.startBillEdit = function startBillEdit(id) {
+      const bill = currentBills.find((item) => String(item.id) === String(id));
+      if (!bill) {
+        setStatus(billStatus, "找不到這筆預支資料。", "error");
+        return;
+      }
+
+      billIdInput.value = bill.id;
+      itemNameInput.value = normalizeName(bill.item_name);
+      billSubGroupNameInput.value = normalizeSubGroupName(bill.sub_group);
+      amountInput.value = bill.amount ?? "";
+      renderPayerOptions(normalizeName(bill.payer), normalizeSubGroupName(bill.sub_group));
+      billFormTitle.textContent = "修改預支";
+      billSubmitBtn.textContent = "更新";
+      setBillEditMode(true);
+      setMemberEditMode(false);
+      setStatus(billStatus, "已進入預支編輯模式。", "success");
+      billCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    window.deleteBill = deleteBill;
+
     groupForm.addEventListener("submit", (event) => {
       event.preventDefault();
       enterGroupWorkspace(groupInput.value);
@@ -3072,6 +4100,72 @@
 
       if (event.key === "Escape" && deleteGroupModal.classList.contains("is-open")) {
         closeDeleteGroupModal();
+      }
+    });
+
+
+
+    if (enterExistingGroupBtn) {
+      enterExistingGroupBtn.addEventListener("click", () => {
+        const selectedGroup = normalizeName(groupSelect.value);
+        if (!selectedGroup) {
+          homeHint.textContent = "請先選擇一個既有群組。";
+          return;
+        }
+        enterGroupWorkspace(selectedGroup);
+      });
+    }
+
+    if (subGroupTabs) {
+      subGroupTabs.addEventListener("click", (event) => {
+        const tabButton = event.target.closest("[data-subgroup-tab]");
+        if (!tabButton) {
+          return;
+        }
+        selectCurrentSubGroup(tabButton.getAttribute("data-subgroup-tab"));
+      });
+    }
+
+    if (openAllBillsOverviewBtn) {
+      openAllBillsOverviewBtn.addEventListener("click", openAllBillsOverview);
+    }
+
+    if (closeAllBillsOverviewBtn) {
+      closeAllBillsOverviewBtn.addEventListener("click", closeAllBillsOverview);
+    }
+
+    if (closeAllBillsOverviewBtnBottom) {
+      closeAllBillsOverviewBtnBottom.addEventListener("click", closeAllBillsOverview);
+    }
+
+    allBillsOverviewModal.addEventListener("click", async (event) => {
+      if (event.target === allBillsOverviewModal) {
+        closeAllBillsOverview();
+        return;
+      }
+
+      const actionButton = event.target.closest("[data-overview-action]");
+      if (!actionButton) {
+        return;
+      }
+
+      const billId = actionButton.getAttribute("data-bill-id");
+      if (!billId) {
+        return;
+      }
+
+      if (actionButton.getAttribute("data-overview-action") === "edit") {
+        await jumpToBillEditFromOverview(billId);
+      }
+
+      if (actionButton.getAttribute("data-overview-action") === "delete") {
+        await deleteBillFromOverview(billId);
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && allBillsOverviewModal.classList.contains("is-open")) {
+        closeAllBillsOverview();
       }
     });
 
