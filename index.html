@@ -700,6 +700,29 @@
       margin-top: 8px;
     }
 
+    .summary-focus-stack {
+      display: grid;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .summary-focus-section {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+    }
+
+    .summary-focus-section .subgroup-title {
+      margin-bottom: 0;
+    }
+
+    .summary-focus-section .table-wrap {
+      margin-top: 2px;
+    }
+
     .danger-note {
       color: #991b1b;
     }
@@ -1094,10 +1117,10 @@
         <div class="section-head">
           <div>
             <h2>本群組收支概覽</h2>
-            <div class="quiet">輸入資料時，會同步顯示整個大群組底下各子群組與最終淨額關係。</div>
+            <div class="quiet">主頁只保留最後需要看的付款指引與淨額總表，詳細明細可從上方總覽視窗查看。</div>
           </div>
         </div>
-        <div class="stats">
+        <div class="stats" hidden>
           <div class="stat">
             <small>總金額</small>
             <strong id="totalAmount">0.00</strong>
@@ -3885,16 +3908,6 @@
         return;
       }
 
-      const subgroupReports = calculateSubGroupReports(stats.uniqueBills, members);
-      const subgroupHtml = subgroupReports.map((report) => `
-        <div class="subgroup-block">
-          <h4 class="subgroup-title">${escapeHtml(report.subGroupName)}</h4>
-          ${report.stats.rows.length
-            ? buildSettlementTable(report.stats.rows, { showWeight: true })
-            : '<div class="empty">此子群組目前沒有足夠資料可供計算。</div>'}
-        </div>
-      `).join("");
-
       const groupBalanceMap = new Map(
         (stats.rows || [])
           .filter((row) => normalizeName(row.name))
@@ -3926,22 +3939,16 @@
         : '<div class="empty">目前子群組加總後已經平衡，沒有需要額外付款的對象。</div>';
 
       groupSummaryEl.innerHTML = `
-        <div class="note-box">本區會先顯示各子群組分攤明細，最下方提供「最終結算總表」讓你在輸入資料時就能即時看到整體應收應付關係。</div>
         ${stats.duplicateCount > 0 ? `<div class="note-box warning-box">本區統計已先去除 ${escapeHtml(String(stats.duplicateCount))} 筆重複 bill，只會以每個 bill_id 的唯一消費計入總金額與每單位應付。</div>` : ""}
-        ${subgroupHtml}
-        <div class="subsection">
-          <h3>大群組總報告</h3>
-          ${buildSettlementTable(stats.rows, { showWeight: false })}
-        </div>
-        <div class="subsection">
-          <h3>最終結算總表</h3>
-          <div class="note-box">這裡會把所有子群組的淨額加總為整體結果，並提供最少筆數的付款指引。</div>
-          <div class="subsection">
-            <h4 class="subgroup-title">付款指引</h4>
+        <div class="summary-focus-stack">
+          <div class="summary-focus-section">
+            <h3>付款指引</h3>
+            <div class="note-box">以下只保留最少筆數的最終轉帳對象，方便直接照著付款。</div>
             ${transferHtml}
           </div>
-          <div class="subsection">
-            <h4 class="subgroup-title">淨額總表</h4>
+          <div class="summary-focus-section">
+            <h3>淨額總表</h3>
+            <div class="note-box">綠色代表可收回，紅色代表需支付，讓整體收支一眼看懂。</div>
             <div class="table-wrap">
               <table>
                 <thead>
