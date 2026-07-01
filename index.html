@@ -1059,78 +1059,104 @@
       }
 
       /* =======================================================
-         1. 恢復標準表格機制，強制資料行與標頭對齊
+         Mobile tables: 比例 + 自適應（不使用欄位固定 px）
          ======================================================= */
-      .bill-table,
-      .member-table,
-      table {
-        display: table !important;
-        table-layout: fixed !important;
-        width: 100% !important;
+      .workspace-view .table-wrap {
+        overflow-x: hidden;
       }
 
-      .bill-table tr,
-      .member-table tr {
-        display: table-row !important;
+      .bill-table,
+      .member-table,
+      .net-summary-table,
+      table {
+        width: 100% !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
       }
 
       .bill-table th,
       .bill-table td,
       .member-table th,
-      .member-table td {
-        display: table-cell !important;
+      .member-table td,
+      .net-summary-table th,
+      .net-summary-table td {
         vertical-align: middle !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
-      /* =======================================================
-         2. 預支紀錄列表：資料行與標頭對齊（4 欄）
-         欄位順序：項目名稱 / 金額 / 付款人 / 操作
-         ======================================================= */
+      /* 操作按鈕：純圖示 */
+      .action-label {
+        display: none !important;
+      }
+
+      .table-action-row {
+        display: inline-flex !important;
+        gap: 0.25rem !important;
+      }
+
+      .icon-action-btn {
+        width: 1.625rem !important;
+        height: 1.625rem !important;
+        min-width: 1.625rem !important;
+        padding: 0 !important;
+        border-radius: 0.4rem !important;
+      }
+
+      .action-icon {
+        font-size: 0.85rem !important;
+      }
+
+      /* -----------------------
+         預支紀錄列表（4 欄）
+         欄位：項目名稱 / 金額 / 付款人 / 操作
+         ----------------------- */
       .bill-table th:nth-child(1),
       .bill-table td:nth-child(1) {
-        width: 35% !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        width: 38% !important;
+        white-space: normal !important;
       }
 
+      /* 金額：最高優先、絕不換行；遇到大數字會自動縮字 */
       .bill-table th:nth-child(2),
-      .bill-table td:nth-child(2) {
-        width: 15% !important;
+      .bill-table td:nth-child(2),
+      .bill-table td.amount-column {
+        width: 20% !important;
         white-space: nowrap !important;
         text-align: right !important;
+        font-size: clamp(0.82rem, 3.2vw, 0.92rem);
       }
 
+      /* 付款人：允許換行，避免變垂直單字 */
       .bill-table th:nth-child(3),
       .bill-table td:nth-child(3) {
-        width: 25% !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        width: 22% !important;
+        white-space: normal !important;
         text-align: left !important;
       }
 
+      /* 操作：保持在右側、不被擠壓 */
       .bill-table th.actions-cell,
       .bill-table td.actions-cell {
-        width: 25% !important;
+        width: 20% !important;
         text-align: right !important;
+        white-space: nowrap !important;
       }
 
-      /* =======================================================
-         3. 新增成員列表：資料行與標頭完美對齊
-         ======================================================= */
+      /* -----------------------
+         新增成員列表（3 欄）
+         欄位：成員名稱 / 人數 / 操作
+         ----------------------- */
       .member-table th:nth-child(1),
       .member-table td:nth-child(1) {
-        width: 45% !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        width: 50% !important;
+        white-space: normal !important;
       }
 
       .member-table th:nth-child(2),
       .member-table td:nth-child(2) {
-        width: 30% !important;
-        white-space: nowrap !important;
+        width: 25% !important;
+        white-space: normal !important;
         text-align: right !important;
       }
 
@@ -1138,29 +1164,38 @@
       .member-table td.actions-cell {
         width: 25% !important;
         text-align: right !important;
+        white-space: nowrap !important;
       }
 
-      /* =======================================================
-         4. 精緻化操作按鈕尺寸（緊湊但好點擊）
-         ======================================================= */
-      .bill-table .table-action-row,
-      .member-table .table-action-row {
-        gap: 4px !important;
+      /* -----------------------
+         淨額總表：滿版且不出現左右捲動
+         ----------------------- */
+      .net-summary-table th:nth-child(1),
+      .net-summary-table td:nth-child(1) {
+        width: 40% !important;
+        white-space: normal !important;
       }
 
-      .bill-table .icon-action-btn,
-      .member-table .icon-action-btn {
-        width: 26px !important;
-        height: 26px !important;
-        min-width: 26px !important;
+      .net-summary-table th:nth-child(2),
+      .net-summary-table td:nth-child(2) {
+        width: 60% !important;
+      }
+
+      /* 膠囊寬度改為跟隨欄位（不設固定最小寬），字體大小與左欄一致 */
+      .net-summary-table td:last-child .net-amount-cell {
+        width: 100% !important;
+        min-width: 0 !important;
         padding: 0 !important;
-        margin: 0 2px !important;
-        border-radius: 6px !important;
       }
 
-      .bill-table .action-icon,
-      .member-table .action-icon {
-        font-size: 13px !important;
+      .net-summary-table td:last-child .net-amount-track {
+        min-width: 0 !important;
+        padding: 0 0.5rem;
+      }
+
+      .net-summary-table .net-amount-text {
+        font-size: inherit !important;
+        white-space: normal !important;
       }
     }
 
@@ -2256,7 +2291,7 @@
                 <thead>
                   <tr>
                     <th>成員名稱</th>
-                    <th>權重 / 人數</th>
+                    <th>人數</th>
                     <th class="actions-cell">操作</th>
                   </tr>
                 </thead>
