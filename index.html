@@ -1913,23 +1913,22 @@
     }
 
     function buildGroupSettlementFromSubGroups(groupBills = [], groupMembers = []) {
-      const { uniqueBills, duplicateCount } = dedupeBills(groupBills);
-      const subgroupReports = calculateSubGroupReports(uniqueBills, groupMembers);
-      const aggregatedRows = aggregateSettlementRowsByName(
-        subgroupReports.flatMap((report) => report.stats.rows || [])
-      );
+      const overallStats = calculateGroupStats(groupBills, groupMembers);
+      const subgroupReports = calculateSubGroupReports(overallStats.uniqueBills, groupMembers);
 
       return {
-        duplicateCount,
-        uniqueBills,
+        duplicateCount: overallStats.duplicateCount,
+        uniqueBills: overallStats.uniqueBills,
         subgroupReports,
-        stats: {
-          totalAmount: subgroupReports.reduce((sum, report) => sum + Number(report.stats.totalAmount || 0), 0),
-          totalWeight: subgroupReports.reduce((sum, report) => sum + Number(report.stats.totalWeight || 0), 0),
-          unitAmount: 0,
-          rows: aggregatedRows
-        }
+        stats: overallStats
       };
+    }
+
+    async function refreshGlobalSettlementViewIfOpen() {
+      if (!currentGroupName || !globalSettlementModal.classList.contains("is-open")) {
+        return;
+      }
+      await runCurrentGroupSettlement(currentGroupName);
     }
 
     function setStatus(element, message, type = "success") {
@@ -4090,6 +4089,7 @@
       if (allBillsOverviewModal.classList.contains("is-open")) {
         renderAllBillsOverview();
       }
+      void refreshGlobalSettlementViewIfOpen();
     }
 
     function renderBills(bills) {
