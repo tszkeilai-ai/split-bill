@@ -25,6 +25,9 @@
       --warning: #b45309;
       --warning-soft: #fff7ed;
       --edit-ring: 0 0 0 1px rgba(37, 99, 235, 0.14), 0 0 0 6px rgba(37, 99, 235, 0.08), 0 16px 40px rgba(37, 99, 235, 0.12);
+      --table-font-size: clamp(0.94rem, 0.91rem + 0.12vw, 1rem);
+      --table-compact-size: clamp(0.72rem, 0.68rem + 0.24vw, 0.94rem);
+      --table-tight-spacing: -0.03em;
     }
 
     * {
@@ -565,6 +568,8 @@
       border-bottom: 1px solid #e5e7eb;
       text-align: left;
       vertical-align: middle;
+      font-size: var(--table-font-size);
+      line-height: 1.35;
     }
 
     .member-table th.actions-cell,
@@ -579,7 +584,7 @@
 
     th {
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: var(--table-font-size);
       font-weight: 700;
       white-space: nowrap;
       background: #fbfcfe;
@@ -590,23 +595,34 @@
 
     td.number {
       font-variant-numeric: tabular-nums;
-      text-align: right;
-      white-space: nowrap;
+      text-align: center;
+      white-space: nowrap !important;
+      font-size: var(--table-compact-size);
+      letter-spacing: var(--table-tight-spacing);
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .amount-column {
-      white-space: nowrap;
-      text-align: right;
-      padding-right: 16px;
+      white-space: nowrap !important;
+      text-align: center;
+      padding-inline: 10px;
+      font-size: var(--table-compact-size);
+      letter-spacing: var(--table-tight-spacing);
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .numeric-tight {
       white-space: nowrap !important;
       font-variant-numeric: tabular-nums;
-      font-size: clamp(0.8rem, 2.2vw, 0.92rem);
-      letter-spacing: -0.02em;
+      font-size: var(--table-compact-size);
+      letter-spacing: var(--table-tight-spacing);
       line-height: 1.2;
-      text-align: right;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .settlement-positive {
@@ -857,22 +873,22 @@
 
     .bill-table th:nth-child(1),
     .bill-table td:nth-child(1) {
-      width: 34%;
+      width: 40%;
     }
 
     .bill-table th:nth-child(2),
     .bill-table td:nth-child(2) {
-      width: 16%;
+      width: 27%;
     }
 
     .bill-table th:nth-child(3),
     .bill-table td:nth-child(3) {
-      width: 20%;
+      width: 17%;
     }
 
     .bill-table th.actions-cell,
     .bill-table td.actions-cell {
-      width: 30%;
+      width: 16%;
       text-align: right;
     }
 
@@ -883,20 +899,24 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(88px, 42%);
       align-items: center;
+      justify-items: center;
       gap: 12px;
     }
 
     .net-amount-value {
       min-width: 0;
-      text-align: right;
+      width: 100%;
+      text-align: center;
       font-variant-numeric: tabular-nums;
-      font-size: clamp(0.78rem, 2.1vw, 1rem);
+      font-size: var(--table-compact-size);
       font-weight: 700;
       line-height: 1.1;
       white-space: nowrap !important;
-      letter-spacing: -0.5px;
+      letter-spacing: var(--table-tight-spacing);
       word-break: keep-all;
       overflow-wrap: normal;
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .net-amount-value.is-positive {
@@ -1149,36 +1169,37 @@
 
       /* -----------------------
          預支紀錄列表（4 欄）
-         欄位：項目名稱 / 金額 / 付款人 / 操作
+         欄位：項目名稱 / 付款人 / 金額 / 操作
          ----------------------- */
       .bill-table th:nth-child(1),
       .bill-table td:nth-child(1) {
-        width: 38% !important;
+        width: 40% !important;
         white-space: normal !important;
       }
 
-      /* 金額：最高優先、絕不換行；遇到大數字會自動縮字 */
+      /* 付款人：允許換行，維持與實際欄位順序一致 */
       .bill-table th:nth-child(2),
-      .bill-table td:nth-child(2),
-      .bill-table td.amount-column {
-        width: 20% !important;
-        white-space: nowrap !important;
-        text-align: right !important;
-        font-size: clamp(0.82rem, 3.2vw, 0.92rem);
-      }
-
-      /* 付款人：允許換行，避免變垂直單字 */
-      .bill-table th:nth-child(3),
-      .bill-table td:nth-child(3) {
-        width: 22% !important;
+      .bill-table td:nth-child(2) {
+        width: 25% !important;
         white-space: normal !important;
         text-align: left !important;
+      }
+
+      /* 金額：置中、絕不換行；遇到大數字時維持緊湊單行 */
+      .bill-table th:nth-child(3),
+      .bill-table td:nth-child(3),
+      .bill-table td.amount-column {
+        width: 17% !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        font-size: var(--table-compact-size) !important;
+        letter-spacing: var(--table-tight-spacing);
       }
 
       /* 操作：保持在右側、不被擠壓 */
       .bill-table th.actions-cell,
       .bill-table td.actions-cell {
-        width: 20% !important;
+        width: 18% !important;
         text-align: right !important;
         white-space: nowrap !important;
       }
@@ -1196,8 +1217,10 @@
       .member-table th:nth-child(2),
       .member-table td:nth-child(2) {
         width: 25% !important;
-        white-space: normal !important;
-        text-align: right !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        font-size: var(--table-compact-size) !important;
+        letter-spacing: var(--table-tight-spacing);
       }
 
       .member-table th.actions-cell,
@@ -1219,6 +1242,7 @@
       .net-summary-table th:nth-child(2),
       .net-summary-table td:nth-child(2) {
         width: 60% !important;
+        text-align: center !important;
       }
 
       /* 膠囊寬度改為跟隨欄位（不設固定最小寬），字體大小與左欄一致 */
@@ -1236,9 +1260,9 @@
       }
 
       .net-summary-table .net-amount-value {
-        font-size: clamp(0.68rem, 2.45vw, 0.84rem) !important;
+        font-size: var(--table-compact-size) !important;
         white-space: nowrap !important;
-        letter-spacing: -0.5px;
+        letter-spacing: var(--table-tight-spacing);
       }
     }
 
@@ -1352,12 +1376,14 @@
     .member-table td.col-number,
     .settlement-table th.col-number,
     .settlement-table td.col-number {
-      text-align: right;
+      text-align: center;
       font-variant-numeric: tabular-nums;
       white-space: nowrap !important;
-      font-size: clamp(0.8rem, 2.2vw, 0.92rem);
-      letter-spacing: -0.02em;
+      font-size: var(--table-compact-size);
+      letter-spacing: var(--table-tight-spacing);
       line-height: 1.2;
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .bill-table th.actions-cell,
@@ -1386,7 +1412,12 @@
     .bill-table .amount-column,
     .overview-table .amount-column {
       white-space: nowrap !important;
-      text-align: right;
+      text-align: center;
+    }
+
+    .net-summary-table th:last-child,
+    .net-summary-table td:last-child {
+      text-align: center;
     }
 
     .bill-table th.col-number,
@@ -1487,8 +1518,8 @@
       .overview-table .amount-column,
       td.number {
         white-space: nowrap !important;
-        font-size: clamp(0.74rem, 2.9vw, 0.86rem) !important;
-        letter-spacing: -0.03em;
+        font-size: var(--table-compact-size) !important;
+        letter-spacing: var(--table-tight-spacing);
       }
     }
 
