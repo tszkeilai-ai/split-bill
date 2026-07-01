@@ -600,6 +600,15 @@
       padding-right: 16px;
     }
 
+    .numeric-tight {
+      white-space: nowrap !important;
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(0.8rem, 2.2vw, 0.92rem);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      text-align: right;
+    }
+
     .settlement-positive {
       color: var(--success);
       font-weight: 700;
@@ -917,11 +926,13 @@
       padding: 0 14px;
       z-index: 1;
       font-variant-numeric: tabular-nums;
-      font-size: 1.25rem;
+      font-size: clamp(0.78rem, 2.3vw, 1.05rem);
       font-weight: 700;
       line-height: 1.1;
-      word-break: break-all;
-      overflow-wrap: anywhere;
+      white-space: nowrap !important;
+      letter-spacing: -0.03em;
+      word-break: keep-all;
+      overflow-wrap: normal;
     }
 
     .final-net-amount-container {
@@ -932,11 +943,13 @@
     }
 
     .final-net-amount-text {
-      font-size: 1.25rem !important;
+      font-size: clamp(0.78rem, 2.3vw, 1.05rem) !important;
       font-weight: 700;
       line-height: 1.1;
-      word-break: break-all;
-      overflow-wrap: anywhere;
+      white-space: nowrap !important;
+      letter-spacing: -0.03em;
+      word-break: keep-all;
+      overflow-wrap: normal;
     }
 
     .workspace-shell[hidden],
@@ -1203,8 +1216,9 @@
       }
 
       .net-summary-table .net-amount-text {
-        font-size: inherit !important;
-        white-space: normal !important;
+        font-size: clamp(0.72rem, 2.7vw, 0.88rem) !important;
+        white-space: nowrap !important;
+        letter-spacing: -0.03em;
       }
     }
 
@@ -1320,7 +1334,10 @@
     .settlement-table td.col-number {
       text-align: right;
       font-variant-numeric: tabular-nums;
-      white-space: nowrap;
+      white-space: nowrap !important;
+      font-size: clamp(0.8rem, 2.2vw, 0.92rem);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
     }
 
     .bill-table th.actions-cell,
@@ -1348,8 +1365,23 @@
 
     .bill-table .amount-column,
     .overview-table .amount-column {
-      white-space: nowrap;
+      white-space: nowrap !important;
       text-align: right;
+    }
+
+    .bill-table th.col-number,
+    .bill-table td.col-number,
+    .overview-table th.col-number,
+    .overview-table td.col-number,
+    .member-table th.col-number,
+    .member-table td.col-number,
+    .settlement-table th.col-number,
+    .settlement-table td.col-number,
+    .bill-table .amount-column,
+    .overview-table .amount-column,
+    td.number {
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .table-action-row {
@@ -1421,6 +1453,22 @@
       .settlement-table th,
       .settlement-table td {
         padding: 10px 8px;
+      }
+
+      .bill-table th.col-number,
+      .bill-table td.col-number,
+      .overview-table th.col-number,
+      .overview-table td.col-number,
+      .member-table th.col-number,
+      .member-table td.col-number,
+      .settlement-table th.col-number,
+      .settlement-table td.col-number,
+      .bill-table .amount-column,
+      .overview-table .amount-column,
+      td.number {
+        white-space: nowrap !important;
+        font-size: clamp(0.74rem, 2.9vw, 0.86rem) !important;
+        letter-spacing: -0.03em;
       }
     }
 
@@ -2428,23 +2476,23 @@
       const { showWeight = true, hideSettlement = false } = options;
       return rows
         .map((row) => {
-          let settlementText = `剛好 ${formatNumber(0)} 元`;
+          let settlementText = `剛好 ${formatNumber(0)}`;
           let settlementClass = "settlement-zero";
 
           if (row.net > EPSILON) {
-            settlementText = `可收回 ${formatNumber(row.net)} 元`;
+            settlementText = `可收回 ${formatNumber(row.net)}`;
             settlementClass = "settlement-positive";
           } else if (row.net < -EPSILON) {
-            settlementText = `需支付 ${formatNumber(Math.abs(row.net))} 元`;
+            settlementText = `需支付 ${formatNumber(Math.abs(row.net))}`;
             settlementClass = "settlement-negative";
           }
 
           return `
             <tr>
               <td>${escapeHtml(row.name)}</td>
-              ${showWeight ? `<td class="number">${formatNumber(row.weight)}</td>` : ""}
-              <td class="number">${formatNumber(row.paid)}</td>
-              <td class="number">${formatNumber(row.shouldPay)}</td>
+              ${showWeight ? `<td class="number col-number numeric-tight">${formatNumber(row.weight)}</td>` : ""}
+              <td class="number col-number numeric-tight">${formatNumber(row.paid)}</td>
+              <td class="number col-number numeric-tight">${formatNumber(row.shouldPay)}</td>
               ${hideSettlement ? "" : `<td class="${settlementClass}">${settlementText}</td>`}
             </tr>
           `;
@@ -2604,7 +2652,7 @@
             <tr>
               <td class="item-cell col-text">${escapeHtml(bill.item_name)}</td>
               <td class="payer-cell col-text">${escapeHtml(bill.payer)}</td>
-              <td class="col-number amount-column">${formatNumber(bill.amount)}</td>
+              <td class="col-number amount-column numeric-tight">${formatNumber(bill.amount)}</td>
               <td class="actions-cell">
                 ${buildListActionButtons(
                   `onclick="startBillEdit(${Number(bill.id)})"`,
@@ -2687,13 +2735,13 @@
         .sort((a, b) => b.net - a.net);
       const netTableRows = netRows.length
         ? netRows.map((row) => {
-            let label = `剛好 ${formatNumber(0)} 元`;
+            let label = `剛好 ${formatNumber(0)}`;
             let className = "settlement-zero";
             if (row.net > EPSILON) {
-              label = `可收 ${formatNumber(row.net)} 元`;
+              label = `可收 ${formatNumber(row.net)}`;
               className = "settlement-positive";
             } else if (row.net < -EPSILON) {
-              label = `應付 ${formatNumber(Math.abs(row.net))} 元`;
+              label = `應付 ${formatNumber(Math.abs(row.net))}`;
               className = "settlement-negative";
             }
             return `
@@ -2708,7 +2756,7 @@
         ? `
           <ol class="transfer-list">
             ${groupTransfers.map((item) => `
-              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)} 元</li>
+              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)}</li>
             `).join("")}
           </ol>
         `
@@ -3448,7 +3496,7 @@
         ? `
           <ol class="transfer-list">
             ${snapshot.transfers.map((item) => `
-              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)} 元</li>
+              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)}</li>
             `).join("")}
           </ol>
         `
@@ -3456,13 +3504,13 @@
 
       const netTableRows = snapshot.netRows.length
         ? snapshot.netRows.map((row) => {
-            let label = `剛好 ${formatNumber(0)} 元`;
+            let label = formatNumber(0);
             let className = "settlement-zero";
             if (row.net > EPSILON) {
-              label = `可收 ${formatNumber(row.net)} 元`;
+              label = formatNumber(row.net);
               className = "settlement-positive";
             } else if (row.net < -EPSILON) {
-              label = `應付 ${formatNumber(Math.abs(row.net))} 元`;
+              label = formatNumber(row.net);
               className = "settlement-negative";
             }
             return `
@@ -3690,16 +3738,14 @@
 
       const groupSettlementText = (net) => {
         const value = Number(net || 0);
-        if (value > EPSILON) return `可收回 ${formatNumber(value)} 元`;
-        if (value < -EPSILON) return `需支付 ${formatNumber(Math.abs(value))} 元`;
-        return `剛好 ${formatNumber(0)} 元`;
+        if (value > EPSILON) return `可收回 ${formatNumber(value)}`;
+        if (value < -EPSILON) return `需支付 ${formatNumber(Math.abs(value))}`;
+        return `剛好 ${formatNumber(0)}`;
       };
 
       const globalNetText = (net) => {
         const value = Number(net || 0);
-        if (value > EPSILON) return `可收 ${formatNumber(value)} 元`;
-        if (value < -EPSILON) return `應付 ${formatNumber(Math.abs(value))} 元`;
-        return `剛好 ${formatNumber(0)} 元`;
+        return formatNumber(value);
       };
 
       const addTableHeader = (headers, startCol = 0) => {
@@ -3788,7 +3834,7 @@
       if ((snapshot.transfers || []).length) {
         snapshot.transfers.forEach((item, idx) => {
           addMergedTextRow(
-            `${idx + 1}. ${normalizeName(item.from)} 應付給 ${normalizeName(item.to)}：${formatNumber(item.amount)} 元`,
+            `${idx + 1}. ${normalizeName(item.from)} 應付給 ${normalizeName(item.to)}：${formatNumber(item.amount)}`,
             styles.note,
             18
           );
@@ -3890,9 +3936,9 @@
       const settlementText = (net) => {
         const label = netLabel(net);
         if (label === "剛好") {
-          return `剛好 ${formatNumber(0)} 元`;
+          return `剛好 ${formatNumber(0)}`;
         }
-        return `${label} ${settlementAmount(net)} 元`;
+        return `${label} ${settlementAmount(net)}`;
       };
 
       groupBreakdowns.forEach((groupReport) => {
@@ -4062,13 +4108,13 @@
       const transfers = minimizeDebts(totalBalanceMap);
       const netTableRows = netRows.length
         ? netRows.map((row) => {
-            let label = `剛好 ${formatNumber(0)} 元`;
+            let label = formatNumber(0);
             let className = "settlement-zero";
             if (row.net > EPSILON) {
-              label = `可收 ${formatNumber(row.net)} 元`;
+              label = formatNumber(row.net);
               className = "settlement-positive";
             } else if (row.net < -EPSILON) {
-              label = `應付 ${formatNumber(Math.abs(row.net))} 元`;
+              label = formatNumber(row.net);
               className = "settlement-negative";
             }
             return `
@@ -4084,7 +4130,7 @@
         ? `
           <ol class="transfer-list">
             ${transfers.map((item) => `
-              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)} 元</li>
+              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)}</li>
             `).join("")}
           </ol>
         `
@@ -4388,7 +4434,7 @@
             <tr>
               <td class="item-cell col-text">${escapeHtml(bill.item_name)}</td>
               <td class="payer-cell col-text">${escapeHtml(bill.payer)}</td>
-              <td class="col-number amount-column">${formatNumber(bill.amount)}</td>
+              <td class="col-number amount-column numeric-tight">${formatNumber(bill.amount)}</td>
               <td class="actions-cell">
                 ${buildListActionButtons(
                   `onclick="startBillEdit(${Number(bill.id)})"`,
@@ -4434,16 +4480,16 @@
       const ratio = maxAbsNet > 0 ? absNet / maxAbsNet : 0;
       const fillWidth = Math.max(0, Math.min(50, ratio * 50));
 
-      let label = `剛好 ${formatNumber(0)} 元`;
+      let label = formatNumber(0);
       let className = "settlement-zero";
       let fillHtml = "";
 
       if (net > EPSILON) {
-        label = `可收 ${formatNumber(net)} 元`;
+        label = formatNumber(net);
         className = "settlement-positive";
         fillHtml = `<span class="net-amount-fill is-positive" style="left: 50%; width: ${fillWidth.toFixed(2)}%;"></span>`;
       } else if (net < -EPSILON) {
-        label = `應付 ${formatNumber(absNet)} 元`;
+        label = formatNumber(net);
         className = "settlement-negative";
         fillHtml = `<span class="net-amount-fill is-negative" style="left: ${(50 - fillWidth).toFixed(2)}%; width: ${fillWidth.toFixed(2)}%;"></span>`;
       }
@@ -4505,7 +4551,7 @@
         ? `
           <ol class="transfer-list">
             ${groupTransfers.map((item) => `
-              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)} 元</li>
+              <li><strong>${escapeHtml(item.from)}</strong> 應付給 <strong>${escapeHtml(item.to)}</strong>：${formatNumber(item.amount)}</li>
             `).join("")}
           </ol>
         `
@@ -4578,7 +4624,7 @@
           <tr>
             <td class="item-cell col-text">${escapeHtml(bill.item_name)}</td>
             <td class="payer-cell col-text">${escapeHtml(bill.payer)}</td>
-            <td class="col-number amount-column">${formatNumber(bill.amount)}</td>
+            <td class="col-number amount-column numeric-tight">${formatNumber(bill.amount)}</td>
             <td class="actions-cell">
               ${buildListActionButtons(
                 `data-overview-action="edit" data-bill-id="${Number(bill.id)}"`,
