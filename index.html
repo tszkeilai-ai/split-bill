@@ -29,6 +29,8 @@
       --table-compact-size: clamp(0.72rem, 0.66rem + 0.22vw, 0.94rem);
       --table-tight-spacing: -0.5px;
       --net-summary-value-size: clamp(0.92rem, 0.86rem + 0.34vw, 1.12rem);
+      --amount-value-condensed-size: clamp(0.86rem, 0.82rem + 0.2vw, 0.94rem);
+      --amount-value-tight-size: var(--table-compact-size);
       --table-action-col-width: clamp(4.6rem, 5vw, 5.2rem);
       --table-action-btn-size: 1.9rem;
       --table-main-third-width: calc((100% - var(--table-action-col-width)) / 3);
@@ -621,10 +623,31 @@
       white-space: nowrap !important;
       text-align: center;
       padding-inline: 10px;
-      font-size: var(--table-compact-size);
-      letter-spacing: var(--table-tight-spacing);
+      font-size: var(--table-font-size);
+      letter-spacing: normal;
       overflow: hidden;
       text-overflow: clip;
+    }
+
+    .amount-value {
+      display: inline-block;
+      max-width: 100%;
+      white-space: nowrap;
+      font-size: var(--table-font-size);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.25;
+      letter-spacing: normal;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+
+    .amount-value.is-condensed {
+      font-size: var(--amount-value-condensed-size);
+    }
+
+    .amount-value.is-ultra-condensed {
+      font-size: var(--amount-value-tight-size);
+      letter-spacing: var(--table-tight-spacing);
     }
 
     .numeric-tight {
@@ -868,10 +891,15 @@
     }
 
     .overview-table .table-action-row,
-    .bill-table .table-action-row,
     .member-table .table-action-row {
       margin-top: 0;
       justify-content: flex-end;
+    }
+
+    .bill-table .table-action-row {
+      margin-top: 0;
+      margin-inline: auto;
+      justify-content: center;
     }
 
     .bill-table {
@@ -905,7 +933,7 @@
       min-width: var(--table-action-col-width);
       max-width: var(--table-action-col-width);
       padding-inline: 6px 8px;
-      text-align: right;
+      text-align: center;
     }
 
     .net-amount-value {
@@ -1148,17 +1176,17 @@
         width: var(--table-main-third-width) !important;
         white-space: nowrap !important;
         text-align: center !important;
-        font-size: var(--table-compact-size) !important;
-        letter-spacing: var(--table-tight-spacing);
+        font-size: var(--table-font-size) !important;
+        letter-spacing: normal !important;
       }
 
-      /* 操作：保持在右側、不被擠壓 */
+      /* 操作：與表頭其他欄位一致並置中 */
       .bill-table th.actions-cell,
       .bill-table td.actions-cell {
         width: var(--table-action-col-width) !important;
         min-width: var(--table-action-col-width) !important;
         max-width: var(--table-action-col-width) !important;
-        text-align: right !important;
+        text-align: center !important;
         white-space: nowrap !important;
       }
 
@@ -1347,8 +1375,6 @@
       text-overflow: clip;
     }
 
-    .bill-table th.actions-cell,
-    .bill-table td.actions-cell,
     .overview-table th.actions-cell,
     .overview-table td.actions-cell,
     .member-table th.actions-cell,
@@ -1358,6 +1384,11 @@
       text-align: right;
       white-space: nowrap;
       vertical-align: middle;
+    }
+
+    .bill-table th.actions-cell,
+    .bill-table td.actions-cell {
+      text-align: center;
     }
 
     .bill-table .item-cell,
@@ -1406,6 +1437,11 @@
     .table-action-row {
       width: max-content;
       justify-content: flex-end;
+    }
+
+    .bill-table .table-action-row {
+      justify-content: center;
+      margin-inline: auto;
     }
 
     @media (max-width: 640px) {
@@ -2029,6 +2065,45 @@
     function formatNumber(value) {
       const number = Number(value || 0);
       return Number.isFinite(number) ? number.toFixed(2) : "0.00";
+    }
+
+    function formatResponsiveAmount(value) {
+      return `<span class="amount-value">${formatNumber(value)}</span>`;
+    }
+
+    function autoFitAmountValue(element) {
+      if (!element) {
+        return;
+      }
+
+      element.classList.remove("is-condensed", "is-ultra-condensed");
+
+      if (element.scrollWidth <= element.clientWidth + 1) {
+        return;
+      }
+
+      element.classList.add("is-condensed");
+
+      if (element.scrollWidth <= element.clientWidth + 1) {
+        return;
+      }
+
+      element.classList.add("is-ultra-condensed");
+    }
+
+    function refreshResponsiveAmountValues(root = document) {
+      const run = () => {
+        root.querySelectorAll(".amount-value").forEach((element) => {
+          autoFitAmountValue(element);
+        });
+      };
+
+      if (typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(run);
+        return;
+      }
+
+      run();
     }
 
     function escapeHtml(value) {
@@ -2672,7 +2747,7 @@
             <tr>
               <td class="item-cell col-text">${escapeHtml(bill.item_name)}</td>
               <td class="payer-cell col-text">${escapeHtml(bill.payer)}</td>
-              <td class="col-number amount-column numeric-tight">${formatNumber(bill.amount)}</td>
+              <td class="col-number amount-column">${formatResponsiveAmount(bill.amount)}</td>
               <td class="actions-cell">
                 ${buildListActionButtons(
                   `onclick="startBillEdit(${Number(bill.id)})"`,
@@ -2710,6 +2785,7 @@
       }).join("");
 
       billListEl.innerHTML = subgroupSections;
+      refreshResponsiveAmountValues(billListEl);
     }
 
     function renderGroupSummary(bills, members) {
@@ -4459,7 +4535,7 @@
             <tr>
               <td class="item-cell col-text">${escapeHtml(bill.item_name)}</td>
               <td class="payer-cell col-text">${escapeHtml(bill.payer)}</td>
-              <td class="col-number amount-column numeric-tight">${formatNumber(bill.amount)}</td>
+              <td class="col-number amount-column">${formatResponsiveAmount(bill.amount)}</td>
               <td class="actions-cell">
                 ${buildListActionButtons(
                   `onclick="startBillEdit(${Number(bill.id)})"`,
@@ -4497,6 +4573,7 @@
       }).join("");
 
       billListEl.innerHTML = subgroupSections;
+      refreshResponsiveAmountValues(billListEl);
     }
 
     function buildNetAmountCell(row) {
@@ -4633,7 +4710,7 @@
           <tr>
             <td class="item-cell col-text">${escapeHtml(bill.item_name)}</td>
             <td class="payer-cell col-text">${escapeHtml(bill.payer)}</td>
-            <td class="col-number amount-column numeric-tight">${formatNumber(bill.amount)}</td>
+            <td class="col-number amount-column">${formatResponsiveAmount(bill.amount)}</td>
             <td class="actions-cell">
               ${buildListActionButtons(
                 `data-overview-action="edit" data-bill-id="${Number(bill.id)}"`,
@@ -4675,6 +4752,7 @@
         </div>
         ${sections}
       `;
+      refreshResponsiveAmountValues(allBillsOverviewContent);
     }
 
     function openAllBillsOverview() {
@@ -5127,8 +5205,10 @@
     closeEditModalBtn.addEventListener("click", closeEditModal);
     editModal.addEventListener("focusin", (event) => keepEditModalFieldVisible(event.target));
     window.addEventListener("resize", updateEditModalViewportPosition);
+    window.addEventListener("resize", refreshResponsiveAmountValues);
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", updateEditModalViewportPosition);
+      window.visualViewport.addEventListener("resize", refreshResponsiveAmountValues);
       window.visualViewport.addEventListener("scroll", updateEditModalViewportPosition);
     }
 
