@@ -1058,182 +1058,131 @@
         animation: modal-pop 0.2s ease;
       }
 
-      .bill-table {
-        min-width: 0;
-        table-layout: auto;
-      }
-
-      .net-amount-cell {
-        min-width: 0;
-      }
-
-      .table-action-row {
-        width: 76px;
-        gap: 6px;
-      }
-
-      .icon-action-btn {
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
-        padding: 0;
-        gap: 0;
-        border-radius: 10px;
-      }
-
-      .action-label {
-        display: none;
-      }
-
-      .action-icon {
-        font-size: 1rem;
-      }
-
-      .member-table th.actions-cell,
-      .member-table td.actions-cell,
-      .bill-table th.actions-cell,
-      .bill-table td.actions-cell,
-      .overview-table th.actions-cell,
-      .overview-table td.actions-cell {
-        width: 76px;
-      }
-
-      .bill-table th:nth-child(1),
-      .bill-table td:nth-child(1) {
-        width: auto;
-        word-break: break-all;
-      }
-
-      .bill-table th:nth-child(2),
-      .bill-table td:nth-child(2) {
-        white-space: nowrap;
-        text-align: right;
-      }
-
-      .bill-table th:nth-child(2),
-      .bill-table td:nth-child(2),
-      .bill-table th:nth-child(3),
-      .bill-table td:nth-child(3) {
-        width: auto;
-      }
-
-      /* 修正行動裝置下內容被切掉或擠出螢幕 */
-      /* 1. 強制維持固定比例布局，不允許任何表格長度超出螢幕 */
+      /* =======================================================
+         1. 表格/列表基礎：防擠壓的防禦性佈局（Flex）
+         ======================================================= */
       .bill-table,
       .member-table,
       .overview-table,
+      .net-summary-table,
       table {
-        table-layout: fixed !important;
         width: 100% !important;
       }
 
-      /* 2. 強制所有單元格內過長的文字自動換行，不可撐開表格 */
-      th,
-      td {
-        word-break: break-word !important;
-        overflow-wrap: anywhere !important;
-        white-space: normal !important;
+      .bill-table tbody tr,
+      .member-table tbody tr {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        box-sizing: border-box;
+        gap: 0;
       }
 
-      /* 3. 重新分配欄位比例：名稱 40%、付款/權重 25%、右側按鈕固定保留 35% */
-      .bill-table th:nth-child(1),
-      .bill-table td:nth-child(1) {
-        width: 40% !important;
-      }
-
-      .bill-table th:nth-child(2),
-      .bill-table td:nth-child(2) {
-        width: 25% !important;
-      }
-
-      .bill-table th:nth-child(3),
-      .bill-table td:nth-child(3) {
-        width: auto !important;
-      }
-
-      .member-table th:nth-child(1),
-      .member-table td:nth-child(1) {
-        width: 45% !important;
-      }
-
-      .member-table th:nth-child(2),
-      .member-table td:nth-child(2) {
-        width: 20% !important;
-      }
-
-      /* 4. 保證操作按鈕區塊有足夠空間顯示 */
-      .member-table th.actions-cell,
-      .member-table td.actions-cell,
-      .bill-table th.actions-cell,
-      .bill-table td.actions-cell {
-        width: 35% !important;
-        min-width: 80px !important;
-        text-align: right !important;
-      }
-
-      /* 5. 修正最終結算總表與進度條淨額文字過長問題 */
-      .net-amount-text,
-      .final-net-amount-text {
-        font-size: 0.95rem !important;
-        white-space: normal !important;
+      .bill-table tbody td,
+      .member-table tbody td {
+        display: block !important;
+        min-width: 0;
       }
 
       /* =======================================================
-         問題 1 修正：淨額總表（橢圓形標籤不夠寬）
+         2. 文字防撐爆：長文字一律省略號，不得擠壓右側操作
          ======================================================= */
+      /* 預支列表欄位順序：項目名稱 / 金額 / 付款人 / 操作 */
+      .bill-table tbody td:nth-child(1),
+      .bill-table tbody td:nth-child(3),
+      .member-table tbody td:first-child {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        padding-right: 8px !important;
+      }
+
+      .bill-table tbody td.amount-column,
+      .bill-table tbody td:nth-child(2) {
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+        text-align: right !important;
+        padding-right: 12px !important;
+      }
+
+      .member-table tbody td:nth-child(2) {
+        flex: 0 0 56px !important;
+        white-space: nowrap !important;
+        text-align: right !important;
+        padding-right: 8px !important;
+      }
+
+      /* =======================================================
+         3. 縮小操作按鈕：固定寬度保護區 + 更小 icon button
+         ======================================================= */
+      .bill-table td.actions-cell,
+      .member-table td.actions-cell {
+        flex: 0 0 60px !important;
+        width: 60px !important;
+        min-width: 60px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        text-align: right !important;
+        display: inline-flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+      }
+
+      .table-action-row {
+        width: 60px !important;
+        gap: 4px !important;
+      }
+
+      .icon-action-btn {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        border-radius: 6px !important;
+      }
+
+      .action-icon {
+        font-size: 14px !important;
+      }
+
+      .action-label {
+        display: none !important;
+      }
+
+      /* =======================================================
+         4. 淨額總表：膠囊（橢圓）寬度不足的錯位修正
+         ======================================================= */
+      .net-summary-table td:first-child {
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+      }
+
       .net-summary-table td:last-child {
-        width: 60% !important;
+        width: 135px !important;
+        min-width: 135px !important;
         text-align: right !important;
       }
 
       .net-summary-table td:last-child .net-amount-cell {
-        width: auto !important;
-        min-width: 110px !important;
+        width: 100% !important;
+        min-width: 135px !important;
+        padding: 0 !important;
       }
 
       .net-summary-table td:last-child .net-amount-track {
-        min-width: 110px !important;
+        min-width: 135px !important;
       }
 
-      .net-amount-text {
+      .net-summary-table .net-amount-text {
         font-size: 0.85rem !important;
         white-space: nowrap !important;
-      }
-
-      /* =======================================================
-         問題 2 修正：預支紀錄列表（付款人垂直換行）
-         ======================================================= */
-      /* 預支紀錄列表欄位順序：項目名稱 / 金額 / 付款人 / 操作 */
-      .bill-table th:nth-child(1),
-      .bill-table td:nth-child(1) {
-        width: 35% !important;
-      }
-
-      .bill-table th:nth-child(2),
-      .bill-table td:nth-child(2) {
-        width: 20% !important;
-        white-space: nowrap !important;
-        text-align: right !important;
-      }
-
-      .bill-table th:nth-child(3),
-      .bill-table td:nth-child(3) {
-        width: 35% !important;
-        white-space: nowrap !important;
-        text-align: left !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .bill-table th.actions-cell,
-      .bill-table td.actions-cell {
-        width: 90px !important;
-        min-width: 90px !important;
-      }
-
-      .bill-table td {
-        font-size: 0.9rem !important;
-        vertical-align: middle !important;
+        word-break: keep-all !important;
       }
     }
 
