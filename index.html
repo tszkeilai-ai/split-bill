@@ -28,6 +28,7 @@
       --table-font-size: clamp(0.94rem, 0.91rem + 0.12vw, 1rem);
       --table-compact-size: clamp(0.72rem, 0.66rem + 0.22vw, 0.94rem);
       --table-tight-spacing: -0.5px;
+      --net-summary-value-size: clamp(0.92rem, 0.86rem + 0.34vw, 1.12rem);
       --table-action-col-width: clamp(4.6rem, 5vw, 5.2rem);
       --table-action-btn-size: 1.9rem;
       --table-main-third-width: calc((100% - var(--table-action-col-width)) / 3);
@@ -907,25 +908,14 @@
       text-align: right;
     }
 
-    .net-amount-cell {
-      width: 100%;
-      min-width: 0;
-      box-sizing: border-box;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(88px, 42%);
-      align-items: center;
-      justify-items: center;
-      gap: 12px;
-    }
-
     .net-amount-value {
-      min-width: 0;
-      width: 100%;
+      display: inline-block;
+      max-width: 100%;
       text-align: center;
       font-variant-numeric: tabular-nums;
-      font-size: var(--table-compact-size);
+      font-size: var(--net-summary-value-size);
       font-weight: 700;
-      line-height: 1.1;
+      line-height: 1.25;
       white-space: nowrap !important;
       letter-spacing: var(--table-tight-spacing);
       word-break: keep-all;
@@ -944,65 +934,6 @@
 
     .net-amount-value.is-zero {
       color: #475569;
-    }
-
-    .net-amount-track {
-      position: relative;
-      height: 14px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.08);
-      overflow: hidden;
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-    }
-
-    .net-amount-track.is-positive {
-      background: rgba(40, 167, 69, 0.08);
-      border-color: rgba(40, 167, 69, 0.2);
-    }
-
-    .net-amount-track.is-negative {
-      background: rgba(220, 53, 69, 0.08);
-      border-color: rgba(220, 53, 69, 0.2);
-    }
-
-    .net-amount-track.is-zero {
-      background: rgba(148, 163, 184, 0.08);
-      border-color: rgba(148, 163, 184, 0.2);
-    }
-
-    .net-amount-axis {
-      position: absolute;
-      top: 2px;
-      bottom: 2px;
-      left: calc(50% - 1px);
-      width: 2px;
-      background: rgba(148, 163, 184, 0.45);
-      border-radius: 999px;
-    }
-
-    .net-amount-fill {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      border-radius: 999px;
-      opacity: 0.98;
-    }
-
-    .net-amount-fill.is-positive {
-      background: linear-gradient(90deg, #2ecc71 0%, #28a745 100%);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
-    }
-
-    .net-amount-fill.is-negative {
-      background: linear-gradient(90deg, #ff6b6b 0%, #dc3545 100%);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-    }
-
-    .final-net-amount-container {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 8px 0;
     }
 
     .workspace-shell[hidden],
@@ -1267,22 +1198,8 @@
         text-align: center !important;
       }
 
-      /* 膠囊寬度改為跟隨欄位（不設固定最小寬），字體大小與左欄一致 */
-      .net-summary-table td:last-child .net-amount-cell {
-        width: 100% !important;
-        min-width: 0 !important;
-        padding: 0 !important;
-        gap: 8px;
-        grid-template-columns: minmax(0, 1fr) minmax(72px, 38%);
-      }
-
-      .net-summary-table td:last-child .net-amount-track {
-        min-width: 0 !important;
-        padding: 0 !important;
-      }
-
       .net-summary-table .net-amount-value {
-        font-size: var(--table-compact-size) !important;
+        font-size: clamp(0.84rem, 0.76rem + 0.44vw, 1rem) !important;
         white-space: nowrap !important;
         letter-spacing: var(--table-tight-spacing);
       }
@@ -1391,12 +1308,20 @@
     }
 
     .bill-table th.col-number,
-    .bill-table td.col-number,
     .overview-table th.col-number,
-    .overview-table td.col-number,
     .member-table th.col-number,
+    .settlement-table th.col-number {
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap !important;
+      font-size: var(--table-font-size);
+      letter-spacing: normal;
+      line-height: 1.35;
+    }
+
+    .bill-table td.col-number,
+    .overview-table td.col-number,
     .member-table td.col-number,
-    .settlement-table th.col-number,
     .settlement-table td.col-number {
       text-align: center;
       font-variant-numeric: tabular-nums;
@@ -1453,13 +1378,9 @@
       text-align: center;
     }
 
-    .bill-table th.col-number,
     .bill-table td.col-number,
-    .overview-table th.col-number,
     .overview-table td.col-number,
-    .member-table th.col-number,
     .member-table td.col-number,
-    .settlement-table th.col-number,
     .settlement-table td.col-number,
     .bill-table .amount-column,
     .overview-table .amount-column,
@@ -1544,13 +1465,9 @@
         padding: 10px 8px;
       }
 
-      .bill-table th.col-number,
       .bill-table td.col-number,
-      .overview-table th.col-number,
       .overview-table td.col-number,
-      .member-table th.col-number,
       .member-table td.col-number,
-      .settlement-table th.col-number,
       .settlement-table td.col-number,
       .bill-table .amount-column,
       .overview-table .amount-column,
@@ -3629,12 +3546,14 @@
             .note { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 12px; margin: 12px 0; }
             .section { margin-top: 18px; }
             .section h2 { font-size: 16px; margin: 0 0 10px; }
-            :root { --print-table-size: 14px; --print-table-tight-size: 12px; }
+            :root { --print-table-size: 14px; --print-table-tight-size: 12px; --print-net-summary-size: 15px; }
             table { width: 100%; border-collapse: collapse; table-layout: fixed; }
             th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: left; font-size: var(--print-table-size); line-height: 1.35; }
             th { background: #f1f5f9; font-size: var(--print-table-size); }
-            .col-number, td.number, .amount-column { text-align: center; white-space: nowrap !important; font-size: var(--print-table-tight-size); letter-spacing: -0.5px; }
+            th.col-number { text-align: center; white-space: nowrap !important; font-size: var(--print-table-size); letter-spacing: normal; }
+            td.col-number, td.number, .amount-column { text-align: center; white-space: nowrap !important; font-size: var(--print-table-tight-size); letter-spacing: -0.5px; }
             .net-summary-table th:last-child, .net-summary-table td:last-child { text-align: center; }
+            .net-summary-table .net-amount-value { display: inline-block; max-width: 100%; white-space: nowrap !important; font-size: var(--print-net-summary-size); font-weight: 700; letter-spacing: -0.5px; }
             .settlement-positive { color: #166534; font-weight: 700; }
             .settlement-negative { color: #9a3412; font-weight: 700; }
             .settlement-zero { color: #334155; font-weight: 700; }
@@ -4566,38 +4485,21 @@
       billListEl.innerHTML = subgroupSections;
     }
 
-    function buildNetAmountCell(row, maxAbsNet) {
+    function buildNetAmountCell(row) {
       const net = Number(row.net || 0);
-      const absNet = Math.abs(net);
-      const ratio = maxAbsNet > 0 ? absNet / maxAbsNet : 0;
-      const fillWidth = Math.max(0, Math.min(50, ratio * 50));
 
       let label = formatNumber(0);
       let valueClass = "is-zero";
-      let trackClass = "is-zero";
-      let fillHtml = "";
 
       if (net > EPSILON) {
         label = formatNumber(net);
         valueClass = "is-positive";
-        trackClass = "is-positive";
-        fillHtml = `<span class="net-amount-fill is-positive" style="left: 50%; width: ${fillWidth.toFixed(2)}%;"></span>`;
       } else if (net < -EPSILON) {
         label = formatNumber(net);
         valueClass = "is-negative";
-        trackClass = "is-negative";
-        fillHtml = `<span class="net-amount-fill is-negative" style="left: ${(50 - fillWidth).toFixed(2)}%; width: ${fillWidth.toFixed(2)}%;"></span>`;
       }
 
-      return `
-        <div class="net-amount-cell final-net-amount-container">
-          <span class="net-amount-value ${valueClass}">${label}</span>
-          <div class="net-amount-track ${trackClass}">
-            <span class="net-amount-axis"></span>
-            ${fillHtml}
-          </div>
-        </div>
-      `;
+      return `<span class="net-amount-value ${valueClass}">${label}</span>`;
     }
 
     function renderGroupSummary(bills, members) {
@@ -4631,13 +4533,11 @@
       const netRows = [...groupBalanceMap.entries()]
         .map(([name, net]) => ({ name, net }))
         .sort((a, b) => b.net - a.net);
-      const maxAbsNet = netRows.reduce((maxValue, row) => Math.max(maxValue, Math.abs(Number(row.net || 0))), 0);
-
       const netTableRows = netRows.length
         ? netRows.map((row) => `
             <tr>
               <td>${escapeHtml(row.name)}</td>
-              <td>${buildNetAmountCell(row, maxAbsNet)}</td>
+              <td>${buildNetAmountCell(row)}</td>
             </tr>
           `).join("")
         : '<tr><td colspan="2">目前沒有可彙總的成員淨額。</td></tr>';
