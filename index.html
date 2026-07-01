@@ -1135,7 +1135,14 @@
       }
 
       /* 金額：置中、絕不換行；遇到大數字時維持緊湊單行 */
-      .bill-table th:nth-child(3),
+      .bill-table th:nth-child(3) {
+        width: var(--table-main-third-width) !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        font-size: var(--table-font-size) !important;
+        letter-spacing: normal !important;
+      }
+
       .bill-table td:nth-child(3),
       .bill-table td.amount-column {
         width: var(--table-main-third-width) !important;
@@ -1165,7 +1172,14 @@
         white-space: normal !important;
       }
 
-      .member-table th:nth-child(2),
+      .member-table th:nth-child(2) {
+        width: var(--table-main-half-width) !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        font-size: var(--table-font-size) !important;
+        letter-spacing: normal !important;
+      }
+
       .member-table td:nth-child(2) {
         width: var(--table-main-half-width) !important;
         white-space: nowrap !important;
