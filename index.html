@@ -1208,6 +1208,222 @@
       }
     }
 
+    /* =======================================================
+       表格自適應對稱優化覆寫
+       ======================================================= */
+    .bill-table,
+    .overview-table,
+    .member-table,
+    .settlement-table,
+    .net-summary-table {
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+    }
+
+    .bill-table col.item-col,
+    .overview-table col.item-col {
+      width: 40%;
+    }
+
+    .bill-table col.payer-col,
+    .overview-table col.payer-col {
+      width: 27%;
+    }
+
+    .bill-table col.amount-col,
+    .overview-table col.amount-col {
+      width: 17%;
+    }
+
+    .bill-table col.action-col,
+    .overview-table col.action-col {
+      width: 16%;
+    }
+
+    .member-table col.name-col {
+      width: 52%;
+    }
+
+    .member-table col.weight-col {
+      width: 18%;
+    }
+
+    .member-table col.action-col {
+      width: 30%;
+    }
+
+    .settlement-table--members col.name-col {
+      width: 30%;
+    }
+
+    .settlement-table--members col.weight-col {
+      width: 20%;
+    }
+
+    .settlement-table--members col.paid-col,
+    .settlement-table--members col.should-pay-col {
+      width: 25%;
+    }
+
+    .settlement-table--group col.name-col {
+      width: 34%;
+    }
+
+    .settlement-table--group col.paid-col,
+    .settlement-table--group col.should-pay-col {
+      width: 33%;
+    }
+
+    .settlement-table--detail col.name-col {
+      width: 24%;
+    }
+
+    .settlement-table--detail col.weight-col {
+      width: 16%;
+    }
+
+    .settlement-table--detail col.paid-col,
+    .settlement-table--detail col.should-pay-col,
+    .settlement-table--detail col.settlement-col {
+      width: 20%;
+    }
+
+    .settlement-table--summary col.name-col {
+      width: 28%;
+    }
+
+    .settlement-table--summary col.paid-col,
+    .settlement-table--summary col.should-pay-col,
+    .settlement-table--summary col.settlement-col {
+      width: 24%;
+    }
+
+    .bill-table th.col-text,
+    .bill-table td.col-text,
+    .overview-table th.col-text,
+    .overview-table td.col-text,
+    .member-table th.col-text,
+    .member-table td.col-text,
+    .settlement-table th.col-text,
+    .settlement-table td.col-text {
+      text-align: left;
+    }
+
+    .bill-table th.col-number,
+    .bill-table td.col-number,
+    .overview-table th.col-number,
+    .overview-table td.col-number,
+    .member-table th.col-number,
+    .member-table td.col-number,
+    .settlement-table th.col-number,
+    .settlement-table td.col-number {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .bill-table th.actions-cell,
+    .bill-table td.actions-cell,
+    .overview-table th.actions-cell,
+    .overview-table td.actions-cell,
+    .member-table th.actions-cell,
+    .member-table td.actions-cell,
+    .settlement-table th.actions-cell,
+    .settlement-table td.actions-cell {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .bill-table .item-cell,
+    .bill-table .payer-cell,
+    .overview-table .item-cell,
+    .overview-table .payer-cell,
+    .member-table .member-name-cell,
+    .settlement-table .member-name-cell {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .bill-table .amount-column,
+    .overview-table .amount-column {
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .table-action-row {
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    @media (max-width: 640px) {
+      .bill-table col.item-col,
+      .overview-table col.item-col {
+        width: 40%;
+      }
+
+      .bill-table col.payer-col,
+      .overview-table col.payer-col {
+        width: 25%;
+      }
+
+      .bill-table col.amount-col,
+      .overview-table col.amount-col {
+        width: 17%;
+      }
+
+      .bill-table col.action-col,
+      .overview-table col.action-col {
+        width: 18%;
+      }
+
+      .member-table col.name-col {
+        width: 50%;
+      }
+
+      .member-table col.weight-col {
+        width: 18%;
+      }
+
+      .member-table col.action-col {
+        width: 32%;
+      }
+
+      .settlement-table--members col.name-col {
+        width: 30%;
+      }
+
+      .settlement-table--members col.weight-col {
+        width: 20%;
+      }
+
+      .settlement-table--members col.paid-col,
+      .settlement-table--members col.should-pay-col {
+        width: 25%;
+      }
+
+      .settlement-table--group col.name-col {
+        width: 34%;
+      }
+
+      .settlement-table--group col.paid-col,
+      .settlement-table--group col.should-pay-col {
+        width: 33%;
+      }
+
+      .bill-table th,
+      .bill-table td,
+      .overview-table th,
+      .overview-table td,
+      .member-table th,
+      .member-table td,
+      .settlement-table th,
+      .settlement-table td {
+        padding: 10px 8px;
+      }
+    }
+
     @keyframes modal-pop {
       from {
         transform: translate(-50%, calc(-50% + 18px));
@@ -1326,7 +1542,7 @@
                 <input id="memberSubGroupName" type="text" placeholder="未填寫時預設為子群組 1" />
               </div>
               <div class="field">
-                <label for="weight">權重 / 人數</label>
+                <label for="weight">人數</label>
                 <input id="weight" type="number" min="0" step="0.01" value="1" required />
               </div>
             </div>
@@ -1474,7 +1690,7 @@
               <input id="editMemberName" type="text" placeholder="例如：小明、小華、小孩" required />
             </div>
             <div class="field">
-              <label for="editMemberWeight">權重 / 人數</label>
+              <label for="editMemberWeight">人數</label>
               <input id="editMemberWeight" type="number" min="0" step="0.01" required />
             </div>
           </div>
@@ -2238,16 +2454,57 @@
 
     function buildSettlementTable(rows, options = {}) {
       const { showWeight = true, hideSettlement = false } = options;
+      const variantClass = showWeight
+        ? (hideSettlement ? "settlement-table--members" : "settlement-table--detail")
+        : (hideSettlement ? "settlement-table--group" : "settlement-table--summary");
+
+      const colgroup = showWeight
+        ? (hideSettlement
+          ? `
+              <colgroup>
+                <col class="name-col" />
+                <col class="weight-col" />
+                <col class="paid-col" />
+                <col class="should-pay-col" />
+              </colgroup>
+            `
+          : `
+              <colgroup>
+                <col class="name-col" />
+                <col class="weight-col" />
+                <col class="paid-col" />
+                <col class="should-pay-col" />
+                <col class="settlement-col" />
+              </colgroup>
+            `)
+        : (hideSettlement
+          ? `
+              <colgroup>
+                <col class="name-col" />
+                <col class="paid-col" />
+                <col class="should-pay-col" />
+              </colgroup>
+            `
+          : `
+              <colgroup>
+                <col class="name-col" />
+                <col class="paid-col" />
+                <col class="should-pay-col" />
+                <col class="settlement-col" />
+              </colgroup>
+            `);
+
       return `
         <div class="table-wrap">
-          <table>
+          <table class="settlement-table ${variantClass}">
+            ${colgroup}
             <thead>
               <tr>
-                <th>成員</th>
-                ${showWeight ? "<th>權重 / 人數</th>" : ""}
-                <th>已付</th>
-                <th>應付</th>
-                ${hideSettlement ? "" : "<th>結算</th>"}
+                <th class="col-text">成員</th>
+                ${showWeight ? '<th class="col-number">人數</th>' : ""}
+                <th class="col-number">已付</th>
+                <th class="col-number">應付</th>
+                ${hideSettlement ? "" : '<th class="col-text">結算</th>'}
               </tr>
             </thead>
             <tbody>${buildSettlementRows(rows, { showWeight, hideSettlement })}</tbody>
@@ -2289,8 +2546,8 @@
           .sort((a, b) => normalizeName(a.member_name).localeCompare(normalizeName(b.member_name), "zh-Hant"))
           .map((member) => `
             <tr>
-              <td>${escapeHtml(member.member_name)}</td>
-              <td class="number">${formatNumber(member.weight)}</td>
+              <td class="member-name-cell col-text">${escapeHtml(member.member_name)}</td>
+              <td class="col-number">${formatNumber(member.weight)}</td>
               <td class="actions-cell">
                 ${buildListActionButtons(
                   `onclick="startMemberEdit(${Number(member.id)})"`,
@@ -2306,10 +2563,15 @@
             <h4 class="subgroup-title">${escapeHtml(subGroupName)}</h4>
             <div class="table-wrap">
               <table class="member-table">
+                <colgroup>
+                  <col class="name-col" />
+                  <col class="weight-col" />
+                  <col class="action-col" />
+                </colgroup>
                 <thead>
                   <tr>
-                    <th>成員名稱</th>
-                    <th>人數</th>
+                    <th class="col-text">成員名稱</th>
+                    <th class="col-number">人數</th>
                     <th class="actions-cell">操作</th>
                   </tr>
                 </thead>
@@ -2340,9 +2602,9 @@
         const rows = subgroupBills
           .map((bill) => `
             <tr>
-              <td>${escapeHtml(bill.item_name)}</td>
-              <td>${escapeHtml(bill.payer)}</td>
-              <td class="number amount-column">${formatNumber(bill.amount)}</td>
+              <td class="item-cell col-text">${escapeHtml(bill.item_name)}</td>
+              <td class="payer-cell col-text">${escapeHtml(bill.payer)}</td>
+              <td class="col-number amount-column">${formatNumber(bill.amount)}</td>
               <td class="actions-cell">
                 ${buildListActionButtons(
                   `onclick="startBillEdit(${Number(bill.id)})"`,
@@ -2358,11 +2620,17 @@
             <h4 class="subgroup-title">${escapeHtml(subGroupName)}</h4>
             <div class="table-wrap">
               <table class="bill-table">
+                <colgroup>
+                  <col class="item-col" />
+                  <col class="payer-col" />
+                  <col class="amount-col" />
+                  <col class="action-col" />
+                </colgroup>
                 <thead>
                   <tr>
-                    <th>項目名稱</th>
-                    <th>付款人</th>
-                    <th>金額</th>
+                    <th class="col-text">項目名稱</th>
+                    <th class="col-text">付款人</th>
+                    <th class="col-number">金額</th>
                     <th class="actions-cell">操作</th>
                   </tr>
                 </thead>
@@ -2878,7 +3146,7 @@
       }
 
       if (payload.weight < 0) {
-        setStatus(memberStatus, "權重 / 人數不可小於 0。", "error");
+        setStatus(memberStatus, "人數不可小於 0。", "error");
         return;
       }
 
@@ -3556,7 +3824,7 @@
             });
 
             if (sortedRows.length) {
-              addTableHeader(["成員", "權重 / 人數", "已付", "應付", "結算"]);
+              addTableHeader(["成員", "人數", "已付", "應付", "結算"]);
               addSettlementRows(sortedRows, true);
             } else {
               addMergedTextRow("此子群組目前沒有足夠資料可供計算。", styles.note, 18);
@@ -3583,7 +3851,7 @@
       ws["!merges"] = merges;
       ws["!cols"] = [
         { wch: 18 }, // A 成員/標題
-        { wch: 14 }, // B 權重/已付
+        { wch: 14 }, // B 人數/已付
         { wch: 14 }, // C 已付/應付
         { wch: 14 }, // D 應付/結算
         { wch: 28 }  // E 結算/長文字
@@ -3716,7 +3984,7 @@
         ]);
       });
 
-      const header = ["區段", "群組", "子群組", "成員", "權重/人數", "已付", "應付", "淨額", "收付", "結算金額", "結算說明"];
+      const header = ["區段", "群組", "子群組", "成員", "人數", "已付", "應付", "淨額", "收付", "結算金額", "結算說明"];
 
       const escapeCsv = (value) => {
         const text = String(value ?? "");
@@ -4102,50 +4370,62 @@
     }
 
     function renderBills(bills) {
-      const safeBills = [...(bills || [])].sort(compareByCreatedAtDesc);
-      billCount.textContent = `${safeBills.length} 筆`;
+      billCount.textContent = `${bills.length} 筆`;
 
       if (!currentGroupName) {
         billListEl.innerHTML = '<div class="empty">請先輸入群組名稱並進入。</div>';
         return;
       }
 
-      if (!safeBills.length) {
-        billListEl.innerHTML = `<div class="empty">目前子群組「${escapeHtml(normalizeSubGroupName(currentSubGroupName))}」還沒有預支資料。</div>`;
+      if (!bills.length) {
+        billListEl.innerHTML = '<div class="empty">這個群組目前沒有預支資料。</div>';
         return;
       }
 
-      const rows = safeBills
-        .map((bill) => `
-          <tr>
-            <td>${escapeHtml(bill.item_name)}</td>
-            <td class="number">${formatNumber(bill.amount)}</td>
-            <td>${escapeHtml(bill.payer)}</td>
-            <td class="actions-cell">
-              ${buildListActionButtons(
-                `onclick="startBillEdit(${Number(bill.id)})"`,
-                `onclick="deleteBill(${Number(bill.id)})"`
-              )}
-            </td>
-          </tr>
-        `)
-        .join("");
+      const subgroupSections = [...groupBySubGroup(bills).entries()].map(([subGroupName, subgroupBills]) => {
+        const rows = subgroupBills
+          .map((bill) => `
+            <tr>
+              <td class="item-cell col-text">${escapeHtml(bill.item_name)}</td>
+              <td class="payer-cell col-text">${escapeHtml(bill.payer)}</td>
+              <td class="col-number amount-column">${formatNumber(bill.amount)}</td>
+              <td class="actions-cell">
+                ${buildListActionButtons(
+                  `onclick="startBillEdit(${Number(bill.id)})"`,
+                  `onclick="deleteBill(${Number(bill.id)})"`
+                )}
+              </td>
+            </tr>
+          `)
+          .join("");
 
-      billListEl.innerHTML = `
-        <div class="table-wrap">
-          <table class="bill-table">
-            <thead>
-              <tr>
-                <th>項目名稱</th>
-                <th>金額</th>
-                <th>付款人</th>
-                <th class="actions-cell">操作</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
+        return `
+          <div class="subgroup-block">
+            <h4 class="subgroup-title">${escapeHtml(subGroupName)}</h4>
+            <div class="table-wrap">
+              <table class="bill-table">
+                <colgroup>
+                  <col class="item-col" />
+                  <col class="payer-col" />
+                  <col class="amount-col" />
+                  <col class="action-col" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="col-text">項目名稱</th>
+                    <th class="col-text">付款人</th>
+                    <th class="col-number">金額</th>
+                    <th class="actions-cell">操作</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      billListEl.innerHTML = subgroupSections;
     }
 
     function buildNetAmountCell(row, maxAbsNet) {
@@ -4296,9 +4576,9 @@
       const sections = [...groupedBills.entries()].map(([subGroupName, bills]) => {
         const rows = bills.map((bill) => `
           <tr>
-            <td class="item-cell">${escapeHtml(bill.item_name)}</td>
-            <td class="number amount-column">${formatNumber(bill.amount)}</td>
-            <td>${escapeHtml(bill.payer)}</td>
+            <td class="item-cell col-text">${escapeHtml(bill.item_name)}</td>
+            <td class="payer-cell col-text">${escapeHtml(bill.payer)}</td>
+            <td class="col-number amount-column">${formatNumber(bill.amount)}</td>
             <td class="actions-cell">
               ${buildListActionButtons(
                 `data-overview-action="edit" data-bill-id="${Number(bill.id)}"`,
@@ -4313,11 +4593,17 @@
             <h4 class="subgroup-title">${escapeHtml(normalizeSubGroupName(subGroupName))}</h4>
             <div class="table-wrap">
               <table class="overview-table">
+                <colgroup>
+                  <col class="item-col" />
+                  <col class="payer-col" />
+                  <col class="amount-col" />
+                  <col class="action-col" />
+                </colgroup>
                 <thead>
                   <tr>
-                    <th>項目名稱</th>
-                    <th>金額</th>
-                    <th>付款人</th>
+                    <th class="col-text">項目名稱</th>
+                    <th class="col-text">付款人</th>
+                    <th class="col-number">金額</th>
                     <th class="actions-cell">操作</th>
                   </tr>
                 </thead>
@@ -4435,7 +4721,7 @@
       }
 
       if (payload.weight < 0) {
-        setStatus(editMemberStatus, "權重 / 人數不可小於 0。", "error");
+        setStatus(editMemberStatus, "人數不可小於 0。", "error");
         return;
       }
 
