@@ -1913,14 +1913,22 @@
     }
 
     function buildGroupSettlementFromSubGroups(groupBills = [], groupMembers = []) {
-      const overallStats = calculateGroupStats(groupBills, groupMembers);
-      const subgroupReports = calculateSubGroupReports(overallStats.uniqueBills, groupMembers);
+      const { uniqueBills, duplicateCount } = dedupeBills(groupBills);
+      const subgroupReports = calculateSubGroupReports(uniqueBills, groupMembers);
+      const aggregatedRows = aggregateSettlementRowsByName(
+        subgroupReports.flatMap((report) => report.stats.rows || [])
+      );
 
       return {
-        duplicateCount: overallStats.duplicateCount,
-        uniqueBills: overallStats.uniqueBills,
+        duplicateCount,
+        uniqueBills,
         subgroupReports,
-        stats: overallStats
+        stats: {
+          totalAmount: uniqueBills.reduce((sum, bill) => sum + Number(bill.amount || 0), 0),
+          totalWeight: subgroupReports.reduce((sum, report) => sum + Number(report.stats.totalWeight || 0), 0),
+          unitAmount: 0,
+          rows: aggregatedRows
+        }
       };
     }
 
@@ -2369,7 +2377,8 @@
     }
 
     function renderGroupSummary(bills, members) {
-      const stats = calculateGroupStats(bills, members);
+      const settlementReport = buildGroupSettlementFromSubGroups(bills, members);
+      const stats = settlementReport.stats;
       totalAmountEl.textContent = formatNumber(stats.totalAmount);
       if (totalWeightEl) totalWeightEl.textContent = formatNumber(stats.totalWeight);
       if (unitAmountEl) unitAmountEl.textContent = formatNumber(stats.unitAmount);
@@ -2389,7 +2398,7 @@
         return;
       }
 
-      const subgroupReports = calculateSubGroupReports(stats.uniqueBills, members);
+      const subgroupReports = settlementReport.subgroupReports;
       const subgroupHtml = subgroupReports.map((report) => `
         <div class="subgroup-block">
           <h4 class="subgroup-title">${escapeHtml(report.subGroupName)}</h4>
@@ -2439,7 +2448,7 @@
 
       groupSummaryEl.innerHTML = `
         <div class="note-box">本區會先顯示各子群組分攤明細，最下方提供「最終結算總表」讓你在輸入資料時就能即時看到整體應收應付關係。</div>
-        ${stats.duplicateCount > 0 ? `<div class="note-box warning-box">本區統計已先去除 ${escapeHtml(String(stats.duplicateCount))} 筆重複 bill，只會以每個 bill_id 的唯一消費計入總金額與每單位應付。</div>` : ""}
+        ${settlementReport.duplicateCount > 0 ? `<div class="note-box warning-box">本區統計已先去除 ${escapeHtml(String(settlementReport.duplicateCount))} 筆重複 bill，只會以每個 bill_id 的唯一消費計入總金額與每單位應付。</div>` : ""}
         ${subgroupHtml}
         <div class="subsection">
           <h3>大群組總報告</h3>
@@ -4171,7 +4180,8 @@
     }
 
     function renderGroupSummary(bills, members) {
-      const stats = calculateGroupStats(bills, members);
+      const settlementReport = buildGroupSettlementFromSubGroups(bills, members);
+      const stats = settlementReport.stats;
       totalAmountEl.textContent = formatNumber(stats.totalAmount);
       if (totalWeightEl) totalWeightEl.textContent = formatNumber(stats.totalWeight);
       if (unitAmountEl) unitAmountEl.textContent = formatNumber(stats.unitAmount);
@@ -4222,7 +4232,7 @@
         : '<div class="empty">目前子群組加總後已經平衡，沒有需要額外付款的對象。</div>';
 
       groupSummaryEl.innerHTML = `
-        ${stats.duplicateCount > 0 ? `<div class="note-box warning-box">本區統計已先去除 ${escapeHtml(String(stats.duplicateCount))} 筆重複 bill，只會以每個 bill_id 的唯一消費計入總金額與每單位應付。</div>` : ""}
+        ${settlementReport.duplicateCount > 0 ? `<div class="note-box warning-box">本區統計已先去除 ${escapeHtml(String(settlementReport.duplicateCount))} 筆重複 bill，只會以每個 bill_id 的唯一消費計入總金額與每單位應付。</div>` : ""}
         <div class="summary-focus-stack">
           <div class="summary-focus-section">
             <h3>付款指引</h3>
