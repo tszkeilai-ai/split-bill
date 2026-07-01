@@ -1177,6 +1177,64 @@
         font-size: 0.95rem !important;
         white-space: normal !important;
       }
+
+      /* =======================================================
+         問題 1 修正：淨額總表（橢圓形標籤不夠寬）
+         ======================================================= */
+      .net-summary-table td:last-child {
+        width: 60% !important;
+        text-align: right !important;
+      }
+
+      .net-summary-table td:last-child .net-amount-cell {
+        width: auto !important;
+        min-width: 110px !important;
+      }
+
+      .net-summary-table td:last-child .net-amount-track {
+        min-width: 110px !important;
+      }
+
+      .net-amount-text {
+        font-size: 0.85rem !important;
+        white-space: nowrap !important;
+      }
+
+      /* =======================================================
+         問題 2 修正：預支紀錄列表（付款人垂直換行）
+         ======================================================= */
+      /* 預支紀錄列表欄位順序：項目名稱 / 金額 / 付款人 / 操作 */
+      .bill-table th:nth-child(1),
+      .bill-table td:nth-child(1) {
+        width: 35% !important;
+      }
+
+      .bill-table th:nth-child(2),
+      .bill-table td:nth-child(2) {
+        width: 20% !important;
+        white-space: nowrap !important;
+        text-align: right !important;
+      }
+
+      .bill-table th:nth-child(3),
+      .bill-table td:nth-child(3) {
+        width: 35% !important;
+        white-space: nowrap !important;
+        text-align: left !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .bill-table th.actions-cell,
+      .bill-table td.actions-cell {
+        width: 90px !important;
+        min-width: 90px !important;
+      }
+
+      .bill-table td {
+        font-size: 0.9rem !important;
+        vertical-align: middle !important;
+      }
     }
 
     @keyframes modal-pop {
@@ -4194,7 +4252,7 @@
             <h3>淨額總表</h3>
             <div class="note-box">綠色代表可收回，紅色代表需支付，讓整體收支一眼看懂。</div>
             <div class="table-wrap">
-              <table>
+              <table class="net-summary-table">
                 <thead>
                   <tr>
                     <th>成員</th>
