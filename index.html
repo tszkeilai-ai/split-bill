@@ -26,8 +26,12 @@
       --warning-soft: #fff7ed;
       --edit-ring: 0 0 0 1px rgba(37, 99, 235, 0.14), 0 0 0 6px rgba(37, 99, 235, 0.08), 0 16px 40px rgba(37, 99, 235, 0.12);
       --table-font-size: clamp(0.94rem, 0.91rem + 0.12vw, 1rem);
-      --table-compact-size: clamp(0.72rem, 0.68rem + 0.24vw, 0.94rem);
-      --table-tight-spacing: -0.03em;
+      --table-compact-size: clamp(0.72rem, 0.66rem + 0.22vw, 0.94rem);
+      --table-tight-spacing: -0.5px;
+      --table-action-col-width: clamp(4.6rem, 5vw, 5.2rem);
+      --table-action-btn-size: 1.9rem;
+      --table-main-third-width: calc((100% - var(--table-action-col-width)) / 3);
+      --table-main-half-width: calc((100% - var(--table-action-col-width)) / 2);
     }
 
     * {
@@ -464,18 +468,26 @@
     }
 
     .table-action-row {
-      display: inline-flex;
+      display: inline-grid;
+      grid-auto-flow: column;
+      grid-auto-columns: max-content;
       align-items: center;
       justify-content: flex-end;
-      gap: 8px;
+      gap: 0.35rem;
       flex-wrap: nowrap;
+      width: max-content;
+      margin-left: auto;
     }
 
     .icon-action-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 0;
+      width: var(--table-action-btn-size);
+      height: var(--table-action-btn-size);
+      min-width: var(--table-action-btn-size);
+      padding: 0;
       white-space: nowrap;
     }
 
@@ -488,7 +500,7 @@
     }
 
     .action-label {
-      display: inline;
+      display: none !important;
       line-height: 1;
     }
 
@@ -873,22 +885,25 @@
 
     .bill-table th:nth-child(1),
     .bill-table td:nth-child(1) {
-      width: 40%;
+      width: var(--table-main-third-width);
     }
 
     .bill-table th:nth-child(2),
     .bill-table td:nth-child(2) {
-      width: 27%;
+      width: var(--table-main-third-width);
     }
 
     .bill-table th:nth-child(3),
     .bill-table td:nth-child(3) {
-      width: 17%;
+      width: var(--table-main-third-width);
     }
 
     .bill-table th.actions-cell,
     .bill-table td.actions-cell {
-      width: 16%;
+      width: var(--table-action-col-width);
+      min-width: var(--table-action-col-width);
+      max-width: var(--table-action-col-width);
+      padding-inline: 6px 8px;
       text-align: right;
     }
 
@@ -1151,8 +1166,11 @@
       }
 
       .table-action-row {
-        display: inline-flex !important;
+        display: inline-grid !important;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
         gap: 0.25rem !important;
+        width: max-content !important;
       }
 
       .icon-action-btn {
@@ -1173,14 +1191,14 @@
          ----------------------- */
       .bill-table th:nth-child(1),
       .bill-table td:nth-child(1) {
-        width: 40% !important;
+        width: var(--table-main-third-width) !important;
         white-space: normal !important;
       }
 
       /* 付款人：允許換行，維持與實際欄位順序一致 */
       .bill-table th:nth-child(2),
       .bill-table td:nth-child(2) {
-        width: 25% !important;
+        width: var(--table-main-third-width) !important;
         white-space: normal !important;
         text-align: left !important;
       }
@@ -1189,7 +1207,7 @@
       .bill-table th:nth-child(3),
       .bill-table td:nth-child(3),
       .bill-table td.amount-column {
-        width: 17% !important;
+        width: var(--table-main-third-width) !important;
         white-space: nowrap !important;
         text-align: center !important;
         font-size: var(--table-compact-size) !important;
@@ -1199,7 +1217,9 @@
       /* 操作：保持在右側、不被擠壓 */
       .bill-table th.actions-cell,
       .bill-table td.actions-cell {
-        width: 18% !important;
+        width: var(--table-action-col-width) !important;
+        min-width: var(--table-action-col-width) !important;
+        max-width: var(--table-action-col-width) !important;
         text-align: right !important;
         white-space: nowrap !important;
       }
@@ -1210,13 +1230,13 @@
          ----------------------- */
       .member-table th:nth-child(1),
       .member-table td:nth-child(1) {
-        width: 50% !important;
+        width: var(--table-main-half-width) !important;
         white-space: normal !important;
       }
 
       .member-table th:nth-child(2),
       .member-table td:nth-child(2) {
-        width: 25% !important;
+        width: var(--table-main-half-width) !important;
         white-space: nowrap !important;
         text-align: center !important;
         font-size: var(--table-compact-size) !important;
@@ -1225,7 +1245,9 @@
 
       .member-table th.actions-cell,
       .member-table td.actions-cell {
-        width: 25% !important;
+        width: var(--table-action-col-width) !important;
+        min-width: var(--table-action-col-width) !important;
+        max-width: var(--table-action-col-width) !important;
         text-align: right !important;
         white-space: nowrap !important;
       }
@@ -1281,34 +1303,34 @@
 
     .bill-table col.item-col,
     .overview-table col.item-col {
-      width: 40%;
+      width: var(--table-main-third-width);
     }
 
     .bill-table col.payer-col,
     .overview-table col.payer-col {
-      width: 27%;
+      width: var(--table-main-third-width);
     }
 
     .bill-table col.amount-col,
     .overview-table col.amount-col {
-      width: 17%;
+      width: var(--table-main-third-width);
     }
 
     .bill-table col.action-col,
     .overview-table col.action-col {
-      width: 16%;
+      width: var(--table-action-col-width);
     }
 
     .member-table col.name-col {
-      width: 52%;
+      width: var(--table-main-half-width);
     }
 
     .member-table col.weight-col {
-      width: 18%;
+      width: var(--table-main-half-width);
     }
 
     .member-table col.action-col {
-      width: 30%;
+      width: var(--table-action-col-width);
     }
 
     .settlement-table--members col.name-col {
@@ -1396,6 +1418,7 @@
     .settlement-table td.actions-cell {
       text-align: right;
       white-space: nowrap;
+      vertical-align: middle;
     }
 
     .bill-table .item-cell,
@@ -1413,6 +1436,16 @@
     .overview-table .amount-column {
       white-space: nowrap !important;
       text-align: center;
+    }
+
+    .member-table th.actions-cell,
+    .member-table td.actions-cell,
+    .overview-table th.actions-cell,
+    .overview-table td.actions-cell {
+      width: var(--table-action-col-width);
+      min-width: var(--table-action-col-width);
+      max-width: var(--table-action-col-width);
+      padding-inline: 6px 8px;
     }
 
     .net-summary-table th:last-child,
@@ -1436,41 +1469,46 @@
     }
 
     .table-action-row {
-      width: 100%;
+      width: max-content;
       justify-content: flex-end;
     }
 
     @media (max-width: 640px) {
+      :root {
+        --table-action-col-width: 4.2rem;
+        --table-action-btn-size: 1.625rem;
+      }
+
       .bill-table col.item-col,
       .overview-table col.item-col {
-        width: 40%;
+        width: var(--table-main-third-width);
       }
 
       .bill-table col.payer-col,
       .overview-table col.payer-col {
-        width: 25%;
+        width: var(--table-main-third-width);
       }
 
       .bill-table col.amount-col,
       .overview-table col.amount-col {
-        width: 17%;
+        width: var(--table-main-third-width);
       }
 
       .bill-table col.action-col,
       .overview-table col.action-col {
-        width: 18%;
+        width: var(--table-action-col-width);
       }
 
       .member-table col.name-col {
-        width: 50%;
+        width: var(--table-main-half-width);
       }
 
       .member-table col.weight-col {
-        width: 18%;
+        width: var(--table-main-half-width);
       }
 
       .member-table col.action-col {
-        width: 32%;
+        width: var(--table-action-col-width);
       }
 
       .settlement-table--members col.name-col {
@@ -2831,7 +2869,7 @@
           <div class="subsection">
             <h4 class="subgroup-title">淨額總表</h4>
             <div class="table-wrap">
-              <table>
+              <table class="net-summary-table">
                 <thead>
                   <tr>
                     <th>成員</th>
@@ -3591,9 +3629,12 @@
             .note { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 12px; margin: 12px 0; }
             .section { margin-top: 18px; }
             .section h2 { font-size: 16px; margin: 0 0 10px; }
-            table { width: 100%; border-collapse: collapse; font-size: 14px; }
-            th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: left; }
-            th { background: #f1f5f9; }
+            :root { --print-table-size: 14px; --print-table-tight-size: 12px; }
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+            th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 8px; text-align: left; font-size: var(--print-table-size); line-height: 1.35; }
+            th { background: #f1f5f9; font-size: var(--print-table-size); }
+            .col-number, td.number, .amount-column { text-align: center; white-space: nowrap !important; font-size: var(--print-table-tight-size); letter-spacing: -0.5px; }
+            .net-summary-table th:last-child, .net-summary-table td:last-child { text-align: center; }
             .settlement-positive { color: #166534; font-weight: 700; }
             .settlement-negative { color: #9a3412; font-weight: 700; }
             .settlement-zero { color: #334155; font-weight: 700; }
@@ -3618,7 +3659,7 @@
           </div>
           <div class="section">
             <h2>本群組淨額總表</h2>
-            <table>
+            <table class="net-summary-table">
               <thead>
                 <tr>
                   <th>成員</th>
@@ -4223,7 +4264,7 @@
         <div class="subsection">
           <h3>本群組淨額總表</h3>
           <div class="table-wrap">
-            <table>
+            <table class="net-summary-table">
               <thead>
                 <tr>
                   <th>成員</th>
