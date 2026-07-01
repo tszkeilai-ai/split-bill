@@ -114,6 +114,10 @@
       color: var(--text);
     }
 
+    .hint:empty {
+      display: none;
+    }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -607,11 +611,6 @@
 
     .delete-panel {
       margin-top: 6px;
-    }
-
-    .delete-panel p {
-      color: var(--muted);
-      margin-bottom: 0;
     }
 
     .note-box {
@@ -1270,7 +1269,6 @@
         <div class="workspace-hero">
           <div class="workspace-title">
             <h1>群組工作區</h1>
-            <p class="muted">集中處理目前群組的資料輸入、子群組切換、群內彙總與債務結算。</p>
           </div>
           <div class="workspace-header-meta">
             <div class="badge">目前群組：<span id="currentGroupLabel">未選擇群組</span></div>
@@ -1304,7 +1302,6 @@
             <h2><span id="memberFormTitle">新增成員</span><span class="title-subgroup" id="memberActiveSubGroup">子群組 1</span></h2>
             <span class="edit-badge" id="memberEditBadge" hidden>[ 編輯中 ]</span>
           </div>
-          <p class="muted">這裡新增的成員，會成為同子群組內「新增預支」的付款人下拉選單來源。</p>
           <form id="memberForm">
             <input type="hidden" id="memberId" />
             <input type="hidden" id="memberOriginalName" />
@@ -1344,7 +1341,6 @@
             <h2><span id="billFormTitle">新增預支</span><span class="title-subgroup" id="billActiveSubGroup">子群組 1</span></h2>
             <span class="edit-badge" id="billEditBadge" hidden>[ 編輯中 ]</span>
           </div>
-          <p class="muted">記帳工作面板將新增與檢視整合在同一區。儲存後會保留付款人，清空其餘欄位並把焦點送回項目名稱。</p>
           <form id="billForm">
             <input type="hidden" id="billId" />
             <div class="form-grid">
@@ -1386,10 +1382,7 @@
 
       <section class="card workspace-view">
         <div class="section-head">
-          <div>
-            <h2>本群組收支概覽</h2>
-            <div class="quiet">主頁只保留最後需要看的付款指引與淨額總表，詳細明細可從上方總覽視窗查看。</div>
-          </div>
+          <h2>本群組收支概覽</h2>
         </div>
         <div class="stats" hidden>
           <div class="stat">
@@ -1410,21 +1403,19 @@
 
       <section class="card action-panel workspace-view">
         <h2>債務結算</h2>
-        <p class="muted">按下後會直接鎖定目前 `group_name`，自動整合這個群組底下所有子群組資料並產出最小化付款配對，不再進行二次篩選。</p>
         <div class="button-row">
           <button type="button" class="btn-primary" id="openGlobalSettlementBtn">執行本群組債務結算</button>
         </div>
-        <div class="hint" id="globalSettlementHint">尚未執行本群組結算。</div>
+        <div class="hint" id="globalSettlementHint">尚未結算</div>
       </section>
 
       <section class="card delete-panel workspace-view">
         <h2>維護操作</h2>
-        <p>可返回首頁，或用安全刪除流程移除目前群組。刪除時必須手動輸入正確群組名稱才會解鎖。</p>
         <div class="button-row">
           <button type="button" class="btn-light" id="returnHomeBtn">返回首頁</button>
           <button type="button" class="btn-danger" id="deleteGroupBtn">刪除目前群組</button>
         </div>
-        <div class="hint danger-note" id="deleteGroupHint">刪除後會同步移除這個群組的 `bills` 與 `members`，完成後自動返回首頁。</div>
+        <div class="hint danger-note" id="deleteGroupHint"></div>
       </section>
     </div>
   </div>
@@ -4207,12 +4198,10 @@
         <div class="summary-focus-stack">
           <div class="summary-focus-section">
             <h3>付款指引</h3>
-            <div class="note-box">以下只保留最少筆數的最終轉帳對象，方便直接照著付款。</div>
             ${transferHtml}
           </div>
           <div class="summary-focus-section">
             <h3>淨額總表</h3>
-            <div class="note-box">綠色代表可收回，紅色代表需支付，讓整體收支一眼看懂。</div>
             <div class="table-wrap">
               <table class="net-summary-table">
                 <thead>
