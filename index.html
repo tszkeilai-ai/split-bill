@@ -877,14 +877,43 @@
     }
 
     .net-amount-cell {
-      min-width: 260px;
       width: 100%;
+      min-width: 0;
       box-sizing: border-box;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(88px, 42%);
+      align-items: center;
+      gap: 12px;
+    }
+
+    .net-amount-value {
+      min-width: 0;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(0.78rem, 2.1vw, 1rem);
+      font-weight: 700;
+      line-height: 1.1;
+      white-space: nowrap !important;
+      letter-spacing: -0.5px;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
+
+    .net-amount-value.is-positive {
+      color: #166534;
+    }
+
+    .net-amount-value.is-negative {
+      color: #991b1b;
+    }
+
+    .net-amount-value.is-zero {
+      color: #475569;
     }
 
     .net-amount-track {
       position: relative;
-      height: 36px;
+      height: 14px;
       border-radius: 999px;
       background: rgba(148, 163, 184, 0.08);
       overflow: hidden;
@@ -909,20 +938,20 @@
 
     .net-amount-axis {
       position: absolute;
-      top: 4px;
-      bottom: 4px;
+      top: 2px;
+      bottom: 2px;
       left: calc(50% - 1px);
       width: 2px;
-      background: rgba(148, 163, 184, 0.6);
+      background: rgba(148, 163, 184, 0.45);
       border-radius: 999px;
     }
 
     .net-amount-fill {
       position: absolute;
-      top: 6px;
-      bottom: 6px;
+      top: 0;
+      bottom: 0;
       border-radius: 999px;
-      opacity: 0.92;
+      opacity: 0.98;
     }
 
     .net-amount-fill.is-positive {
@@ -935,40 +964,10 @@
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
     }
 
-    .net-amount-text {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 14px;
-      z-index: 1;
-      font-variant-numeric: tabular-nums;
-      font-size: clamp(0.76rem, 2.15vw, 1.02rem);
-      font-weight: 700;
-      line-height: 1.1;
-      white-space: nowrap !important;
-      letter-spacing: -0.5px;
-      word-break: keep-all;
-      overflow-wrap: normal;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
-    }
-
     .final-net-amount-container {
       width: 100%;
-      flex: 1 1 100%;
       box-sizing: border-box;
-      padding: 12px;
-    }
-
-    .final-net-amount-text {
-      font-size: clamp(0.76rem, 2.15vw, 1.02rem) !important;
-      font-weight: 700;
-      line-height: 1.1;
-      white-space: nowrap !important;
-      letter-spacing: -0.5px;
-      word-break: keep-all;
-      overflow-wrap: normal;
+      padding: 8px 0;
     }
 
     .workspace-shell[hidden],
@@ -1227,14 +1226,16 @@
         width: 100% !important;
         min-width: 0 !important;
         padding: 0 !important;
+        gap: 8px;
+        grid-template-columns: minmax(0, 1fr) minmax(72px, 38%);
       }
 
       .net-summary-table td:last-child .net-amount-track {
         min-width: 0 !important;
-        padding: 0 0.5rem;
+        padding: 0 !important;
       }
 
-      .net-summary-table .net-amount-text {
+      .net-summary-table .net-amount-value {
         font-size: clamp(0.68rem, 2.45vw, 0.84rem) !important;
         white-space: nowrap !important;
         letter-spacing: -0.5px;
@@ -4500,28 +4501,28 @@
       const fillWidth = Math.max(0, Math.min(50, ratio * 50));
 
       let label = formatNumber(0);
-      let className = "settlement-zero";
+      let valueClass = "is-zero";
       let trackClass = "is-zero";
       let fillHtml = "";
 
       if (net > EPSILON) {
         label = formatNumber(net);
-        className = "settlement-positive";
+        valueClass = "is-positive";
         trackClass = "is-positive";
         fillHtml = `<span class="net-amount-fill is-positive" style="left: 50%; width: ${fillWidth.toFixed(2)}%;"></span>`;
       } else if (net < -EPSILON) {
         label = formatNumber(net);
-        className = "settlement-negative";
+        valueClass = "is-negative";
         trackClass = "is-negative";
         fillHtml = `<span class="net-amount-fill is-negative" style="left: ${(50 - fillWidth).toFixed(2)}%; width: ${fillWidth.toFixed(2)}%;"></span>`;
       }
 
       return `
         <div class="net-amount-cell final-net-amount-container">
+          <span class="net-amount-value ${valueClass}">${label}</span>
           <div class="net-amount-track ${trackClass}">
             <span class="net-amount-axis"></span>
             ${fillHtml}
-            <span class="net-amount-text final-net-amount-text ${className}">${label}</span>
           </div>
         </div>
       `;
