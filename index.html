@@ -3117,6 +3117,7 @@
 
     function buildGlobalBreakdownHtml(groupBreakdowns = [], options = {}) {
       const hideGroupSettlementColumn = Boolean(options.hideGroupSettlementColumn);
+      const hideSubgroupSettlementColumn = Boolean(options.hideSubgroupSettlementColumn);
       return groupBreakdowns.map((groupReport) => `
         <div class="subsection">
           <h3>${escapeHtml(groupReport.groupName)}</h3>
@@ -3125,7 +3126,9 @@
           ${groupReport.subgroupReports.map((subgroupReport) => `
             <div class="subgroup-block">
               <h4 class="subgroup-title">${escapeHtml(subgroupReport.subGroupName)}</h4>
-              ${subgroupReport.stats.rows.length ? buildSettlementTable(subgroupReport.stats.rows, { showWeight: true }) : '<div class="empty">此子群組目前沒有足夠資料可供計算。</div>'}
+              ${subgroupReport.stats.rows.length
+                ? buildSettlementTable(subgroupReport.stats.rows, { showWeight: true, hideSettlement: hideSubgroupSettlementColumn })
+                : '<div class="empty">此子群組目前沒有足夠資料可供計算。</div>'}
             </div>
           `).join("")}
           <div class="subsection">
@@ -3792,7 +3795,10 @@
         `
         : '<div class="empty">本群組加總後已經平衡，沒有需要額外付款的對象。</div>';
 
-      const breakdownHtml = buildGlobalBreakdownHtml(groupBreakdowns, { hideGroupSettlementColumn: true });
+      const breakdownHtml = buildGlobalBreakdownHtml(groupBreakdowns, {
+        hideGroupSettlementColumn: true,
+        hideSubgroupSettlementColumn: true
+      });
 
       latestGlobalSettlementSnapshot = {
         currentGroupName: targetGroup,
